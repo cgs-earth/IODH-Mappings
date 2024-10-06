@@ -19,7 +19,7 @@ HEADERS = {"accept": "application/vnd.api+json"}
 LOGGER = logging.getLogger(__name__)
 
 REDIS_HOST = os.getenv("REDIS_HOST", "redis")
-REDIS_PORT = os.getenv("REDIS_PORT", "6379")
+REDIS_PORT: int = int(os.getenv("REDIS_PORT", "6379"))
 
 
 async def fetch_url(url: str) -> dict:
