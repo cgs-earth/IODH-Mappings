@@ -14,12 +14,8 @@ from pygeoapi.provider.base import (
 import asyncio
 
 from rise.rise_api_types import (
-    Coverage,
-    CoverageCollection,
-    CoverageRange,
     JsonPayload,
     LocationResponse,
-    Parameter,
     Url,
     ZType,
 )
