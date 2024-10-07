@@ -1,5 +1,8 @@
+import asyncio
+from copy import deepcopy
+import logging
 from typing import Optional
-from rise.rise_api_types import (
+from rise.custom_types import (
     CoverageCollection,
     Coverage,
     CoverageRange,
@@ -7,9 +10,13 @@ from rise.rise_api_types import (
     LocationResponse,
     Parameter,
 )
-from rise.rise_cache import RISECache
-from rise.rise_edr_helpers import LocationHelper
+from rise.cache import RISECache
+from rise.edr_helpers import LocationHelper
+from rise.lib import flatten_values, getResultUrlFromCatalogUrl
 
+LOGGER = logging.getLogger(__name__)
+
+# The template that we will fill in with data and return to the user
 COVJSON_TEMPLATE: CoverageCollection = {
     "type": "CoverageCollection",
     ## CoverageJSON makes us specify a list of parameters that are relevant for the entire coverage collection
@@ -42,11 +49,11 @@ COVJSON_TEMPLATE: CoverageCollection = {
             "system": {"type": "TemporalRS", "calendar": "Gregorian"},
         },
     ],
-    "coverages": {},  # type: ignore this w/ static type checks since it is a template
+    "coverages": {},  # type: ignore this w/ static type checks since it is a template and intended to be empty
 }
 
 
-def generate_coverage_item(
+def _generate_coverage_item(
     paramToCoverage: dict[str, CoverageRange],
     location_feature: LocationData,
     times: list[str],
@@ -103,64 +110,114 @@ def generate_coverage_item(
 class CovJSONBuilder:
     """A helper class for building CovJSON from a Rise JSON Response"""
 
-    _locationResponse: (
-        LocationResponse  # The response from RISE conforming to the /locations response
-    )
     _cache: RISECache  # The RISE Cache to use for storing and fetching data
-    _coverages: list[Coverage]
-    _time_filter: Optional[
-        str  # When converting from a RISE locationresponse to covjson we fetch results. We can filter by time here
-    ]
-    _params_with_metadata: dict
 
-    def __init__(
-        self,
-        cache: RISECache,
-        locationResponse: LocationResponse,
-        time_filter: Optional[str] = None,
-    ):
+    def __init__(self, cache: RISECache):
         self._cache = cache
-        self._locationResponse = LocationHelper.fill_catalogItems(
-            locationResponse, cache, time_filter, add_results=True
-        )
-        return self
 
-    def _get_relevant_parameters(self) -> set[str]:
+    def _get_relevant_parameters(self, location_response: LocationResponse) -> set[str]:
         relevant_parameters = set()
-        for location_feature in self._locationResponse["data"]:
+        for location_feature in location_response["data"]:
             for param in location_feature["relationships"]["catalogItems"]["data"]:
                 id = str(param["attributes"]["parameterId"])
                 relevant_parameters.add(id)
         return relevant_parameters
 
-    def fill_parameters(self, only_include_ids: Optional[list[str]] = None) -> None:
-        relevant_parameters = self._get_relevant_parameters()
+    def _get_parameter_metadata(self, location_response: LocationResponse):
+        relevant_parameters = self._get_relevant_parameters(location_response)
 
-        paramIdsToMetadata: dict[str, Parameter] = {}
+        paramNameToMetadata: dict[str, Parameter] = {}
 
         paramsToGeoJsonOutput = self._cache.get_or_fetch_parameters()
-        for f in paramsToGeoJsonOutput:
-            if only_include_ids and f not in only_include_ids:
+        for param_id in paramsToGeoJsonOutput:
+            if relevant_parameters and param_id not in relevant_parameters:
                 continue
 
-            associatedData = paramsToGeoJsonOutput[f]
+            associatedData = paramsToGeoJsonOutput[param_id]
 
             _param: Parameter = {
                 "type": "Parameter",
                 "description": {"en": associatedData["description"]},
                 "unit": {"symbol": associatedData["x-ogc-unit"]},
                 "observedProperty": {
-                    "id": f,
+                    "id": param_id,
                     "label": {"en": associatedData["title"]},
                 },
             }
             # TODO check default if _id isn't present
-            paramIdsToMetadata[f] = _param
 
-        self._params_with_metadata = paramIdsToMetadata
+            natural_language_name = associatedData["title"]
+            paramNameToMetadata[natural_language_name] = _param
 
-    def fill_coverages(self) -> None:
-        for location_feature in self._locationResponse["data"]:
+        return paramNameToMetadata
+
+    def get_location_response_with_results(
+        self,
+        base_location_response: LocationResponse,
+        time_filter: Optional[str] = None,
+    ) -> LocationResponse:
+        """Given a location that contains just catalog item ids, fill in the catalog items with the full
+        endpoint response for the given catalog item so it can be more easily used for complex joins
+        """
+
+        new = deepcopy(base_location_response)
+
+        # Make a dictionary from an existing response, no fetch needed
+        locationToCatalogItemUrls: dict[str, list[str]] = (
+            LocationHelper.get_catalogItemURLs(new)
+        )
+        catalogItemUrls = flatten_values(locationToCatalogItemUrls)
+
+        catalogItemUrlToResponse = asyncio.run(
+            self._cache.get_or_fetch_group(catalogItemUrls)
+        )
+
+        # Fetch all results in parallel before looping through each location to add them in the json
+        resultUrls = [
+            getResultUrlFromCatalogUrl(url, time_filter) for url in catalogItemUrls
+        ]
+        assert len(resultUrls) == len(set(resultUrls)), LOGGER.error(
+            "Duplicate result urls when adding results to the catalog items"
+        )
+        LOGGER.debug(f"Fetching {resultUrls}; {len(resultUrls)} in total")
+        results = asyncio.run(self._cache.get_or_fetch_group(resultUrls))
+
+        for i, location in enumerate(new["data"]):
+            for j, catalogitem in enumerate(
+                location["relationships"]["catalogItems"]["data"]
+            ):
+                # url = https://data.usbr.gov/rise/api/catalog-record/8025   if id": "/rise/api/catalog-record/8025"
+                url: str = "https://data.usbr.gov" + catalogitem["id"]
+                try:
+                    fetchedData = catalogItemUrlToResponse[url]["data"]
+                    new["data"][i]["relationships"]["catalogItems"]["data"][j] = (
+                        fetchedData
+                    )
+
+                except KeyError:
+                    # a few locations have invalid catalog items so we can't do anything with them
+                    LOGGER.error(f"Missing key for catalog item {url} in {location}")
+                    continue
+
+                base_catalog_item_j = new["data"][i]["relationships"]["catalogItems"][
+                    "data"
+                ][j]
+                associated_res_url = getResultUrlFromCatalogUrl(url, time_filter)
+                if not associated_res_url:
+                    results_for_catalog_item_j = None
+                else:
+                    results_for_catalog_item_j = results[associated_res_url].get(
+                        "data", None
+                    )
+                    base_catalog_item_j["results"] = results_for_catalog_item_j
+
+        return new
+
+    def _get_coverages(self, location_response: LocationResponse) -> list[Coverage]:
+        """Return the data needed for the 'coverage' key in the covjson response"""
+        coverages: list[Coverage] = []
+
+        for location_feature in location_response["data"]:
             # CoverageJSON needs a us to associated every parameter with data
             # This data is grouped independently for each location
             paramToCoverage: dict[str, CoverageRange] = {}
@@ -182,7 +239,8 @@ class CovJSONBuilder:
                     result["attributes"]["dateTime"] for result in param["results"]
                 ]
 
-                id = str(param["attributes"]["parameterId"])
+                # id = str(param["attributes"]["parameterId"])
+                id = param["attributes"]["parameterName"]
 
                 paramToCoverage[id] = {
                     "axisNames": ["t"],
@@ -192,15 +250,23 @@ class CovJSONBuilder:
                     "type": "NdArray",
                 }
 
-                coverage_item = generate_coverage_item(
+                coverage_item = _generate_coverage_item(
                     paramToCoverage, location_feature, times
                 )
 
-                self._coverages.append(coverage_item)
+                coverages.append(coverage_item)
+        return coverages
 
-    def render(self) -> CoverageCollection:
+    def render(
+        self, location_response: LocationResponse, time_filter: Optional[str] = None
+    ) -> CoverageCollection:
+        response_with_data = self.get_location_response_with_results(
+            location_response, time_filter
+        )
         templated_covjson: CoverageCollection = COVJSON_TEMPLATE
-        templated_covjson["coverages"] = self._coverages
-        templated_covjson["parameters"] = self._params_with_metadata
+        templated_covjson["coverages"] = self._get_coverages(response_with_data)
+        templated_covjson["parameters"] = self._get_parameter_metadata(
+            location_response=response_with_data
+        )
 
         return templated_covjson

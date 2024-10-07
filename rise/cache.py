@@ -7,9 +7,9 @@ import shelve
 from typing import ClassVar, Literal, Optional, Union
 from typing_extensions import assert_never
 from pygeoapi.provider.base import ProviderConnectionError, ProviderNoDataError
-from rise.rise_api_types import CacheInterface, JsonPayload, Url
+from rise.custom_types import CacheInterface, JsonPayload, Url
 import aiohttp
-from rise.rise_edr_share import merge_pages
+from rise.lib import merge_pages
 import redis
 from aiohttp import client_exceptions
 from datetime import timedelta

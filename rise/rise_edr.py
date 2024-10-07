@@ -6,13 +6,13 @@ from pygeoapi.provider.base import (
     ProviderQueryError,
 )
 from pygeoapi.provider.base_edr import BaseEDRProvider
-from rise.rise_api_types import LocationResponse
-from rise.rise_edr_helpers import (
+from rise.custom_types import LocationResponse
+from rise.edr_helpers import (
     RISECache,
     get_only_key,
     LocationHelper,
 )
-from rise.rise_edr_share import merge_pages
+from rise.lib import merge_pages
 
 
 LOGGER = logging.getLogger(__name__)
