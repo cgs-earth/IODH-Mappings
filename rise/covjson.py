@@ -1,4 +1,3 @@
-import asyncio
 from copy import deepcopy
 import logging
 from typing import Optional
@@ -12,7 +11,7 @@ from rise.custom_types import (
 )
 from rise.cache import RISECache
 from rise.edr_helpers import LocationHelper
-from rise.lib import flatten_values, getResultUrlFromCatalogUrl
+from rise.lib import flatten_values, getResultUrlFromCatalogUrl, safe_run_async
 
 LOGGER = logging.getLogger(__name__)
 
@@ -36,9 +35,9 @@ COVJSON_TEMPLATE: CoverageCollection = {
                 "cs": {
                     "csAxes": [
                         {
-                            "name": {"en": "Pressure"},
+                            "name": {"en": "time"},
                             "direction": "down",
-                            "unit": {"symbol": "Pa"},
+                            "unit": {"symbol": "time"},
                         }
                     ]
                 },
@@ -168,7 +167,7 @@ class CovJSONBuilder:
         )
         catalogItemUrls = flatten_values(locationToCatalogItemUrls)
 
-        catalogItemUrlToResponse = asyncio.run(
+        catalogItemUrlToResponse = safe_run_async(
             self._cache.get_or_fetch_group(catalogItemUrls)
         )
 
@@ -180,7 +179,7 @@ class CovJSONBuilder:
             "Duplicate result urls when adding results to the catalog items"
         )
         LOGGER.debug(f"Fetching {resultUrls}; {len(resultUrls)} in total")
-        results = asyncio.run(self._cache.get_or_fetch_group(resultUrls))
+        results = safe_run_async(self._cache.get_or_fetch_group(resultUrls))
 
         for i, location in enumerate(new["data"]):
             for j, catalogitem in enumerate(

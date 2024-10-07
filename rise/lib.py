@@ -1,9 +1,22 @@
+import asyncio
 import datetime
-from typing import Optional, Tuple
+from typing import Any, Coroutine, Optional, Tuple
 
 import shapely
 from pygeoapi.provider.base import ProviderQueryError
 from rise.custom_types import JsonPayload, Url, ZType
+
+
+def safe_run_async(coro: Coroutine[Any, Any, Any]) -> Any:
+    """
+    Run an asyncio coroutine, ensuring it works even if an event loop is already running.
+    """
+    try:
+        loop = asyncio.get_running_loop()
+        return loop.run_until_complete(coro)
+    except RuntimeError:
+        # No running event loop
+        return asyncio.run(coro)
 
 
 def merge_pages(pages: dict[Url, JsonPayload]):

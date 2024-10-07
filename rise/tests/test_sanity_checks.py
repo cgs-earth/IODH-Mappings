@@ -1,6 +1,7 @@
 import redis
 import requests
 import shapely.wkt
+import shapely.geometry
 
 """This file is solely for sanity checks on the upstream repo or underlying libs to make sure that queries are performing as our understanding expects"""
 

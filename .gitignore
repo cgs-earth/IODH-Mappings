@@ -20,6 +20,7 @@
 !Dockerfile-rise
 !docker-compose-rise.yml
 !readme.md
+!requirements-rise.txt
 
 *.pyc
 __pycache__/

@@ -1,9 +1,13 @@
 from datetime import timedelta
 import json
 import logging
-import redis
 
-from rise.lib import flatten_values, getResultUrlFromCatalogUrl, merge_pages
+from rise.lib import (
+    flatten_values,
+    getResultUrlFromCatalogUrl,
+    merge_pages,
+    safe_run_async,
+)
 import pytest
 import shapely.wkt
 
@@ -43,7 +47,7 @@ def test_fetch():
     )
     assert resp.json()
 
-    async_resp = asyncio.run(fetch_url(url))
+    async_resp = safe_run_async(fetch_url(url))
     assert async_resp == resp.json()
 
 
@@ -203,7 +207,7 @@ def test_get_or_fetch_group():
     ]
 
     cache = RISECache()
-    urlToContent = asyncio.run(cache.get_or_fetch_group(group))
+    urlToContent = safe_run_async(cache.get_or_fetch_group(group))
 
     assert len(urlToContent.values()) == 2
     # Can't do a better test here since the remote value changes ocassionally and can make this flakey
@@ -247,7 +251,7 @@ class TestFnsWithCaching:
             "https://data.usbr.gov/rise/api/catalog-item/128564",
         ]
         cache = RISECache(cache_type)
-        resp = asyncio.run(cache.fetch_and_set_url_group(urls))
+        resp = safe_run_async(cache.fetch_and_set_url_group(urls))
         assert len(resp) == 3
         assert None not in resp
 
@@ -300,7 +304,7 @@ class TestFnsWithCaching:
         start = time.time()
         cache = RISECache(cache_type)
         cache.clear(url)
-        remote_res = asyncio.run(cache.get_or_fetch(url))
+        remote_res = safe_run_async(cache.get_or_fetch(url))
         assert remote_res
         network_time = time.time() - start
 
@@ -309,7 +313,7 @@ class TestFnsWithCaching:
         start = time.time()
         cache.clear(url)
         assert not cache.contains(url)
-        disk_res = asyncio.run(cache.get_or_fetch(url))
+        disk_res = safe_run_async(cache.get_or_fetch(url))
         assert disk_res
         disk_time = time.time() - start
 
@@ -321,7 +325,7 @@ class TestFnsWithCaching:
         cache.set(
             "https://data.usbr.gov/rise/api/catalog-item/128562", {"data": "test"}
         )
-        assert asyncio.run(
+        assert safe_run_async(
             cache.get_or_fetch("https://data.usbr.gov/rise/api/catalog-item/128562")
         ) == {"data": "test"}
 
@@ -333,3 +337,15 @@ class TestFnsWithCaching:
         )
         with pytest.raises(KeyError):
             cache.get("https://data.usbr.gov/rise/api/catalog-item/128562")
+
+
+def test_safe_async():
+    # Create an event loop without running anything on it
+    loop = asyncio.new_event_loop()
+    asyncio.set_event_loop(loop)
+
+    # Check that the event loop is running by calling run_async
+    safe_run_async(asyncio.sleep(0.1))
+
+    # Close the event loop after the test
+    loop.close()

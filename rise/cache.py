@@ -9,7 +9,7 @@ from typing_extensions import assert_never
 from pygeoapi.provider.base import ProviderConnectionError, ProviderNoDataError
 from rise.custom_types import CacheInterface, JsonPayload, Url
 import aiohttp
-from rise.lib import merge_pages
+from rise.lib import merge_pages, safe_run_async
 import redis
 from aiohttp import client_exceptions
 from datetime import timedelta
@@ -154,7 +154,7 @@ class RISECache(CacheInterface):
         MAX_ITEMS_PER_PAGE = 100
 
         # Get the first response that contains the list of pages
-        response = asyncio.run(self.get_or_fetch(url))
+        response = safe_run_async(self.get_or_fetch(url))
 
         NOT_PAGINATED = "meta" not in response
         if NOT_PAGINATED:
@@ -172,7 +172,7 @@ class RISECache(CacheInterface):
             for page in range(1, int(pages_to_complete) + 1)
         ]
 
-        pages = asyncio.run(self.get_or_fetch_group(urls, force_fetch=force_fetch))
+        pages = safe_run_async(self.get_or_fetch_group(urls, force_fetch=force_fetch))
 
         return pages
 

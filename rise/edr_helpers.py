@@ -20,7 +20,7 @@ from rise.custom_types import (
     ZType,
 )
 from rise.cache import RISECache
-from rise.lib import get_trailing_id, parse_bbox, parse_date, parse_z
+from rise.lib import get_trailing_id, parse_bbox, parse_date, parse_z, safe_run_async
 
 
 LOGGER = logging.getLogger(__name__)
@@ -104,7 +104,7 @@ class LocationHelper:
             results = await asyncio.gather(*tasks)
             return {location: params for location, params in results}
 
-        locationToParams = asyncio.run(gather_parameters())
+        locationToParams = safe_run_async(gather_parameters())
 
         # should have the same number of locations in each
         assert len(locationToParams) == len(locationsToCatalogItemURLs)
@@ -340,7 +340,7 @@ class LocationHelper:
             for endpoint in catalogItemEndpoints
         ]
 
-        fetched_result = asyncio.run(cache.get_or_fetch_group(result_endpoints))
+        fetched_result = safe_run_async(cache.get_or_fetch_group(result_endpoints))
 
         return fetched_result
 
