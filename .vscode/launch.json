@@ -37,9 +37,7 @@
         "PYGEOAPI_CONFIG": "local.config.yml",
         "PYGEOAPI_OPENAPI": "local.openapi.yml"
       },
-      "args": [
-        "pygeoapi.flask_app:APP"
-      ]
+      "args": ["pygeoapi.flask_app:APP"]
     },
     {
       "name": "Pytest One File",
@@ -47,10 +45,7 @@
       "type": "debugpy",
       "request": "launch",
       "module": "pytest",
-      "args": [
-        "-svvvv",
-        "${file}"
-      ]
+      "args": ["-svvvv", "${file}"]
     },
     {
       "name": "Pytest Entire Directory",
