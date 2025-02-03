@@ -28,6 +28,5 @@ services:
       - ./local.config.yml:/pygeoapi/local.config.yml
       - ./rise/:/pygeoapi/rise/
 
-
 volumes:
   redis_data:
