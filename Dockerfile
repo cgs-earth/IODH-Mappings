@@ -3,7 +3,7 @@ FROM geopython/pygeoapi:latest
 WORKDIR /pygeoapi
 
 # Install the additional requirements for the RISE mapping
-COPY requirements-rise.txt requirements-rise.txt
+COPY requirements.txt requirements.txt
 RUN pip install --no-cache-dir -r requirements-rise.txt
 RUN pygeoapi openapi generate /pygeoapi/local.config.yml --output-file /pygeoapi/local.openapi.yml
 

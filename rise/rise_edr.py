@@ -14,9 +14,7 @@ from rise.edr_helpers import (
 )
 from rise.lib import merge_pages, get_only_key
 
-
 LOGGER = logging.getLogger(__name__)
-
 
 class RiseEDRProvider(BaseEDRProvider):
     """Base EDR Provider"""

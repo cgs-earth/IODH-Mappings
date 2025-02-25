@@ -14,7 +14,6 @@ from rise.lib import get_only_key, merge_pages
 
 LOGGER = logging.getLogger(__name__)
 
-
 class RiseProvider(BaseProvider):
     """Rise Provider for OGC API Features"""
 
