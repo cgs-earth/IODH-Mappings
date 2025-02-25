@@ -5,10 +5,13 @@ deps:
 	uv add . --dev
 	uv pip install -e .
 
-# serve the api 
+# serve the api (requires redis to be running)
 dev: 
 	PYGEOAPI_CONFIG=local.config.yml PYGEOAPI_OPENAPI=local.openapi.yml pygeoapi serve
 
 # run pyright to type check the codebase
 types:
 	uv tool run pyright
+
+test:
+	pytest -xn auto

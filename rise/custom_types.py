@@ -138,28 +138,3 @@ class CoverageCollection(TypedDict):
     referencing: list
     coverages: list[Coverage]
 
-
-class CacheInterface(Protocol):
-    """
-    A generic caching interface that supports key updates
-    and fetching url in groups. The client does not need
-    to be aware of whether or not the url is in the cache
-    """
-
-    def __init__(self):
-        if type(self) is super().__class__:
-            raise TypeError(
-                "Cannot instantiate an instance of the cache. You must use static methods on the class itself"
-            )
-
-    def set(
-        self, url: str, json_data: dict, _ttl: Optional[timedelta] = None
-    ) -> None: ...
-
-    def clear(self, url: str) -> None: ...
-
-    def contains(self, url: str) -> bool: ...
-
-    def get(self, url: str) -> dict: ...
-
-    def reset(self) -> None: ...

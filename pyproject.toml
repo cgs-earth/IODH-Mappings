@@ -33,6 +33,7 @@ keywords = [
 
 [dependency-groups]
 dev = [
+    "pytest-xdist>=3.6.1",
     "rise-edr",
 ]
 

@@ -1,6 +1,7 @@
 # Copyright 2025 Lincoln Institute of Land Policy
 # SPDX-License-Identifier: MIT
 
+import os
 import requests
 from rise.cache import RISECache
 from rise.covjson import CovJSONBuilder
@@ -23,7 +24,7 @@ def test_one_location():
 
 
 def test_fill_catalogItems():
-    with open("rise/tests/data/location.json") as f:
+    with open(os.path.join(os.path.dirname(__file__), "data", "location.json")) as f:
         data = json.load(f)
         assert len(data["data"]) == 25
 

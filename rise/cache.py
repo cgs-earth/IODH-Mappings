@@ -6,11 +6,10 @@ import os
 import json
 import logging
 import math
-import shelve
-from typing import ClassVar, Literal, Optional, Union
+from typing import  Literal, Optional, Protocol
 from typing_extensions import assert_never
 from pygeoapi.provider.base import ProviderConnectionError, ProviderNoDataError
-from rise.custom_types import CacheInterface, JsonPayload, Url
+from rise.custom_types import JsonPayload, Url
 import aiohttp
 from rise.lib import merge_pages, safe_run_async
 import redis
@@ -35,45 +34,34 @@ async def fetch_url(url: str) -> dict:
                 raise e
 
 
-class SingletonMeta(type):
-    _instances = {}
+class CacheInterface(Protocol):
+    """
+    A generic caching interface that supports key updates
+    and fetching url in groups. The client does not need
+    to be aware of whether or not the url is in the cache
+    """
 
-    def __call__(cls, *args, **kwargs):
-        if cls not in cls._instances:
-            instance = super().__call__(*args, **kwargs)
-            cls._instances[cls] = instance
-        return cls._instances[cls]
+    def __init__(self):
+        if type(self) is super().__class__:
+            raise TypeError(
+                "Cannot instantiate an instance of the cache. You must use static methods on the class itself"
+            )
 
+    def set(
+        self, url: str, json_data: dict, _ttl: Optional[timedelta] = None
+    ) -> None: ...
 
-class ShelveCache(CacheInterface):
-    db: ClassVar[str] = "tests/data/risedb"
+    def clear(self, url: str) -> None: ...
 
-    def set(self, url: str, json_data: dict, _ttl: Optional[timedelta] = None):
-        with shelve.open(ShelveCache.db, "w") as db:
-            db[url] = json_data
+    def contains(self, url: str) -> bool: ...
 
-    def reset(self):
-        with shelve.open(ShelveCache.db, "w") as db:
-            for key in db:
-                del db[key]
+    def get(self, url: str) -> dict: ...
 
-    def clear(self, url: str):
-        with shelve.open(ShelveCache.db, "w") as db:
-            if url not in db:
-                return
-
-            del db[url]
-
-    def contains(self, url: str) -> bool:
-        with shelve.open(ShelveCache.db) as db:
-            return url in db
-
-    def get(self, url: str):
-        with shelve.open(ShelveCache.db) as db:
-            return db[url]
+    def reset(self) -> None: ...
 
 
 class RedisCache(CacheInterface):
+    """A cache implementation using Redis with ttl support"""
     def __init__(self, ttl: timedelta = timedelta(hours=24)):
         self.db = redis.Redis(host=REDIS_HOST, port=REDIS_PORT, decode_responses=False)
         self.ttl = ttl
@@ -113,12 +101,10 @@ class RISECache(CacheInterface):
     making instances of the class
     """
 
-    implementation: Union[ShelveCache, RedisCache]
+    implementation: RedisCache
 
-    def __init__(self, implementation: Literal["shelve", "redis"] = "shelve"):
+    def __init__(self, implementation: Literal["redis"] = "redis"):
         match implementation:
-            case "shelve":
-                self.cache_impl = ShelveCache()
             case "redis":
                 self.cache_impl = RedisCache()
             case _:
