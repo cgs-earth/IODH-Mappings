@@ -2,8 +2,6 @@ name: Docker Compose Build Test
 
 on:
   push:
-    branches:
-      - main
   pull_request:
 
 jobs:
@@ -19,15 +17,15 @@ jobs:
 
       - name: Build Docker Compose services
         run: |
-          docker-compose pull || true  # Pull images if available, but don't fail if they aren't
-          docker-compose build --no-cache
+          docker compose pull || true  # Pull images if available, but don't fail if they aren't
+          docker compose build --no-cache
 
       - name: Verify services can start
         run: |
-          docker-compose up -d
+          docker compose up -d
           sleep 10  # Give containers some time to initialize
-          docker-compose ps
+          docker compose ps
 
       - name: Stop and clean up
         run: |
-          docker-compose down
+          docker compose down
