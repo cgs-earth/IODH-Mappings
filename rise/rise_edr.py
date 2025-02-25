@@ -1,3 +1,6 @@
+# Copyright 2025 Lincoln Institute of Land Policy
+# SPDX-License-Identifier: MIT
+
 import logging
 from typing import Any, ClassVar, Optional
 import requests
@@ -15,6 +18,7 @@ from rise.edr_helpers import (
 from rise.lib import merge_pages, get_only_key
 
 LOGGER = logging.getLogger(__name__)
+
 
 class RiseEDRProvider(BaseEDRProvider):
     """Base EDR Provider"""

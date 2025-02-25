@@ -1,3 +1,6 @@
+# Copyright 2025 Lincoln Institute of Land Policy
+# SPDX-License-Identifier: MIT
+
 services:
   redis:
     image: redislabs/redismod
@@ -30,7 +33,6 @@ services:
     volumes:
       - ./local.config.yml:/pygeoapi/local.config.yml
       - ./rise/:/pygeoapi/rise/
-
 
 volumes:
   redis_data:
