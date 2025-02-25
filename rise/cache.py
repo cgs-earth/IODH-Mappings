@@ -6,7 +6,7 @@ import os
 import json
 import logging
 import math
-from typing import  Literal, Optional, Protocol
+from typing import Literal, Optional, Protocol
 from typing_extensions import assert_never
 from pygeoapi.provider.base import ProviderConnectionError, ProviderNoDataError
 from rise.custom_types import JsonPayload, Url
@@ -62,6 +62,7 @@ class CacheInterface(Protocol):
 
 class RedisCache(CacheInterface):
     """A cache implementation using Redis with ttl support"""
+
     def __init__(self, ttl: timedelta = timedelta(hours=24)):
         self.db = redis.Redis(host=REDIS_HOST, port=REDIS_PORT, decode_responses=False)
         self.ttl = ttl

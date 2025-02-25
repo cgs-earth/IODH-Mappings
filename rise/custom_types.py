@@ -1,9 +1,8 @@
 # Copyright 2025 Lincoln Institute of Land Policy
 # SPDX-License-Identifier: MIT
 
-from datetime import timedelta
 from enum import Enum, auto
-from typing import Literal, Optional, Protocol, TypedDict
+from typing import Literal, Optional, TypedDict
 
 
 class EDRQuery(TypedDict):
@@ -137,4 +136,3 @@ class CoverageCollection(TypedDict):
     parameters: dict[str, Parameter]
     referencing: list
     coverages: list[Coverage]
-
