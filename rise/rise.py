@@ -1,3 +1,6 @@
+# Copyright 2025 Lincoln Institute of Land Policy
+# SPDX-License-Identifier: MIT
+
 import logging
 from typing import Optional
 
@@ -13,6 +16,7 @@ from rise.edr_helpers import (
 from rise.lib import get_only_key, merge_pages
 
 LOGGER = logging.getLogger(__name__)
+
 
 class RiseProvider(BaseProvider):
     """Rise Provider for OGC API Features"""
