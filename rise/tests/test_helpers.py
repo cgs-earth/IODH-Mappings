@@ -4,10 +4,8 @@
 from datetime import timedelta
 import json
 import logging
-from urllib import response
 
 from rise.lib import (
-    flatten_values,
     getResultUrlFromCatalogUrl,
     merge_pages,
     safe_run_async,
@@ -246,7 +244,7 @@ def test_redis_wrapper():
 
 
 class TestFnsWithCaching:
-    def test_fetch_group(self ):
+    def test_fetch_group(self):
         urls = [
             "https://data.usbr.gov/rise/api/catalog-item/128562",
             "https://data.usbr.gov/rise/api/catalog-item/128563",
@@ -256,7 +254,6 @@ class TestFnsWithCaching:
         resp = safe_run_async(cache.fetch_and_set_url_group(urls))
         assert len(resp) == 3
         assert None not in resp
-
 
     def test_fetch_all_pages(self):
         url = "https://data.usbr.gov/rise/api/location"

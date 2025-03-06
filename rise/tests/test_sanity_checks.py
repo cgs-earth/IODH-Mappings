@@ -17,6 +17,7 @@ def test_rise_include_parameter_order_matters():
     assert "included" in resp1.json().keys()
     assert "included" not in resp2.json().keys()
 
+
 def test_rise_filter_by_param_list():
     """Make sure that rise is actually filtering by parameters correctly"""
     out812 = requests.get(
@@ -42,6 +43,16 @@ def test_rise_filter_by_param_list():
         == out812["meta"]["totalItems"] + out6["meta"]["totalItems"]
     )
 
+def test_rise_fetch_result_by_catalogItem():
+    """Make sure that we can fetch a catalog item and get the associated result for it"""
+    catalogItemUrl = "https://data.usbr.gov/rise/api/catalog-item/6811"
+    response = requests.get(catalogItemUrl, headers={"accept": "application/vnd.api+json"})
+    assert response.ok, response.text
+    assert response.json()["data"]
+    resultUrl = 'https://data.usbr.gov/rise/api/result/6811'
+    response = requests.get(resultUrl, headers={"accept": "application/vnd.api+json"})
+    assert response.ok, response.text
+    assert response.json()["data"]["attributes"]
 
 def test_rise_filter_result_by_date():
     """NOTE: Rise appears to do the datetime filter before the items per page filter so if you request a very long date range it will be very long, even with a small subset of items per page"""
@@ -82,6 +93,7 @@ def test_rise_can_include_catalog_items_in_location():
     resp = resp["relationships"]
     assert "catalogItems" in resp
     assert "location" in resp
+
 
 def test_shapely_sanity_check():
     geo: dict = {

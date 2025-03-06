@@ -16,7 +16,7 @@ def edr_config():
     config = {
         "name": "RISE_EDR_Provider",
         "type": "edr",
-        "cache": "redis" ,
+        "cache": "redis",
         "url": "https://data.usbr.gov/rise/api/",
     }
     return config
@@ -56,7 +56,9 @@ def test_get_or_fetch_all_param_filtered_pages(edr_config: dict):
     oneparam = p.get_or_fetch_all_param_filtered_pages(params)
     assert len(oneparam["data"]) == 13
 
-    assert len(bothparams["data"]) > len(oneparam["data"]), "both params should have more data than one param"
+    assert len(bothparams["data"]) > len(
+        oneparam["data"]
+    ), "both params should have more data than one param"
 
 
 def test_location_select_properties(edr_config: dict):
