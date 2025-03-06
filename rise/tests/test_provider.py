@@ -157,7 +157,9 @@ def test_cube(edr_config: dict):
 
     # Test the bermuda triangle. Spooky...
     # TODO: test this more thoroughly
-    collection = p.area(wkt="POLYGON ((-64.8 32.3, -65.5 18.3, -80.3 25.2, -64.8 32.3))")
+    collection = p.area(
+        wkt="POLYGON ((-64.8 32.3, -65.5 18.3, -80.3 25.2, -64.8 32.3))"
+    )
     assert collection
 
 
