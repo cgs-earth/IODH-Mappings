@@ -165,9 +165,8 @@ class CovJSONBuilder:
         new = deepcopy(base_location_response)
 
         # Make a dictionary from an existing response, no fetch needed
-        locationToCatalogItemUrls: dict[str, list[str]] = (
-            LocationHelper.get_catalogItemURLs(new)
-        )
+        locationToCatalogItemUrls: dict[str, list[str]] = LocationHelper.get_catalogItemURLs(new)
+        
         catalogItemUrls = flatten_values(locationToCatalogItemUrls)
 
         catalogItemUrlToResponse = safe_run_async(
@@ -184,27 +183,30 @@ class CovJSONBuilder:
         LOGGER.debug(f"Fetching {resultUrls}; {len(resultUrls)} in total")
         results = safe_run_async(self._cache.get_or_fetch_group(resultUrls))
 
-        for i, location in enumerate(new["included"]):
-            for j, catalogitem in enumerate(
-                location["relationships"]["catalogItems"]["data"]
-            ):
-                # url = https://data.usbr.gov/rise/api/catalog-record/8025   if id": "/rise/api/catalog-record/8025"
-                url: str = "https://data.usbr.gov" + catalogitem["id"]
-                try:
-                    fetchedData = catalogItemUrlToResponse[url]["data"]
-                    new["data"][i]["relationships"]["catalogItems"]["data"][j] = (
-                        fetchedData
-                    )
+        if type(new["data"]) is not list:
+            new["data"] = [new["data"]]
 
-                except KeyError:
-                    # a few locations have invalid catalog items so we can't do anything with them
-                    LOGGER.error(f"Missing key for catalog item {url} in {location}")
-                    continue
+        for i, location in enumerate(new["data"]):
+
+            # for j, catalogitem in enumerate(
+            #     location["relationships"]["catalogItems"]
+            # ):
+            catalogItemUrls = locationToCatalogItemUrls[location["id"]]
+            for j, catalogItem in enumerate(
+                 catalogItemUrls
+            ):
+
+                fetchedData = catalogItemUrlToResponse[catalogItem]["data"]
+
+                if  "catalogItems" not in new["data"][i]["relationships"]:
+                    new["data"][i]["relationships"]["catalogItems"] =  {"data": []}
+
+                new["data"][i]["relationships"]["catalogItems"]["data"].append(fetchedData)
 
                 base_catalog_item_j = new["data"][i]["relationships"]["catalogItems"][
                     "data"
                 ][j]
-                associated_res_url = getResultUrlFromCatalogUrl(url, time_filter)
+                associated_res_url = getResultUrlFromCatalogUrl(catalogItem, time_filter)
                 if not associated_res_url:
                     results_for_catalog_item_j = None
                 else:

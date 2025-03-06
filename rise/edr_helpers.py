@@ -59,10 +59,15 @@ class LocationHelper:
                 catalogRecordToCatalogItems[catalogRecord].append(catalogItem)
 
 
-        join = {}
+        join: dict[str, list[str]] = {}
         for locationId, catalogRecord in locationIdToCatalogRecord.items():
             if catalogRecord in catalogRecordToCatalogItems:
-                join[locationId] = catalogRecordToCatalogItems[catalogRecord]
+                for catalogItem in catalogRecordToCatalogItems[catalogRecord]:
+                    catalogItemURL = f"https://data.usbr.gov{catalogItem}"
+                    if locationId not in join:
+                        join[str(locationId)] = [catalogItemURL]
+                    else:
+                        join[locationId].append(catalogItemURL)
 
         return join            
 

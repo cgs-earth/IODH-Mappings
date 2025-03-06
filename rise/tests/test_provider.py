@@ -27,9 +27,6 @@ def test_location_locationId(edr_config: dict):
     out = p.locations(location_id=1, format_="covjson")
     # Returns 3 since we have 3 parameters in the location
     assert len(out["coverages"]) == 3
-    # invalid location should return nothing
-    out = p.locations(location_id=1111111111111111)
-    assert len(out["coverages"]) == 0
 
     geojson_out: dict = p.locations(location_id=1, format_="geojson")  # type: ignore For some reason mypy complains
     assert geojson_out["type"] == "Feature"

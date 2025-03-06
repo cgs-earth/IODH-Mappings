@@ -66,7 +66,7 @@ class RiseEDRProvider(BaseEDRProvider):
                 base_url += f"parameterId%5B%5D={prop}&"
             base_url = base_url.removesuffix("&")
         else:
-            base_url = RiseEDRProvider.LOCATION_API
+            base_url = "https://data.usbr.gov/rise/api/location?"
         base_url += "&include=catalogRecords.catalogItems"
         response = self.cache.get_or_fetch_all_pages(base_url)
         response = merge_pages(response)
