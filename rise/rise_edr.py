@@ -2,6 +2,7 @@
 # SPDX-License-Identifier: MIT
 
 import logging
+from re import A
 from typing import Any, ClassVar, Optional
 import requests
 
@@ -15,7 +16,7 @@ from rise.edr_helpers import (
     RISECache,
     LocationHelper,
 )
-from rise.lib import merge_pages, get_only_key
+from rise.lib import merge_pages, get_only_key, safe_run_async
 
 LOGGER = logging.getLogger(__name__)
 
@@ -91,19 +92,8 @@ class RiseEDRProvider(BaseEDRProvider):
         LOGGER.warning(datetime_)
 
         if location_id:
-            # Instead of merging all location pages, just
-            # fetch the location associated with the ID
-            response = requests.get(
-                RiseEDRProvider.LOCATION_API,
-                headers={"accept": "application/vnd.api+json"},
-                params={"id": location_id, "include": "catalogRecords.catalogItems"},
-            )
-
-            if not response.ok:
-                raise ProviderQueryError(response.text)
-            else:
-                response = response.json()
-
+            url: str = f"https://data.usbr.gov/rise/api/location/{location_id}?include=catalogRecords.catalogItems"
+            response = safe_run_async(self.cache.get_or_fetch(url))
         else:
             response = self.get_or_fetch_all_param_filtered_pages(select_properties)
 

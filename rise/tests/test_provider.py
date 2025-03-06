@@ -150,13 +150,15 @@ def test_cube(edr_config: dict):
 
     # random location near corpus christi should return only one feature
     # TODO: test this more thoroughly
-    p.area(
+    collection = p.area(
         wkt="POLYGON ((-98.96918309080456 28.682352643651612, -98.96918309080456 26.934669197978764, -94.3740448509505 26.934669197978764, -94.3740448509505 28.682352643651612, -98.96918309080456 28.682352643651612))"
     )
+    assert collection
 
     # Test the bermuda triangle. Spooky...
     # TODO: test this more thoroughly
-    p.area(wkt="POLYGON ((-64.8 32.3, -65.5 18.3, -80.3 25.2, -64.8 32.3))")
+    collection = p.area(wkt="POLYGON ((-64.8 32.3, -65.5 18.3, -80.3 25.2, -64.8 32.3))")
+    assert collection
 
 
 def test_polygon_output(edr_config: dict):
