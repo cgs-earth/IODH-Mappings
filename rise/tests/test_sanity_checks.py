@@ -43,16 +43,20 @@ def test_rise_filter_by_param_list():
         == out812["meta"]["totalItems"] + out6["meta"]["totalItems"]
     )
 
+
 def test_rise_fetch_result_by_catalogItem():
     """Make sure that we can fetch a catalog item and get the associated result for it"""
     catalogItemUrl = "https://data.usbr.gov/rise/api/catalog-item/6811"
-    response = requests.get(catalogItemUrl, headers={"accept": "application/vnd.api+json"})
+    response = requests.get(
+        catalogItemUrl, headers={"accept": "application/vnd.api+json"}
+    )
     assert response.ok, response.text
     assert response.json()["data"]
-    resultUrl = 'https://data.usbr.gov/rise/api/result/6811'
+    resultUrl = "https://data.usbr.gov/rise/api/result/6811"
     response = requests.get(resultUrl, headers={"accept": "application/vnd.api+json"})
     assert response.ok, response.text
     assert response.json()["data"]["attributes"]
+
 
 def test_rise_filter_result_by_date():
     """NOTE: Rise appears to do the datetime filter before the items per page filter so if you request a very long date range it will be very long, even with a small subset of items per page"""
