@@ -312,6 +312,9 @@ class LocationHelper:
     ) -> dict:
         features = []
 
+        if type(location_response["data"]) is not list:
+            location_response["data"] = [location_response["data"]]
+
         for location_feature in location_response["data"]:
             # z = location_feature["attributes"]["elevation"]
             # if z is not None:

@@ -97,6 +97,7 @@ class RiseEDRProvider(BaseEDRProvider):
         else:
             response = self.get_or_fetch_all_param_filtered_pages(select_properties)
 
+        # FROM SPEC: If a location id is not defined the API SHALL return a GeoJSON features array of valid location identifiers,
         if not any([crs, datetime_, location_id]) or format_ == "geojson":
             return LocationHelper.to_geojson(
                 response,

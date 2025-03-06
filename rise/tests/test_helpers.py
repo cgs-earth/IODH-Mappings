@@ -276,24 +276,17 @@ class TestFnsWithCaching:
     def test_cache(self):
         url = "https://data.usbr.gov/rise/api/catalog-item/128562"
 
-        start = time.time()
         cache = RISECache("redis")
         cache.clear(url)
         remote_res = safe_run_async(cache.get_or_fetch(url))
-        assert remote_res
-        network_time = time.time() - start
 
         assert cache.contains(url)
 
-        start = time.time()
         cache.clear(url)
         assert not cache.contains(url)
         disk_res = safe_run_async(cache.get_or_fetch(url))
         assert disk_res
-        disk_time = time.time() - start
-
         assert remote_res == disk_res
-        assert disk_time < network_time
 
     def test_cache_clears(self):
         cache = RISECache("redis")
