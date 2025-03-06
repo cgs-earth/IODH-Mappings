@@ -29,10 +29,7 @@ class RiseProvider(BaseProvider):
         try:
             self.cache = RISECache(provider_def["cache"])
         except KeyError:
-            LOGGER.error(
-                "You must specify a cache implementation in the config.yml for RISE"
-            )
-            raise
+            raise Exception("You must specify a cache implementation in the config.yml for RISE")
 
         super().__init__(provider_def)
 

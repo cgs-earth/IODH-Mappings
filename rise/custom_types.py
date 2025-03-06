@@ -3,36 +3,9 @@
 
 from enum import Enum, auto
 from typing import Literal, Optional, TypedDict
+from pydantic import BaseModel
 
 
-class EDRQuery(TypedDict):
-    data_queries: list[dict]
-
-
-class LocationDataCoordinates(TypedDict):
-    type: Literal["Point", "Polygon"]
-    coordinates: list[float]
-
-
-class LocationDataAttributes(TypedDict):
-    _id: int
-    locationParentId: Optional[str]
-    locationName: str
-    locationDescription: str
-    locationStatusId: int
-    locationCoordinates: LocationDataCoordinates
-    elevation: Optional[str]
-    createDate: str
-    updateDate: str
-    horizontalDatum: dict
-    locationGeometry: dict
-    verticalDatum: str
-    locationTags: list[dict]
-    relatedLocationIds: Optional[str]
-    projectNames: list[str]
-    locationTypeName: str
-    locationRegionNames: list[str]
-    locationUnifiedRegionNames: list[str]
 
 
 class CatalogItemEndpointResponseDataAttributes(TypedDict):
@@ -63,35 +36,6 @@ class CatalogItemsResponse(TypedDict):
     # we can't do a union of typeddicts so we have to settle for this
     data: dict | list
 
-
-class LocationDataRelationships(TypedDict):
-    states: dict
-    locationUnifiedRegions: dict
-    catalogRecords: dict
-    catalogItems: CatalogItemsResponse
-
-
-class LocationData(TypedDict):
-    id: str
-    type: Literal["Location"]
-    attributes: LocationDataAttributes
-    relationships: LocationDataRelationships
-
-
-class LocationIncluded(TypedDict):
-    id: str
-    type: str
-    relationships: dict[str, dict]
-
-
-class LocationResponse(TypedDict):
-    links: dict[Literal["self", "first", "last", "next"], str]
-    meta: dict[
-        Literal["totalItems", "itemsPerPage", "currentPage"],
-        int,
-    ]
-    included: list[LocationIncluded]
-    data: list[LocationData]
 
 
 class GeoJsonResponse(TypedDict):
