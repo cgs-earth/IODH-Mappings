@@ -4,7 +4,6 @@
 import logging
 from typing import Optional
 
-import requests
 
 from pygeoapi.provider.base import BaseProvider, ProviderNoDataError, ProviderQueryError
 from rise.custom_types import LocationResponse
