@@ -2,9 +2,7 @@
 # SPDX-License-Identifier: MIT
 
 import logging
-from re import A
 from typing import Any, ClassVar, Optional
-import requests
 
 from pygeoapi.provider.base import (
     ProviderQueryError,
