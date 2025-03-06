@@ -1,8 +1,7 @@
 
-from pydantic import BaseModel, Field, FiniteFloat
 from typing import Literal, Optional, Union
-
-
+from pydantic import BaseModel, Field, FiniteFloat
+from rise.lib.types.includes import RelationshipData
 
 class PointCoordinates(BaseModel):
     type: Literal["Point"]
@@ -30,22 +29,14 @@ class LocationDataAttributes(BaseModel):
     locationRegionNames: list[str]
     locationUnifiedRegionNames: list[str]
 
-class RelationshipData(BaseModel):
-    data: list[dict[Literal["id", "type"], str]]
+
 
 class LocationDataRelationships(BaseModel):
     states: dict
     locationUnifiedRegions: RelationshipData
     catalogRecords: RelationshipData
 
-
 class LocationData(BaseModel):
     id: str
     type: Literal["Location"]
     attributes: LocationDataAttributes
-    relationships: LocationDataRelationships
-
-class LocationIncluded(BaseModel):
-    id: str
-    type: str
-    relationships: dict[str, dict]

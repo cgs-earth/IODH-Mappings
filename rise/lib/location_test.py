@@ -14,3 +14,9 @@ def locationResponse():
 def test_location_parse(locationResponse: dict):
     model = LocationResponse.model_validate(locationResponse)
     assert model
+
+def test_get_catalogItemURLs(locationResponse: dict):
+    model = LocationResponse.model_validate(locationResponse)
+    urls = model.get_catalogItemURLs()
+    for url in ['https://data.usbr.gov/rise/api/catalog-item/4222', 'https://data.usbr.gov/rise/api/catalog-item/4223', 'https://data.usbr.gov/rise/api/catalog-item/4225']:
+        assert url in urls['/rise/api/location/1']
