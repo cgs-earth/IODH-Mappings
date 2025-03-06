@@ -189,10 +189,9 @@ class CovJSONBuilder:
             new["data"] = [new["data"]]
 
         for i, location in enumerate(new["data"]):
-            # for j, catalogitem in enumerate(
-            #     location["relationships"]["catalogItems"]
-            # ):
-            catalogItemUrls = locationToCatalogItemUrls[location["id"]]
+            catalogItemUrls = locationToCatalogItemUrls.get(location["id"])
+            if not catalogItemUrls:
+                continue
             for j, catalogItem in enumerate(catalogItemUrls):
                 fetchedData = catalogItemUrlToResponse[catalogItem]["data"]
 

@@ -118,12 +118,19 @@ def test_location_datetime(edr_config: dict):
 def test_area(edr_config: dict):
     p = RiseEDRProvider(edr_config)
 
-    # TODO: test this more thoroughly
-    p.area(
-        # location 291
-        wkt="GEOMETRYCOLLECTION(POLYGON ((-5.976563 55.677584, 11.425781 47.517201, 16.699219 53.225768, -5.976563 55.677584)), POLYGON ((-99.717407 28.637568, -97.124634 28.608637, -97.020264 27.210671, -100.184326 26.980829, -101.392822 28.139816, -99.717407 28.637568)))",
-        format_="geojson",
+    # areaInEurope = "GEOMETRYCOLLECTION(POLYGON ((-5.976563 55.677584, 11.425781 47.517201, 16.699219 53.225768, -5.976563 55.677584)), POLYGON ((-99.717407 28.637568, -97.124634 28.608637, -97.020264 27.210671, -100.184326 26.980829, -101.392822 28.139816, -99.717407 28.637568)))"
+    # response = p.area(
+    #     wkt=areaInEurope,
+    # )
+    # assert len(response["coverages"]) == 0
+
+    victoriaTexas = "GEOMETRYCOLLECTION (POLYGON ((-97.789307 29.248063, -97.789307 29.25046, -97.789307 29.25046, -97.789307 29.248063)), POLYGON ((-97.588806 29.307956, -97.58606 29.307956, -97.58606 29.310351, -97.588806 29.310351, -97.588806 29.307956)), POLYGON ((-97.410278 28.347899, -95.314636 28.347899, -95.314636 29.319931, -97.410278 29.319931, -97.410278 28.347899)))"
+
+    response = p.area(
+        wkt=victoriaTexas,
     )
+    assert response["coverages"]
+
 
 
 @pytest.fixture()
