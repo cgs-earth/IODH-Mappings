@@ -13,7 +13,7 @@ from rise.edr_helpers import (
     LocationHelper,
     RISECache,
 )
-from rise.lib import get_only_key, merge_pages
+from rise.lib import get_only_key, merge_pages, safe_run_async
 
 LOGGER = logging.getLogger(__name__)
 
@@ -56,16 +56,8 @@ class RiseProvider(BaseProvider):
 
             # Instead of merging all location pages, just
             # fetch the location associated with the ID
-            single_endpoint_response = requests.get(
-                RiseEDRProvider.LOCATION_API,
-                headers={"accept": "application/vnd.api+json"},
-                params={"id": itemId},
-            )
-
-            if not single_endpoint_response.ok:
-                raise ProviderQueryError(single_endpoint_response.text)
-            else:
-                response: LocationResponse = single_endpoint_response.json()
+            url: str = f"https://data.usbr.gov/rise/api/location/{itemId}"
+            response = safe_run_async(self.cache.get_or_fetch(url))
 
         else:
             all_location_responses = self.cache.get_or_fetch_all_pages(
