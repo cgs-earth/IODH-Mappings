@@ -132,7 +132,6 @@ def test_area(edr_config: dict):
     assert response["coverages"]
 
 
-
 @pytest.fixture()
 def oaf_config(request: type[FixtureRequest]):
     config = {
