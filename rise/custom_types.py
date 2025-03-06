@@ -3,9 +3,6 @@
 
 from enum import Enum, auto
 from typing import Literal, Optional, TypedDict
-from pydantic import BaseModel
-
-
 
 
 class CatalogItemEndpointResponseDataAttributes(TypedDict):
@@ -35,7 +32,6 @@ class CatalogItemResponseData(TypedDict):
 class CatalogItemsResponse(TypedDict):
     # we can't do a union of typeddicts so we have to settle for this
     data: dict | list
-
 
 
 class GeoJsonResponse(TypedDict):
