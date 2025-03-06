@@ -1,7 +1,7 @@
 # Copyright 2025 Lincoln Institute of Land Policy
 # SPDX-License-Identifier: MIT
 
-from typing import Literal, Optional 
+from typing import Literal, Optional
 from pydantic import BaseModel, field_validator
 
 from rise.lib.types.includes import LocationIncluded
@@ -26,10 +26,7 @@ class LocationResponse(BaseModel):
             return [data]
         return data
 
-
-    def get_catalogItemURLs(
-        self
-    ) -> dict[str, list[str]]:
+    def get_catalogItemURLs(self) -> dict[str, list[str]]:
         locationIdToCatalogRecord: dict[str, str] = {}
 
         catalogRecordToCatalogItems: dict[str, list[str]] = {}

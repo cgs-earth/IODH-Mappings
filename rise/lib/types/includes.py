@@ -1,3 +1,6 @@
+# Copyright 2025 Lincoln Institute of Land Policy
+# SPDX-License-Identifier: MIT
+
 from pydantic import BaseModel, Field, field_validator
 from typing import Literal, Optional
 

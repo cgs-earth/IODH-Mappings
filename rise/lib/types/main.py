@@ -5,6 +5,7 @@ from typing import Literal, Optional, Union
 from pydantic import BaseModel, Field, FiniteFloat
 from rise.lib.types.includes import RelationshipData
 
+
 class PointCoordinates(BaseModel):
     type: Literal["Point"]
     coordinates: tuple[
@@ -40,12 +41,11 @@ class LocationDataAttributes(BaseModel):
     locationUnifiedRegionNames: list[str]
 
 
-
-
 class LocationDataRelationships(BaseModel):
     states: dict
     locationUnifiedRegions: RelationshipData
     catalogRecords: RelationshipData
+
 
 class LocationData(BaseModel):
     id: str
