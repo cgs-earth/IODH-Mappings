@@ -38,7 +38,6 @@ class LocationHelper:
     def get_catalogItemURLs(
         location_response: LocationResponse,
     ) -> dict[locationId, list[catalogItemEndpoint]]:
-        
         locationIdToCatalogRecord: dict[int, str] = {}
 
         catalogRecordToCatalogItems: dict[str, list[str]] = {}
@@ -46,18 +45,21 @@ class LocationHelper:
         for included_item in location_response["included"]:
             if included_item["type"] == "CatalogRecord":
                 catalogRecord = included_item["id"]
-                assert "location" in included_item["relationships"], included_item["relationships"]
+                assert "location" in included_item["relationships"], included_item[
+                    "relationships"
+                ]
                 assert "data" in included_item["relationships"]["location"]
                 assert "id" in included_item["relationships"]["location"]["data"]
                 locationId = included_item["relationships"]["location"]["data"]["id"]
                 locationIdToCatalogRecord[locationId] = catalogRecord
             elif included_item["type"] == "CatalogItem":
                 catalogItem = included_item["id"]
-                catalogRecord = included_item["relationships"]["catalogRecord"]["data"]["id"]
+                catalogRecord = included_item["relationships"]["catalogRecord"]["data"][
+                    "id"
+                ]
                 if catalogRecord not in catalogRecordToCatalogItems:
                     catalogRecordToCatalogItems[catalogRecord] = []
                 catalogRecordToCatalogItems[catalogRecord].append(catalogItem)
-
 
         join: dict[str, list[str]] = {}
         for locationId, catalogRecord in locationIdToCatalogRecord.items():
@@ -69,8 +71,7 @@ class LocationHelper:
                     else:
                         join[locationId].append(catalogItemURL)
 
-        return join            
-
+        return join
 
     locationId = str
     paramIdList = list[str | None]

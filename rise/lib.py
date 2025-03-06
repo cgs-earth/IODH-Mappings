@@ -5,10 +5,10 @@ import asyncio
 import datetime
 from typing import Any, Coroutine, Optional, Tuple
 
-import requests
 import shapely
 from pygeoapi.provider.base import ProviderQueryError
 from rise.custom_types import JsonPayload, Url, ZType
+
 
 def safe_run_async(coro: Coroutine[Any, Any, Any]) -> Any:
     """

@@ -17,4 +17,3 @@ def test_one_location():
     cache = RISECache()
 
     CovJSONBuilder(cache).render(r)
-

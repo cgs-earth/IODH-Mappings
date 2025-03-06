@@ -3,7 +3,6 @@
 
 import logging
 from typing import Any, ClassVar, Optional
-from urllib.parse import urlencode
 import requests
 
 from pygeoapi.provider.base import (

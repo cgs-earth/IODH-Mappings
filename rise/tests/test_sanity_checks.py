@@ -17,6 +17,7 @@ def test_rise_include_parameter_order_matters():
     assert "included" in resp1.json().keys()
     assert "included" not in resp2.json().keys()
 
+
 def test_rise_filter_by_param_list():
     """Make sure that rise is actually filtering by parameters correctly"""
     out812 = requests.get(
@@ -82,6 +83,7 @@ def test_rise_can_include_catalog_items_in_location():
     resp = resp["relationships"]
     assert "catalogItems" in resp
     assert "location" in resp
+
 
 def test_shapely_sanity_check():
     geo: dict = {
