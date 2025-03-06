@@ -7,7 +7,7 @@ deps:
 
 # serve the api (requires redis to be running)
 dev: 
-	PYGEOAPI_CONFIG=local.config.yml PYGEOAPI_OPENAPI=local.openapi.yml pygeoapi serve
+	PYGEOAPI_CONFIG=local.config.yml PYGEOAPI_OPENAPI=local.openapi.yml pygeoapi serve --starlette
 
 # run pyright to type check the codebase
 types:
