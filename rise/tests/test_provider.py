@@ -23,10 +23,13 @@ def edr_config():
 
 
 def test_location_locationId(edr_config: dict):
+    includedItems = requests.get("https://data.usbr.gov/rise/api/location/1?include=catalogRecords.catalogItems").json()["included"]
+    catalogItems = len([item["id"] for item in includedItems if item["type"] == "CatalogItem"])
+
     p = RiseEDRProvider(edr_config)
     out = p.locations(location_id=1, format_="covjson")
-    # Returns 3 since we have 3 parameters in the location
-    assert len(out["coverages"]) == 3
+    # Returns the same number of coverages as catalogItems
+    assert len(out["coverages"]) == catalogItems
 
     geojson_out: dict = p.locations(location_id=1, format_="geojson")  # type: ignore For some reason mypy complains
     assert geojson_out["type"] == "Feature"
