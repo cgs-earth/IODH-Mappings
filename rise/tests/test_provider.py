@@ -23,8 +23,12 @@ def edr_config():
 
 
 def test_location_locationId(edr_config: dict):
-    includedItems = requests.get("https://data.usbr.gov/rise/api/location/1?include=catalogRecords.catalogItems").json()["included"]
-    catalogItems = len([item["id"] for item in includedItems if item["type"] == "CatalogItem"])
+    includedItems = requests.get(
+        "https://data.usbr.gov/rise/api/location/1?include=catalogRecords.catalogItems"
+    ).json()["included"]
+    catalogItems = len(
+        [item["id"] for item in includedItems if item["type"] == "CatalogItem"]
+    )
 
     p = RiseEDRProvider(edr_config)
     out = p.locations(location_id=1, format_="covjson")
