@@ -61,15 +61,7 @@ class LocationHelper:
                     catalogRecordToCatalogItems[catalogRecord] = []
                 catalogRecordToCatalogItems[catalogRecord].append(catalogItem)
 
-<<<<<<< HEAD
-<<<<<<< HEAD
-
-=======
->>>>>>> 2dabbd7c6918953ac7d24c8250b1c3582505bead
         join: dict[str, list[str]] = {}
-=======
-        join = {}
->>>>>>> ced138fcf547b7463e3aaf7dd970fec6be8ce6e9
         for locationId, catalogRecord in locationIdToCatalogRecord.items():
             if catalogRecord in catalogRecordToCatalogItems:
                 for catalogItem in catalogRecordToCatalogItems[catalogRecord]:
