@@ -62,7 +62,10 @@ class LocationHelper:
                 catalogRecordToCatalogItems[catalogRecord].append(catalogItem)
 
 <<<<<<< HEAD
+<<<<<<< HEAD
 
+=======
+>>>>>>> 2dabbd7c6918953ac7d24c8250b1c3582505bead
         join: dict[str, list[str]] = {}
 =======
         join = {}
