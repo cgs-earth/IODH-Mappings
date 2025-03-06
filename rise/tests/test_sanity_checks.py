@@ -9,6 +9,14 @@ import shapely.geometry
 """This file is solely for sanity checks on the upstream repo or underlying libs to make sure that queries are performing as our understanding expects"""
 
 
+def test_rise_include_parameter_order_matters():
+    url1 = "https://data.usbr.gov/rise/api/location?include=catalogRecords.catalogItems&page=1&itemsPerPage=5"
+    resp1 = requests.get(url1, headers={"accept": "application/vnd.api+json"})
+    url1 = "https://data.usbr.gov/rise/api/location?include=catalogItems.catalogRecords&page=1&itemsPerPage=5"
+    resp2 = requests.get(url1, headers={"accept": "application/vnd.api+json"})
+    assert "included" in resp1.json().keys()
+    assert "included" not in resp2.json().keys()
+
 def test_rise_filter_by_param_list():
     """Make sure that rise is actually filtering by parameters correctly"""
     out812 = requests.get(
@@ -36,7 +44,8 @@ def test_rise_filter_by_param_list():
 
 
 def test_rise_filter_result_by_date():
-    url = "https://data.usbr.gov/rise/api/result?page=1&itemsPerPage=25&dateTime%5Bbefore%5D=2018-01-01&dateTime%5Bafter%5D=2017-01-01"
+    """NOTE: Rise appears to do the datetime filter before the items per page filter so if you request a very long date range it will be very long, even with a small subset of items per page"""
+    url = "https://data.usbr.gov/rise/api/result?page=1&itemsPerPage=25&dateTime%5Bbefore%5D=2017-01-02&dateTime%5Bafter%5D=2017-01-01"
 
     response = requests.get(url, headers={"accept": "application/vnd.api+json"})
     date: str = response.json()["data"][0]["attributes"]["dateTime"]
@@ -59,6 +68,20 @@ def test_rise_filter_by_same_start_and_end():
     assert response.json()["meta"]["totalItems"] != 0
     assert len(response.json()["data"]) != 0
 
+
+def test_rise_can_include_catalog_items_in_location():
+    url = "https://data.usbr.gov/rise/api/location/1?include=catalogRecords.catalogItems&page=1&itemsPerPage=5"
+    response = requests.get(url, headers={"accept": "application/vnd.api+json"})
+
+    resp = response.json()
+    assert "included" in resp
+    resp = resp["included"]
+    assert len(resp) > 1
+    resp = resp[0]
+    assert "relationships" in resp
+    resp = resp["relationships"]
+    assert "catalogItems" in resp
+    assert "location" in resp
 
 def test_shapely_sanity_check():
     geo: dict = {
@@ -99,7 +122,7 @@ def test_shapely_sanity_check():
 
 
 def test_redis():
-    r = redis.Redis(host="redis", port=6379, db=0)
+    r = redis.Redis(host="localhost", port=6379, db=0)
     assert r
     r.set("test", "test")
     val = r.get("test")

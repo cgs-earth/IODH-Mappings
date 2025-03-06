@@ -184,7 +184,7 @@ class CovJSONBuilder:
         LOGGER.debug(f"Fetching {resultUrls}; {len(resultUrls)} in total")
         results = safe_run_async(self._cache.get_or_fetch_group(resultUrls))
 
-        for i, location in enumerate(new["data"]):
+        for i, location in enumerate(new["included"]):
             for j, catalogitem in enumerate(
                 location["relationships"]["catalogItems"]["data"]
             ):

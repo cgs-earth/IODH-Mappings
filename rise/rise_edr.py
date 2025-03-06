@@ -3,6 +3,7 @@
 
 import logging
 from typing import Any, ClassVar, Optional
+from urllib.parse import urlencode
 import requests
 
 from pygeoapi.provider.base import (
@@ -66,6 +67,7 @@ class RiseEDRProvider(BaseEDRProvider):
             base_url = base_url.removesuffix("&")
         else:
             base_url = RiseEDRProvider.LOCATION_API
+        base_url += "&include=catalogRecords.catalogItems"
         response = self.cache.get_or_fetch_all_pages(base_url)
         response = merge_pages(response)
         response = get_only_key(response)
@@ -95,7 +97,7 @@ class RiseEDRProvider(BaseEDRProvider):
             response = requests.get(
                 RiseEDRProvider.LOCATION_API,
                 headers={"accept": "application/vnd.api+json"},
-                params={"id": location_id},
+                params={"id": location_id, "include": "catalogRecords.catalogItems"},
             )
 
             if not response.ok:

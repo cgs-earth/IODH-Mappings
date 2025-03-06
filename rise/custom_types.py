@@ -78,12 +78,18 @@ class LocationData(TypedDict):
     relationships: LocationDataRelationships
 
 
+class LocationIncluded(TypedDict):
+    id: str
+    type: str
+    relationships: dict[str, dict]
+
 class LocationResponse(TypedDict):
     links: dict[Literal["self", "first", "last", "next"], str]
     meta: dict[
         Literal["totalItems", "itemsPerPage", "currentPage"],
         int,
     ]
+    included: list[LocationIncluded]
     data: list[LocationData]
 
 

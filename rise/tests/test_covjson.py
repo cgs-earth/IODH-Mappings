@@ -14,7 +14,7 @@ from rise.edr_helpers import LocationHelper
 def test_one_location():
     headers = {"accept": "application/vnd.api+json"}
     r: LocationResponse = requests.get(
-        "https://data.usbr.gov/rise/api/location/1?page=1&itemsPerPage=25",
+        "https://data.usbr.gov/rise/api/location/1?page=1&itemsPerPage=25&include=catalogRecords.catalogItems",
         headers=headers,
     ).json()
 

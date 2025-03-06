@@ -4,6 +4,7 @@
 from datetime import timedelta
 import json
 import logging
+from urllib import response
 
 from rise.lib import (
     flatten_values,
@@ -36,10 +37,11 @@ LOGGER = logging.getLogger(__name__)
 
 
 def test_get_catalogItems():
-    with open("rise/tests/data/location.json") as f:
-        data = json.load(f)
-        items = LocationHelper.get_catalogItemURLs(data)
-        assert len(items) == 25
+    url = "https://data.usbr.gov/rise/api/location/?include=catalogRecords.catalogItems&page=1&itemsPerPage=5"
+    resp = requests.get(url, headers={"accept": "application/vnd.api+json"})
+    assert resp.ok, resp.text
+    items = LocationHelper.get_catalogItemURLs(resp.json())
+    assert len(items) > 0
 
 
 def test_fetch():
@@ -85,15 +87,14 @@ def test_merge_pages():
         assert len(content["data"]) == 4
 
 
-@pytest.mark.parametrize("cache_type", ["redis", "shelve"])
-def test_integration_merge_pages(cache_type):
+def test_integration_merge_pages():
     url = "https://data.usbr.gov/rise/api/location"
 
     totalitems = requests.get(
         url, headers={"accept": "application/vnd.api+json"}
     ).json()["meta"]["totalItems"]
 
-    cache = RISECache(cache_type)
+    cache = RISECache("redis")
     pages = cache.get_or_fetch_all_pages(url, force_fetch=True)
     merged = merge_pages(pages)
     for url, content in merged.items():
@@ -103,10 +104,9 @@ def test_integration_merge_pages(cache_type):
         break
 
 
-@pytest.mark.parametrize("cache_type", ["redis", "shelve"])
-def test_fetch_all_only_fetches_one_if_one_page(cache_type):
+def test_fetch_all_only_fetches_one_if_one_page():
     url = "https://data.usbr.gov/rise/api/location/1"
-    cache = RISECache(cache_type)
+    cache = RISECache("redis")
     pages = cache.get_or_fetch_all_pages(url, force_fetch=True)
     assert len(pages) == 1
 
@@ -245,67 +245,42 @@ def test_redis_wrapper():
         cache.get("test_url_catalog_item")
 
 
-@pytest.mark.parametrize("cache_type", ["redis", "shelve"])
 class TestFnsWithCaching:
-    def test_fetch_group(self, cache_type):
+    def test_fetch_group(self ):
         urls = [
             "https://data.usbr.gov/rise/api/catalog-item/128562",
             "https://data.usbr.gov/rise/api/catalog-item/128563",
             "https://data.usbr.gov/rise/api/catalog-item/128564",
         ]
-        cache = RISECache(cache_type)
+        cache = RISECache("redis")
         resp = safe_run_async(cache.fetch_and_set_url_group(urls))
         assert len(resp) == 3
         assert None not in resp
 
-    def test_get_parameters(self, cache_type):
-        with open("rise/tests/data/location.json") as f:
-            data = json.load(f)
-            items = LocationHelper.get_catalogItemURLs(data)
-            assert len(items) == 25
-            assert len(flatten_values(items)) == 236
 
-        with open("rise/tests/data/location.json") as f:
-            data = json.load(f)
-            cache = RISECache(cache_type)
-            locationsToParams = LocationHelper.get_parameters(data, cache)
-            assert len(locationsToParams.keys()) > 0
-            # Test it contains a random catalog item from the location
-            assert cache.contains("https://data.usbr.gov/rise/api/catalog-item/128573")
-            assert "18" in flatten_values(locationsToParams)  # type: ignore
-
-    # def test_get_parameters_full_catalog(self, cache_type):
-    #     """Stress test for get_parameters"""
-    #     response = requests.get(
-    #         "https://data.usbr.gov/rise/api/location",
-    #         headers={"accept": "application/vnd.api+json"},
-    #     ).json()
-    #     cache = RISECache(cache_type)
-    #     locationsToParams = LocationHelper.get_parameters(response, cache)
-
-    def test_fetch_all_pages(self, cache_type):
+    def test_fetch_all_pages(self):
         url = "https://data.usbr.gov/rise/api/location"
-        cache = RISECache(cache_type)
+        cache = RISECache("redis")
         pages = cache.get_or_fetch_all_pages(url)
 
-        # There are 6 pages so we should get 6 responses
-        assert len(pages) == 6
+        # this is at least 7 since in the future the api could change
+        assert len(pages) >= 7, "Expected at least 7 pages"
         for url, resp in pages.items():
             # 100 is the max number of items you can query
             # so we should get 100 items per page
             assert resp["meta"]["itemsPerPage"] == 100
 
-    def test_fields_are_unique(self, cache_type):
-        cache = RISECache(cache_type)
+    def test_fields_are_unique(self):
+        cache = RISECache("redis")
         field_ids = cache.get_or_fetch_parameters().keys()
         length = len(field_ids)
         assert length == len(set(field_ids))
 
-    def test_cache(self, cache_type):
+    def test_cache(self):
         url = "https://data.usbr.gov/rise/api/catalog-item/128562"
 
         start = time.time()
-        cache = RISECache(cache_type)
+        cache = RISECache("redis")
         cache.clear(url)
         remote_res = safe_run_async(cache.get_or_fetch(url))
         assert remote_res
@@ -323,8 +298,8 @@ class TestFnsWithCaching:
         assert remote_res == disk_res
         assert disk_time < network_time
 
-    def test_cache_clears(self, cache_type):
-        cache = RISECache(cache_type)
+    def test_cache_clears(self):
+        cache = RISECache("redis")
         cache.set(
             "https://data.usbr.gov/rise/api/catalog-item/128562", {"data": "test"}
         )

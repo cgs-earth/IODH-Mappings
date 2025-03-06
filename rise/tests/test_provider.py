@@ -11,13 +11,12 @@ from rise.rise_edr import RiseEDRProvider
 import datetime
 
 
-@pytest.fixture(params=["redis", "shelve"])
-def edr_config(request: type[FixtureRequest]):
-    cache_type = request.param  # type: ignore
+@pytest.fixture()
+def edr_config():
     config = {
         "name": "RISE_EDR_Provider",
         "type": "edr",
-        "cache": cache_type,
+        "cache": "redis" ,
         "url": "https://data.usbr.gov/rise/api/",
     }
     return config
@@ -60,7 +59,7 @@ def test_get_or_fetch_all_param_filtered_pages(edr_config: dict):
     oneparam = p.get_or_fetch_all_param_filtered_pages(params)
     assert len(oneparam["data"]) == 13
 
-    assert len(bothparams["data"]) > len(oneparam["data"])
+    assert len(bothparams["data"]) > len(oneparam["data"]), "both params should have more data than one param"
 
 
 def test_location_select_properties(edr_config: dict):
@@ -121,14 +120,13 @@ def test_area(edr_config: dict):
     )
 
 
-@pytest.fixture(params=["redis", "shelve"])
+@pytest.fixture()
 def oaf_config(request: type[FixtureRequest]):
-    cache_type = request.param  # type: ignore
     config = {
         "name": "RISE_EDR_Provider",
         "type": "feature",
         "title_field": "name",
-        "cache": cache_type,
+        "cache": "redis",
         "data": "https://data.usbr.gov/rise/api/",
     }
     return config

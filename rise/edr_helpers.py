@@ -38,29 +38,34 @@ class LocationHelper:
     def get_catalogItemURLs(
         location_response: LocationResponse,
     ) -> dict[locationId, list[catalogItemEndpoint]]:
-        lookup: dict[str, list[str]] = {}
-        if not isinstance(location_response["data"], list):
-            # make sure it's a list for iteration purposes
-            location_response["data"] = [location_response["data"]]
+        
+        locationIdToCatalogRecord: dict[int, str] = {}
 
-        for loc in location_response["data"]:
-            id: str = loc["id"]
-            locationNumber = id.removeprefix("/rise/api/location/")
-            items = []
+        catalogRecordToCatalogItems: dict[str, list[str]] = {}
 
-            try:
-                for catalogItem in loc["relationships"]["catalogItems"]["data"]:
-                    items.append("https://data.usbr.gov" + catalogItem["id"])
+        for included_item in location_response["included"]:
+            if included_item["type"] == "CatalogRecord":
+                catalogRecord = included_item["id"]
+                assert "location" in included_item["relationships"], included_item["relationships"]
+                assert "data" in included_item["relationships"]["location"]
+                assert "id" in included_item["relationships"]["location"]["data"]
+                locationId = included_item["relationships"]["location"]["data"]["id"]
+                locationIdToCatalogRecord[locationId] = catalogRecord
+            elif included_item["type"] == "CatalogItem":
+                catalogItem = included_item["id"]
+                catalogRecord = included_item["relationships"]["catalogRecord"]["data"]["id"]
+                if catalogRecord not in catalogRecordToCatalogItems:
+                    catalogRecordToCatalogItems[catalogRecord] = []
+                catalogRecordToCatalogItems[catalogRecord].append(catalogItem)
 
-                lookup[locationNumber] = items
-            except KeyError:
-                LOGGER.error(f"Missing key for catalog item {id} in {loc}")
-                # location 3396 and 3395 always return failure
-                # and 5315 and 5316 are locations which don't have catalogItems
-                # for some reason
-                lookup[locationNumber] = []
 
-        return lookup
+        join = {}
+        for locationId, catalogRecord in locationIdToCatalogRecord.items():
+            if catalogRecord in catalogRecordToCatalogItems:
+                join[locationId] = catalogRecordToCatalogItems[catalogRecord]
+
+        return join            
+
 
     locationId = str
     paramIdList = list[str | None]
