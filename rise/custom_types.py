@@ -83,6 +83,7 @@ class LocationIncluded(TypedDict):
     type: str
     relationships: dict[str, dict]
 
+
 class LocationResponse(TypedDict):
     links: dict[Literal["self", "first", "last", "next"], str]
     meta: dict[
