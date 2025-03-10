@@ -5,7 +5,7 @@ import logging
 from typing import Optional
 from rise.lib.cache import RISECache
 from rise.lib.helpers import flatten_values, getResultUrlFromCatalogUrl, safe_run_async
-from rise.lib.location import LocationResponse, LocationResponseWithIncluded
+from rise.lib.location import LocationResponseWithIncluded
 from rise.lib.types.catalogItem import CatalogItemResponse
 
 LOGGER = logging.getLogger(__name__)
@@ -63,9 +63,9 @@ class LocationResultBuilder:
                 if not associated_res_url:
                     results_for_catalog_item_j = None
                 else:
-                    results_for_catalog_item_j = timeseriesResults[associated_res_url].get(
-                        "data", None
-                    )
+                    results_for_catalog_item_j = timeseriesResults[
+                        associated_res_url
+                    ].get("data", None)
                     base_catalog_item_j["results"] = results_for_catalog_item_j
 
         return model
