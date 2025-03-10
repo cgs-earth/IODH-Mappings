@@ -70,3 +70,4 @@ class LocationData(BaseModel):
     id: str
     type: Literal["Location"]
     attributes: LocationDataAttributes
+

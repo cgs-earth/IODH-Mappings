@@ -10,8 +10,13 @@ This file contains the pydantic models for specifically the
 """
 
 
+class RelationshipDataDict(BaseModel):
+    id: str 
+    type: str 
+    timeseries: Optional[list] = None
+
 class RelationshipData(BaseModel):
-    data: list[dict[Literal["id", "type"], str]]
+    data: list[RelationshipDataDict]
 
     @field_validator("data", check_fields=True, mode="before")
     @classmethod
