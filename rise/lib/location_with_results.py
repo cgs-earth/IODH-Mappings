@@ -5,13 +5,14 @@ import logging
 from typing import Optional
 from rise.lib.cache import RISECache
 from rise.lib.helpers import flatten_values, getResultUrlFromCatalogUrl, safe_run_async
-from rise.lib.location import LocationResponse
+from rise.lib.location import LocationResponse, LocationResponseWithIncluded
+from rise.lib.types.catalogItem import CatalogItemResponse
 
 LOGGER = logging.getLogger(__name__)
 
 
 class LocationResultBuilder:
-    def __init__(self, cache: RISECache, base_response: LocationResponse):
+    def __init__(self, cache: RISECache, base_response: LocationResponseWithIncluded):
         self.cache = cache
         self.base_response = base_response
 
@@ -38,15 +39,16 @@ class LocationResultBuilder:
         ), "Duplicate result urls when adding results to the catalog items"
 
         LOGGER.debug(f"Fetching {resultUrls}; {len(resultUrls)} in total")
-        results = safe_run_async(self.cache.get_or_fetch_group(resultUrls))
+        timeseriesResults = safe_run_async(self.cache.get_or_fetch_group(resultUrls))
 
         for i, location in enumerate(self.base_response.data):
             catalogItemUrls = locationToCatalogItemUrls.get(location.id)
             if not catalogItemUrls:
                 continue
+
             for j, catalogItem in enumerate(catalogItemUrls):
                 fetchedLocation = catalogItemUrlToResponse[catalogItem]
-                model = LocationResponse.model_validate(fetchedLocation)
+                model = CatalogItemResponse.model_validate(fetchedLocation)
                 fetchedData = model.data
 
                 if not model.data[i].relationships.catalogItems:
@@ -61,7 +63,7 @@ class LocationResultBuilder:
                 if not associated_res_url:
                     results_for_catalog_item_j = None
                 else:
-                    results_for_catalog_item_j = results[associated_res_url].get(
+                    results_for_catalog_item_j = timeseriesResults[associated_res_url].get(
                         "data", None
                     )
                     base_catalog_item_j["results"] = results_for_catalog_item_j

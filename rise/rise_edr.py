@@ -9,7 +9,7 @@ from pygeoapi.provider.base import (
 )
 from pygeoapi.provider.base_edr import BaseEDRProvider
 from rise.lib.covjson.covjson import CovJSONBuilder
-from rise.lib.location import LocationResponse
+from rise.lib.location import LocationResponse, LocationResponseWithIncluded
 from rise.lib.cache import RISECache
 from rise.lib.helpers import safe_run_async
 from rise.lib.location_with_results import LocationResultBuilder
@@ -85,10 +85,10 @@ class RiseEDRProvider(BaseEDRProvider):
         if location_id:
             url: str = f"https://data.usbr.gov/rise/api/location/{location_id}?include=catalogRecords.catalogItems"
             raw_resp = safe_run_async(self.cache.get_or_fetch(url))
-            response = LocationResponse(**raw_resp)
+            response = LocationResponseWithIncluded(**raw_resp)
         else:
             raw_resp = self.get_or_fetch_all_param_filtered_pages(select_properties)
-            response = LocationResponse.from_api_pages(raw_resp)
+            response = LocationResponseWithIncluded.from_api_pages(raw_resp)
 
         # FROM SPEC: If a location id is not defined the API SHALL return a GeoJSON features array of valid location identifiers,
         if not any([crs, datetime_, location_id]) or format_ == "geojson":
@@ -97,11 +97,10 @@ class RiseEDRProvider(BaseEDRProvider):
                 if location_id
                 else False,  # Geojson is redered differently if there is just one feature
             )
-        else:
-            # if we are returning covjson we need to fetch the results and fill in the json
-            builder = LocationResultBuilder(cache=self.cache, base_response=response)
-            response_with_results = builder.fetch_results(time_filter=datetime_)
-            return CovJSONBuilder(self.cache).fill_template(response_with_results)
+        # if we are returning covjson we need to fetch the results and fill in the json
+        builder = LocationResultBuilder(cache=self.cache, base_response=response)
+        response_with_results = builder.fetch_results(time_filter=datetime_)
+        return CovJSONBuilder(self.cache).fill_template(response_with_results)
 
     def get_fields(self):
         """Get the list of all parameters (i.e. fields) that the user can filter by"""

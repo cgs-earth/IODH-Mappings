@@ -22,9 +22,8 @@ def _generate_coverage_item(
     times: list[str],
 ) -> Coverage:
     # if it is a point it will have different geometry
-    isPoint = location_feature.attributes.locationCoordinates.type == "Point"
 
-    if isPoint:
+    if location_feature.attributes.locationCoordinates.type == "Point":
         # z = location_feature["attributes"]["elevation"]
         coords = location_feature.attributes.locationCoordinates.coordinates
         x, y = coords[0], coords[1]
