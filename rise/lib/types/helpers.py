@@ -5,6 +5,8 @@ from enum import Enum, auto
 
 
 class ZType(Enum):
+    """An enum for representing elevation values as allowed by the EDR spec"""
+
     SINGLE = auto()
     # Every value between two values
     RANGE = auto()

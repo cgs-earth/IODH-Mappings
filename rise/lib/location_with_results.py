@@ -9,16 +9,12 @@ from rise.lib.location import LocationResponse
 
 LOGGER = logging.getLogger(__name__)
 
-
-class LocationResponseWithResults:
-    def __init__(self, base_response: LocationResponse, cache: RISECache):
-        self.base_response = base_response
+class LocationResultBuilder():
+    def __init__(self, cache: RISECache,  base_response: LocationResponse):
         self.cache = cache
+        self.base_response = base_response
 
-    def from_base_response(
-        self,
-        time_filter: Optional[str] = None,
-    ) -> LocationResponse:
+    def fetch_results(self, time_filter: Optional[str] = None):
         """Given a location that contains just catalog item ids, fill in the catalog items with the full
         endpoint response for the given catalog item so it can be more easily used for complex joins
         """
@@ -49,18 +45,19 @@ class LocationResponseWithResults:
                 continue
             for j, catalogItem in enumerate(catalogItemUrls):
                 fetchedLocation = catalogItemUrlToResponse[catalogItem]
-                fetchedData = fetchedLocation.data
+                model = LocationResponse.model_validate(fetchedLocation)
+                fetchedData = model.data
 
-                if "catalogItems" not in base_location_response.data[i].relationships:
-                    base_location_response.data[i].relationships.catalogItems = {
+                if not model.data[i].relationships.catalogItems:
+                    model.data[i].relationships.catalogItems = {
                         "data": []
                     }
 
-                base_location_response.data[i].relationships.catalogItems.data.append(
+                model.data[i].relationships.catalogItems.data.append(
                     fetchedData
                 )
 
-                base_catalog_item_j = base_location_response.data[
+                base_catalog_item_j = model.data[
                     i
                 ].relationships.catalogItems.data[j]
                 associated_res_url = getResultUrlFromCatalogUrl(
@@ -74,4 +71,4 @@ class LocationResponseWithResults:
                     )
                     base_catalog_item_j["results"] = results_for_catalog_item_j
 
-        return base_location_response
+        return model

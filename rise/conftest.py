@@ -4,7 +4,6 @@
 import pytest
 import requests
 
-
 @pytest.fixture(scope="session", autouse=True)
 def setup_before_tests():
     # RISE has issues with ipv6 connections and has much better

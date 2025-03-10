@@ -2,7 +2,6 @@
 # SPDX-License-Identifier: MIT
 
 import logging
-from typing import Optional
 from rise.lib.covjson.template import COVJSON_TEMPLATE
 from rise.lib.covjson.types.covjson import (
     CoverageCollection,
@@ -11,7 +10,8 @@ from rise.lib.covjson.types.covjson import (
     Parameter,
 )
 from rise.lib.cache import RISECache
-from rise.lib.location import LocationResponse, LocationData
+from rise.lib.location import LocationData
+from rise.lib.location_with_results import LocationResponseWithResults
 
 LOGGER = logging.getLogger(__name__)
 
@@ -74,7 +74,7 @@ class CovJSONBuilder:
     def __init__(self, cache: RISECache):
         self._cache = cache
 
-    def _get_relevant_parameters(self, location_response: LocationResponse) -> set[str]:
+    def _get_relevant_parameters(self, location_response: LocationResponseWithResults) -> set[str]:
         relevant_parameters = set()
         for location_feature in location_response.data:
             for param in location_feature.relationships.catalogItems.data:
@@ -82,7 +82,7 @@ class CovJSONBuilder:
                 relevant_parameters.add(id)
         return relevant_parameters
 
-    def _get_parameter_metadata(self, location_response: LocationResponse):
+    def _get_parameter_metadata(self, location_response: LocationResponseWithResults):
         relevant_parameters = self._get_relevant_parameters(location_response)
 
         paramNameToMetadata: dict[str, Parameter] = {}
@@ -110,7 +110,7 @@ class CovJSONBuilder:
 
         return paramNameToMetadata
 
-    def _get_coverages(self, location_response: LocationResponse) -> list[Coverage]:
+    def _get_coverages(self, location_response: LocationResponseWithResults) -> list[Coverage]:
         """Return the data needed for the 'coverage' key in the covjson response"""
         coverages: list[Coverage] = []
 
@@ -154,16 +154,13 @@ class CovJSONBuilder:
                 coverages.append(coverage_item)
         return coverages
 
-    def render(
-        self, location_response: LocationResponse, time_filter: Optional[str] = None
+    def fill_template(
+        self, location_response: LocationResponseWithResults
     ) -> CoverageCollection:
-        response_with_data = self.get_location_response_with_results(
-            location_response, time_filter
-        )
         templated_covjson: CoverageCollection = COVJSON_TEMPLATE
-        templated_covjson["coverages"] = self._get_coverages(response_with_data)
+        templated_covjson["coverages"] = self._get_coverages(location_response)
         templated_covjson["parameters"] = self._get_parameter_metadata(
-            location_response=response_with_data
+            location_response=location_response
         )
 
         return templated_covjson

@@ -2,21 +2,9 @@
 # SPDX-License-Identifier: MIT
 
 from typing import Literal, Optional, Union
-from pydantic import BaseModel, Field, FiniteFloat
+from pydantic import BaseModel, Field
 
-class PointCoordinates(BaseModel):
-    type: Literal["Point"]
-    coordinates: tuple[
-        FiniteFloat, FiniteFloat
-    ]  # Expecting exactly two values: [longitude, latitude]
-
-
-class PolygonCoordinates(BaseModel):
-    type: Literal["Polygon"]
-    coordinates: list[
-        list[list[FiniteFloat]]
-    ]  # A list of linear rings (each ring is a list of [longitude, latitude] pairs)
-
+from rise.lib.types.location import PointCoordinates, PolygonCoordinates
 
 class LocationDataAttributes(BaseModel):
     """ 
@@ -49,8 +37,11 @@ class LocationDataAttributes(BaseModel):
     locationRegionNames: list[str]
     locationUnifiedRegionNames: list[str]
 
+    relationships: dict[Literal["relationships"], 
+                        dict[Literal["catalogItems"], list[str]]]
 
-class LocationData(BaseModel):
+
+class LocationDataWithResults(BaseModel):
     """the `data:` key of the location response"""
     id: str
     type: Literal["Location"]

@@ -23,12 +23,16 @@ from rise.lib.types.helpers import ZType
 from rise.lib.types.includes import LocationIncluded
 from rise.lib.types.location import LocationData
 
-CatalogItem = NewType("CatalogItem", str)
 
 LOGGER = logging.getLogger()
 
 
 class LocationResponse(BaseModel):
+    """
+    This class represents the top level location/ response that is returned from the API
+    It is validated with pydantic on initialization and multiple methods are added to it to make it easier to manipulate data
+    """
+    # links and pagination may not be present if there is only one location
     links: Optional[dict[Literal["self", "first", "last", "next"], str]] = None
     meta: Optional[
         dict[
@@ -36,7 +40,9 @@ class LocationResponse(BaseModel):
             int,
         ]
     ] = None
+    # included represents the additional data that is explicitly requested in the fetch request
     included: list[LocationIncluded]
+    # data represents the list of locations returned
     data: list[LocationData]
 
     @classmethod
@@ -54,7 +60,7 @@ class LocationResponse(BaseModel):
             return [data]
         return data
 
-    def get_catalogItemURLs(self) -> dict[str, list[CatalogItem]]:
+    def get_catalogItemURLs(self) -> dict[str, list[str]]:
         """Get all catalog items associated with a particular location"""
         locationIdToCatalogRecord: dict[str, str] = {}
 

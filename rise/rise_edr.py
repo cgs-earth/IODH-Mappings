@@ -12,6 +12,7 @@ from rise.lib.covjson.covjson import CovJSONBuilder
 from rise.lib.location import LocationResponse
 from rise.lib.cache import RISECache
 from rise.lib.helpers import safe_run_async
+from rise.lib.location_with_results import LocationResultBuilder
 
 LOGGER = logging.getLogger(__name__)
 
@@ -97,8 +98,10 @@ class RiseEDRProvider(BaseEDRProvider):
                 else False,  # Geojson is redered differently if there is just one feature
             )
         else:
-            # When we return covjson we also end up filtering by datetime_ along the way
-            return CovJSONBuilder(self.cache).render(response, datetime_)
+            # if we are returning covjson we need to fetch the results and fill in the json
+            builder = LocationResultBuilder(cache=self.cache, base_response=response)
+            response_with_results = builder.fetch_results(time_filter=datetime_)
+            return CovJSONBuilder(self.cache).fill_template(response_with_results)
 
     def get_fields(self):
         """Get the list of all parameters (i.e. fields) that the user can filter by"""
@@ -140,7 +143,7 @@ class RiseEDRProvider(BaseEDRProvider):
         # match format_:
         #     case "json" | "GeoJSON" | _:
         # return LocationHelper.to_geojson(response)
-        return CovJSONBuilder(self.cache).render(response, datetime_)
+        return CovJSONBuilder(self.cache).fill_template(response, datetime_)
 
     @BaseEDRProvider.register()
     def area(
@@ -168,7 +171,7 @@ class RiseEDRProvider(BaseEDRProvider):
         if wkt != "":
             response = response.filter_by_wkt(wkt, z)
 
-        return CovJSONBuilder(self.cache).render(response, datetime_)
+        return CovJSONBuilder(self.cache).fill_template(response, datetime_)
 
     @BaseEDRProvider.register()
     def items(self, **kwargs):
