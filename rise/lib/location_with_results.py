@@ -10,8 +10,6 @@ from rise.lib.location import LocationResponseWithIncluded
 LOGGER = logging.getLogger(__name__)
 
 
-
-
 class LocationResultBuilder:
     """
     Helper class for associating a location/ response from RISE
@@ -22,8 +20,9 @@ class LocationResultBuilder:
         self.cache = cache
         self.base_response = base_response
 
-    
-    def _get_all_timeseries_data(self, locationToCatalogItemUrls, time_filter: Optional[str] = None):
+    def _get_all_timeseries_data(
+        self, locationToCatalogItemUrls, time_filter: Optional[str] = None
+    ):
         # Make a dictionary from an existing response
         catalogItemUrls = flatten_values(locationToCatalogItemUrls)
         resultUrls = [
@@ -42,10 +41,14 @@ class LocationResultBuilder:
         """
 
         locationToCatalogItemUrls = self.base_response.get_catalogItemURLs()
-        resultUrlToCatalogItem = { getResultUrlFromCatalogUrl(url, time_filter): url for url in flatten_values(locationToCatalogItemUrls)}
+        resultUrlToCatalogItem = {
+            getResultUrlFromCatalogUrl(url, time_filter): url
+            for url in flatten_values(locationToCatalogItemUrls)
+        }
 
-        resultUrlToTimeseries = self._get_all_timeseries_data(locationToCatalogItemUrls,time_filter)
-
+        resultUrlToTimeseries = self._get_all_timeseries_data(
+            locationToCatalogItemUrls, time_filter
+        )
 
         for i, location in enumerate(self.base_response.data):
             catalogItemUrls = locationToCatalogItemUrls.get(location.id)
@@ -55,7 +58,8 @@ class LocationResultBuilder:
                 continue
 
             for j, catalogItem in enumerate(catalogItemUrls):
-                
-                self.base_response.included[i].relationships.catalogItems = timeseriesResults[j]                
+                self.base_response.included[
+                    i
+                ].relationships.catalogItems = timeseriesResults[j]
 
         return self.base_response
