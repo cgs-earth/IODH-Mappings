@@ -11,7 +11,7 @@ from rise.lib.covjson.types.covjson import (
 )
 from rise.lib.cache import RISECache
 from rise.lib.location import LocationData
-from rise.lib.location_with_results import LocationResponseWithResults
+from rise.lib.types.location_with_results import LocationDataWithResults
 
 LOGGER = logging.getLogger(__name__)
 
@@ -75,7 +75,7 @@ class CovJSONBuilder:
         self._cache = cache
 
     def _get_relevant_parameters(
-        self, location_response: LocationResponseWithResults
+        self, location_response: LocationDataWithResults
     ) -> set[str]:
         relevant_parameters = set()
         for location_feature in location_response.data:
@@ -84,7 +84,7 @@ class CovJSONBuilder:
                 relevant_parameters.add(id)
         return relevant_parameters
 
-    def _get_parameter_metadata(self, location_response: LocationResponseWithResults):
+    def _get_parameter_metadata(self, location_response: LocationDataWithResults):
         relevant_parameters = self._get_relevant_parameters(location_response)
 
         paramNameToMetadata: dict[str, Parameter] = {}
@@ -113,7 +113,7 @@ class CovJSONBuilder:
         return paramNameToMetadata
 
     def _get_coverages(
-        self, location_response: LocationResponseWithResults
+        self, location_response: LocationDataWithResults
     ) -> list[Coverage]:
         """Return the data needed for the 'coverage' key in the covjson response"""
         coverages: list[Coverage] = []
@@ -159,7 +159,7 @@ class CovJSONBuilder:
         return coverages
 
     def fill_template(
-        self, location_response: LocationResponseWithResults
+        self, location_response: LocationDataWithResults
     ) -> CoverageCollection:
         templated_covjson: CoverageCollection = COVJSON_TEMPLATE
         templated_covjson["coverages"] = self._get_coverages(location_response)

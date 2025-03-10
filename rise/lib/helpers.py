@@ -25,11 +25,11 @@ def safe_run_async(coro):
 
 def merge_pages(pages: dict[Url, JsonPayload]) -> dict:
     """Given multiple different pages of data, merge them together"""
+    assert pages
 
     combined_data = {}
-
     for _, content in pages.items():
-        if combined_data is None:
+        if not combined_data:
             combined_data = content
         else:
             data = content.get("data", [])

@@ -5,11 +5,11 @@ import logging
 from typing import Optional
 
 
-from pygeoapi.provider.base import BaseProvider, ProviderNoDataError, ProviderQueryError
+from pygeoapi.provider.base import BaseProvider, ProviderQueryError
 from rise.lib.cache import RISECache
 from rise.lib.location import LocationResponse
 from rise.rise_edr import RiseEDRProvider
-from rise.lib.helpers import merge_pages, get_only_key
+from rise.lib.helpers import merge_pages, get_only_key, safe_run_async
 
 LOGGER = logging.getLogger(__name__)
 
@@ -32,7 +32,7 @@ class RiseProvider(BaseProvider):
 
         super().__init__(provider_def)
 
-    async def items(
+    def items(
         self,
         bbox: list = [],
         datetime_: Optional[str] = None,
@@ -53,17 +53,14 @@ class RiseProvider(BaseProvider):
             # Instead of merging all location pages, just
             # fetch the location associated with the ID
             url: str = f"https://data.usbr.gov/rise/api/location/{itemId}"
-            raw_resp = await self.cache.get_or_fetch(url)
+            raw_resp = safe_run_async(self.cache.get_or_fetch(url))
             response = LocationResponse(**raw_resp)
         else:
             all_location_responses = self.cache.get_or_fetch_all_pages(
                 RiseEDRProvider.LOCATION_API
             )
             merged_response = merge_pages(all_location_responses)
-            raw_resp = get_only_key(merged_response)
-            if raw_resp is None:
-                raise ProviderNoDataError
-            response = LocationResponse(**raw_resp)
+            response = LocationResponse(**merged_response)
 
         if datetime_:
             response = response.filter_by_date(datetime_)

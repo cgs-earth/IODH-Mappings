@@ -5,6 +5,13 @@ from typing import Literal, Optional, Union
 from pydantic import BaseModel, Field, FiniteFloat
 
 
+class PageLinks(BaseModel):
+    first: str
+    last: str
+    self: str
+    next: Optional[str] = None 
+    prev: Optional[str] = None
+
 class PointCoordinates(BaseModel):
     type: Literal["Point"]
     coordinates: tuple[
@@ -18,6 +25,9 @@ class PolygonCoordinates(BaseModel):
         list[list[FiniteFloat]]
     ]  # A list of linear rings (each ring is a list of [longitude, latitude] pairs)
 
+class LineStringCoordinates(BaseModel):
+    type: Literal["LineString"]
+    coordinates: list[list[FiniteFloat]]
 
 class LocationDataAttributes(BaseModel):
     """
@@ -35,16 +45,16 @@ class LocationDataAttributes(BaseModel):
     locationDescription: Optional[str]
     locationStatusId: int
     # the "type" field tells us whether to validate as a Point or a Polygon
-    locationCoordinates: Union[PointCoordinates, PolygonCoordinates] = Field(
+    locationCoordinates: Union[PointCoordinates, PolygonCoordinates, LineStringCoordinates] = Field(
         discriminator="type"
     )
-    elevation: Optional[int]
+    elevation: Optional[float]
     createDate: str
     updateDate: str
     horizontalDatum: dict
     locationGeometry: dict
     locationTags: list[dict]
-    relatedLocationIds: Optional[str]
+    relatedLocationIds: Optional[list[int]]
     projectNames: list[str]
     locationTypeName: str
     locationRegionNames: list[str]

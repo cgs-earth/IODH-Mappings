@@ -80,7 +80,7 @@ class RiseEDRProvider(BaseEDRProvider):
         Extract data from location
         """
         if not location_id and datetime_:
-            raise ProviderQueryError("Can't filter by date on the entire ")
+            raise ProviderQueryError("Can't filter by date on every location")
 
         if location_id:
             url: str = f"https://data.usbr.gov/rise/api/location/{location_id}?include=catalogRecords.catalogItems"
@@ -143,7 +143,9 @@ class RiseEDRProvider(BaseEDRProvider):
         # match format_:
         #     case "json" | "GeoJSON" | _:
         # return LocationHelper.to_geojson(response)
-        return CovJSONBuilder(self.cache).fill_template(response, datetime_)
+        builder = LocationResultBuilder(cache=self.cache, base_response=response)
+        response_with_results = builder.fetch_results(time_filter=datetime_)
+        return CovJSONBuilder(self.cache).fill_template(response_with_results)
 
     @BaseEDRProvider.register()
     def area(
@@ -171,7 +173,9 @@ class RiseEDRProvider(BaseEDRProvider):
         if wkt != "":
             response = response.filter_by_wkt(wkt, z)
 
-        return CovJSONBuilder(self.cache).fill_template(response, datetime_)
+        builder = LocationResultBuilder(cache=self.cache, base_response=response)
+        response_with_results = builder.fetch_results(time_filter=datetime_)
+        return CovJSONBuilder(self.cache).fill_template(response_with_results)
 
     @BaseEDRProvider.register()
     def items(self, **kwargs):

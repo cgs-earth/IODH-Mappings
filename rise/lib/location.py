@@ -6,6 +6,7 @@ from copy import deepcopy
 from datetime import datetime
 import json
 import logging
+from re import I
 from typing import Literal, Optional, assert_never
 from pydantic import BaseModel, field_validator
 import shapely
@@ -21,7 +22,7 @@ from rise.lib.helpers import (
 )
 from rise.lib.types.helpers import ZType
 from rise.lib.types.includes import LocationIncluded
-from rise.lib.types.location import LocationData
+from rise.lib.types.location import LocationData, PageLinks
 
 
 LOGGER = logging.getLogger()
@@ -34,15 +35,13 @@ class LocationResponse(BaseModel):
     """
 
     # links and pagination may not be present if there is only one location
-    links: Optional[dict[Literal["self", "first", "last", "next"], str]] = None
+    links: Optional[PageLinks]= None 
     meta: Optional[
-        dict[
+        dict[ 
             Literal["totalItems", "itemsPerPage", "currentPage"],
             int,
         ]
     ] = None
-    # included represents the additional data that is explicitly requested in the fetch request
-    included: list[LocationIncluded]
     # data represents the list of locations returned
     data: list[LocationData]
 
@@ -61,39 +60,7 @@ class LocationResponse(BaseModel):
             return [data]
         return data
 
-    def get_catalogItemURLs(self) -> dict[str, list[str]]:
-        """Get all catalog items associated with a particular location"""
-        locationIdToCatalogRecord: dict[str, str] = {}
-
-        catalogRecordToCatalogItems: dict[str, list[str]] = {}
-
-        for included_item in self.included:
-            if included_item.type == "CatalogRecord":
-                catalogRecord = included_item.id
-                locationId = included_item.relationships.location
-                assert locationId is not None
-                locationId = locationId.data[0]["id"]
-                locationIdToCatalogRecord[locationId] = catalogRecord
-            elif included_item.type == "CatalogItem":
-                catalogItem = included_item.id
-                catalogRecord = included_item.relationships.catalogRecord
-                assert catalogRecord is not None
-                catalogRecord = catalogRecord.data[0]["id"]
-                if catalogRecord not in catalogRecordToCatalogItems:
-                    catalogRecordToCatalogItems[catalogRecord] = []
-                catalogRecordToCatalogItems[catalogRecord].append(catalogItem)
-
-        join: dict[str, list[CatalogItem]] = {}
-        for locationId, catalogRecord in locationIdToCatalogRecord.items():
-            if catalogRecord in catalogRecordToCatalogItems:
-                for catalogItem in catalogRecordToCatalogItems[catalogRecord]:
-                    catalogItemURL = f"https://data.usbr.gov{catalogItem}"
-                    if locationId not in join:
-                        join[str(locationId)] = [CatalogItem(catalogItemURL)]
-                    else:
-                        join[locationId].append(CatalogItem(catalogItemURL))
-
-        return join
+    
 
     def filter_by_date(self, datetime_: str):
         """
@@ -201,6 +168,127 @@ class LocationResponse(BaseModel):
 
         return new
 
+
+
+    def filter_by_bbox(
+        self,
+        bbox: Optional[list] = None,
+        z: Optional[str] = None,
+    ):
+        if bbox:
+            parse_result = parse_bbox(bbox)
+            shapely_box = parse_result[0] if parse_result else None
+            z = parse_result[1] if parse_result else z
+
+        shapely_box = parse_bbox(bbox)[0] if bbox else None
+        # TODO what happens if they specify both a bbox with z and a z value?
+        z = parse_bbox(bbox)[1] if bbox else z
+
+        return self._filter_by_geometry(shapely_box, z)
+
+    def filter_by_limit(self, limit: int):
+        self.data = self.data[:limit]
+        return self
+
+    def remove_before_offset(self, offset: int):
+        self.data = self.data[offset:]
+        return self
+
+    def filter_by_id(
+        self,
+        identifier: Optional[str] = None,
+    ):
+        self.data = [
+            location
+            for location in self.data
+            if str(location.attributes.id) == identifier
+        ]
+        return self
+
+    def to_geojson(self, single_feature: bool = False) -> dict:
+        features = []
+
+        for location_feature in self.data:
+            # z = location_feature["attributes"]["elevation"]
+            # if z is not None:
+            #     location_feature["attributes"]["locationCoordinates"][
+            #         "coordinates"
+            #     ].append(float(z))
+            #     LOGGER.error(
+            #         location_feature["attributes"]["locationCoordinates"]["coordinates"]
+            #     )
+
+            feature_as_geojson = {
+                "type": "Feature",
+                "id": location_feature.attributes.id,
+                "properties": {
+                    "Locations@iot.count": 1,
+                    "name": location_feature.attributes.locationName,
+                    "id": location_feature.attributes.id,
+                    "Locations": [
+                        {"location": location_feature.attributes.locationCoordinates.model_dump()}
+                    ],
+                },
+                "geometry": location_feature.attributes.locationCoordinates.model_dump(),
+            }
+            features.append(feature_as_geojson)
+            if single_feature:
+                return feature_as_geojson
+
+        return {"type": "FeatureCollection", "features": features}
+
+    def get_results(
+        self, catalogItemEndpoints: list[str], cache: RISECache
+    ) -> dict[str, str]:
+        result_endpoints = [
+            f"https://data.usbr.gov/rise/api/result?page=1&itemsPerPage=25&itemId={get_trailing_id(endpoint)}"
+            for endpoint in catalogItemEndpoints
+        ]
+
+        fetched_result = safe_run_async(cache.get_or_fetch_group(result_endpoints))
+
+        return fetched_result
+
+
+class LocationResponseWithIncluded(LocationResponse):
+    # included represents the additional data that is explicitly requested in the fetch request
+    included: list[LocationIncluded]
+
+
+    def get_catalogItemURLs(self) -> dict[str, list[str]]:
+        """Get all catalog items associated with a particular location"""
+        locationIdToCatalogRecord: dict[str, str] = {}
+
+        catalogRecordToCatalogItems: dict[str, list[str]] = {}
+
+        for included_item in self.included:
+            if included_item.type == "CatalogRecord":
+                catalogRecord = included_item.id
+                locationId = included_item.relationships.location
+                assert locationId is not None
+                locationId = locationId.data[0]["id"]
+                locationIdToCatalogRecord[locationId] = catalogRecord
+            elif included_item.type == "CatalogItem":
+                catalogItem = included_item.id
+                catalogRecord = included_item.relationships.catalogRecord
+                assert catalogRecord is not None
+                catalogRecord = catalogRecord.data[0]["id"]
+                if catalogRecord not in catalogRecordToCatalogItems:
+                    catalogRecordToCatalogItems[catalogRecord] = []
+                catalogRecordToCatalogItems[catalogRecord].append(catalogItem)
+
+        join: dict[str, list[str]] = {}
+        for locationId, catalogRecord in locationIdToCatalogRecord.items():
+            if catalogRecord in catalogRecordToCatalogItems:
+                for catalogItem in catalogRecordToCatalogItems[catalogRecord]:
+                    catalogItemURL = f"https://data.usbr.gov{catalogItem}"
+                    if locationId not in join:
+                        join[str(locationId)] = [catalogItemURL]
+                    else:
+                        join[locationId].append(catalogItemURL)
+
+        return join
+    
     def get_parameters(
         self,
         cache: RISECache,
@@ -266,82 +354,3 @@ class LocationResponse(BaseModel):
                     response = self.drop_location(int(location))
 
         return response
-
-    def filter_by_bbox(
-        self,
-        bbox: Optional[list] = None,
-        z: Optional[str] = None,
-    ):
-        if bbox:
-            parse_result = parse_bbox(bbox)
-            shapely_box = parse_result[0] if parse_result else None
-            z = parse_result[1] if parse_result else z
-
-        shapely_box = parse_bbox(bbox)[0] if bbox else None
-        # TODO what happens if they specify both a bbox with z and a z value?
-        z = parse_bbox(bbox)[1] if bbox else z
-
-        return self._filter_by_geometry(shapely_box, z)
-
-    def filter_by_limit(self, limit: int):
-        self.data = self.data[:limit]
-        return self
-
-    def remove_before_offset(self, offset: int):
-        self.data = self.data[offset:]
-        return self
-
-    def filter_by_id(
-        self,
-        identifier: Optional[str] = None,
-    ):
-        self.data = [
-            location
-            for location in self.data
-            if str(location.attributes.id) == identifier
-        ]
-        return self
-
-    def to_geojson(self, single_feature: bool = False) -> dict:
-        features = []
-
-        for location_feature in self.data:
-            # z = location_feature["attributes"]["elevation"]
-            # if z is not None:
-            #     location_feature["attributes"]["locationCoordinates"][
-            #         "coordinates"
-            #     ].append(float(z))
-            #     LOGGER.error(
-            #         location_feature["attributes"]["locationCoordinates"]["coordinates"]
-            #     )
-
-            feature_as_geojson = {
-                "type": "Feature",
-                "id": location_feature.attributes.id,
-                "properties": {
-                    "Locations@iot.count": 1,
-                    "name": location_feature.attributes.locationName,
-                    "id": location_feature.attributes.id,
-                    "Locations": [
-                        {"location": location_feature.attributes.locationCoordinates}
-                    ],
-                },
-                "geometry": location_feature.attributes.locationCoordinates,
-            }
-            features.append(feature_as_geojson)
-            if single_feature:
-                return feature_as_geojson
-
-        return {"type": "FeatureCollection", "features": features}
-
-    def get_results(
-        self, catalogItemEndpoints: list[str], cache: RISECache
-    ) -> dict[str, str]:
-        result_endpoints = [
-            f"https://data.usbr.gov/rise/api/result?page=1&itemsPerPage=25&itemId={get_trailing_id(endpoint)}"
-            for endpoint in catalogItemEndpoints
-        ]
-
-        fetched_result = safe_run_async(cache.get_or_fetch_group(result_endpoints))
-
-        return fetched_result

@@ -3,7 +3,7 @@
 
 import pytest
 import requests
-from rise.lib.location import LocationResponse
+from rise.lib.location import LocationResponse, LocationResponseWithIncluded
 
 
 @pytest.fixture
@@ -16,7 +16,7 @@ def locationRespFixture():
 
 def test_get_catalogItemURLs(locationRespFixture: dict):
     """Test getting the associated catalog items from the location response"""
-    model = LocationResponse.model_validate(locationRespFixture)
+    model = LocationResponseWithIncluded.model_validate(locationRespFixture)
     urls = model.get_catalogItemURLs()
     for url in [
         "https://data.usbr.gov/rise/api/catalog-item/4222",
@@ -27,7 +27,7 @@ def test_get_catalogItemURLs(locationRespFixture: dict):
 
 
 def test_filter_by_wkt(locationRespFixture: dict):
-    model = LocationResponse.model_validate(locationRespFixture)
+    model = LocationResponseWithIncluded.model_validate(locationRespFixture)
     squareInOcean = "POLYGON ((-70.64209 40.86368, -70.817871 37.840157, -65.236816 38.013476, -65.500488 41.162114, -70.64209 40.86368))"
     emptyModel = model.filter_by_wkt(squareInOcean)
     assert emptyModel.data == []
@@ -37,7 +37,7 @@ def test_filter_by_wkt(locationRespFixture: dict):
 
 
 def test_drop_locationid(locationRespFixture: dict):
-    model = LocationResponse.model_validate(locationRespFixture)
+    model = LocationResponseWithIncluded.model_validate(locationRespFixture)
     # since the fixture is for location 1, make sure that if we drop location 1 everything is gone
     droppedModel = model.drop_location(location_id=1)
     assert len(droppedModel.data) == 0

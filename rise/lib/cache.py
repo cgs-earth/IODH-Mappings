@@ -149,13 +149,6 @@ class RISECache:
             if k is None or v is None:
                 raise ProviderConnectionError("Error fetching parameters")
 
-        # get the value of a dict with one value without
-        # needed to know the key name. This is just the
-        # merged json payload
-        res: dict = next(iter(res.values()))
-        if res is None:
-            raise ProviderNoDataError
-
         for item in res["data"]:
             param = item["attributes"]
             # TODO check if this should be a string or a number
