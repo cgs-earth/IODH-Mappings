@@ -11,11 +11,9 @@ from rise.lib.covjson.types.covjson import (
     Parameter,
 )
 from rise.lib.cache import RISECache
-from rise.lib.helpers import flatten_values, getResultUrlFromCatalogUrl, safe_run_async
-from rise.lib.location import CatalogItem, LocationResponse, LocationData
+from rise.lib.location import LocationResponse, LocationData
 
 LOGGER = logging.getLogger(__name__)
-
 
 
 def _generate_coverage_item(
@@ -112,7 +110,6 @@ class CovJSONBuilder:
 
         return paramNameToMetadata
 
-    
     def _get_coverages(self, location_response: LocationResponse) -> list[Coverage]:
         """Return the data needed for the 'coverage' key in the covjson response"""
         coverages: list[Coverage] = []

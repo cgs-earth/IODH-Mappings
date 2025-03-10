@@ -5,7 +5,13 @@ from datetime import timedelta
 import json
 import logging
 
-from rise.lib.helpers import getResultUrlFromCatalogUrl, parse_z, safe_run_async, parse_bbox, merge_pages, parse_z
+from rise.lib.helpers import (
+    getResultUrlFromCatalogUrl,
+    safe_run_async,
+    parse_bbox,
+    merge_pages,
+    parse_z,
+)
 import pytest
 import shapely.wkt
 

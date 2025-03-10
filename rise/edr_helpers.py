@@ -5,6 +5,7 @@ import logging
 
 LOGGER = logging.getLogger(__name__)
 
+
 class CatalogItem:
     @classmethod
     def get_parameter(cls, data: dict) -> dict[str, str] | None:

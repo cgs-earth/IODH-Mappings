@@ -21,7 +21,6 @@ HEADERS = {"accept": "application/vnd.api+json"}
 LOGGER = logging.getLogger(__name__)
 
 
-
 async def fetch_url(url: str) -> dict:
     async with aiohttp.ClientSession(headers=HEADERS) as session:
         async with session.get(url, headers=HEADERS) as response:
@@ -32,8 +31,7 @@ async def fetch_url(url: str) -> dict:
                 raise e
 
 
-
-class RedisCache():
+class RedisCache:
     """A cache implementation using Redis with ttl support"""
 
     def __init__(self, ttl: timedelta = timedelta(hours=24)):
@@ -66,7 +64,7 @@ class RedisCache():
         return json.loads(data)  # type: ignore
 
 
-class RISECache():
+class RISECache:
     """
     Generic query class.
 

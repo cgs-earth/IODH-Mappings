@@ -23,7 +23,7 @@ class PolygonCoordinates(BaseModel):
 class LocationDataAttributes(BaseModel):
     # We use an alias here to map the _id field to the id field since the _ in the name causes issues
     # https://stackoverflow.com/questions/59562997/how-to-parse-and-read-id-field-from-and-to-a-pydantic-model
-    id: int = Field(..., alias='_id')
+    id: int = Field(..., alias="_id")
     locationName: str
     locationDescription: Optional[str]
     locationStatusId: int

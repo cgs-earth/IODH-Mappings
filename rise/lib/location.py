@@ -11,7 +11,14 @@ from pydantic import BaseModel, field_validator
 import shapely
 import shapely.wkt
 from rise.lib.cache import RISECache
-from rise.lib.helpers import get_trailing_id, merge_pages, parse_bbox, parse_date, parse_z, safe_run_async
+from rise.lib.helpers import (
+    get_trailing_id,
+    merge_pages,
+    parse_bbox,
+    parse_date,
+    parse_z,
+    safe_run_async,
+)
 from rise.lib.types.helpers import ZType
 from rise.lib.types.includes import LocationIncluded
 from rise.lib.types.location import LocationData
@@ -19,6 +26,7 @@ from rise.lib.types.location import LocationData
 CatalogItem = NewType("CatalogItem", str)
 
 LOGGER = logging.getLogger()
+
 
 class LocationResponse(BaseModel):
     links: Optional[dict[Literal["self", "first", "last", "next"], str]] = None
@@ -30,7 +38,6 @@ class LocationResponse(BaseModel):
     ] = None
     included: list[LocationIncluded]
     data: list[LocationData]
-
 
     @classmethod
     def from_api_pages(cls, pages: dict[str, dict]):
@@ -81,16 +88,12 @@ class LocationResponse(BaseModel):
 
         return join
 
-
-    def filter_by_date(
-        self, datetime_: str
-    ):
+    def filter_by_date(self, datetime_: str):
         """
         Filter a list of locations by date
         """
         if not self.data[0].attributes:
             raise RuntimeError("Can't filter by date")
-
 
         filteredResp = self.copy(deep=True)
 
@@ -100,9 +103,7 @@ class LocationResponse(BaseModel):
             start, end = parsed_date
 
             for i, location in enumerate(filteredResp.data):
-                updateDate = datetime.fromisoformat(
-                    location.attributes.updateDate
-                )
+                updateDate = datetime.fromisoformat(location.attributes.updateDate)
                 if updateDate < start or updateDate > end:
                     filteredResp.data.pop(i)
 
@@ -122,7 +123,7 @@ class LocationResponse(BaseModel):
             )
 
         return filteredResp
-    
+
     def _filter_by_geometry(
         self,
         geometry: Optional[shapely.geometry.base.BaseGeometry],
@@ -135,7 +136,6 @@ class LocationResponse(BaseModel):
         parsed_z = parse_z(str(z)) if z else None
 
         for i, v in enumerate(self.data):
-
             elevation = v.attributes.elevation
 
             if elevation is None:
@@ -154,7 +154,7 @@ class LocationResponse(BaseModel):
                         if elevation not in x:
                             indices_to_pop.add(i)
                     case _:
-                        assert_never(parsed_z) 
+                        assert_never(parsed_z)
 
             if geometry:
                 result_geo = shapely.geometry.shape(
@@ -172,7 +172,6 @@ class LocationResponse(BaseModel):
             copy_to_return.data.pop(i)
 
         return copy_to_return
-    
 
     def filter_by_wkt(
         self,
@@ -182,7 +181,6 @@ class LocationResponse(BaseModel):
         """Filter a location by the well-known-text geometry representation"""
         parsed_geo = shapely.wkt.loads(str(wkt)) if wkt else None
         return self._filter_by_geometry(parsed_geo, z)
-
 
     def drop_location(self, location_id: int):
         """Given a location id, drop all all data that is associated with that location"""
@@ -195,7 +193,6 @@ class LocationResponse(BaseModel):
         new.data = filtered_locations
 
         return new
-
 
     def get_parameters(
         self,
@@ -244,7 +241,6 @@ class LocationResponse(BaseModel):
         assert len(locationToParams) == len(locationsToCatalogItemURLs)
         return locationToParams
 
-
     def filter_by_properties(
         self, select_properties: list[str] | str, cache: RISECache
     ):
@@ -263,13 +259,12 @@ class LocationResponse(BaseModel):
                     response = self.drop_location(int(location))
 
         return response
-        
-    
+
     def filter_by_bbox(
         self,
         bbox: Optional[list] = None,
         z: Optional[str] = None,
-    ) :
+    ):
         if bbox:
             parse_result = parse_bbox(bbox)
             shapely_box = parse_result[0] if parse_result else None
@@ -280,18 +275,12 @@ class LocationResponse(BaseModel):
         z = parse_bbox(bbox)[1] if bbox else z
 
         return self._filter_by_geometry(shapely_box, z)
-    
 
-    def filter_by_limit(
-        self,
-        limit: int
-    ):
+    def filter_by_limit(self, limit: int):
         self.data = self.data[:limit]
         return self
 
-    def remove_before_offset(self,
-        offset: int
-    ):
+    def remove_before_offset(self, offset: int):
         self.data = self.data[offset:]
         return self
 
@@ -306,10 +295,7 @@ class LocationResponse(BaseModel):
         ]
         return self
 
-    def to_geojson(
-        self,
-        single_feature: bool = False
-    ) -> dict:
+    def to_geojson(self, single_feature: bool = False) -> dict:
         features = []
 
         for location_feature in self.data:
@@ -330,9 +316,7 @@ class LocationResponse(BaseModel):
                     "name": location_feature.attributes.locationName,
                     "id": location_feature.attributes.id,
                     "Locations": [
-                        {
-                            "location": location_feature.attributes.locationCoordinates
-                        }
+                        {"location": location_feature.attributes.locationCoordinates}
                     ],
                 },
                 "geometry": location_feature.attributes.locationCoordinates,
@@ -343,8 +327,8 @@ class LocationResponse(BaseModel):
 
         return {"type": "FeatureCollection", "features": features}
 
-    def get_results(self, 
-        catalogItemEndpoints: list[str], cache: RISECache
+    def get_results(
+        self, catalogItemEndpoints: list[str], cache: RISECache
     ) -> dict[str, str]:
         result_endpoints = [
             f"https://data.usbr.gov/rise/api/result?page=1&itemsPerPage=25&itemId={get_trailing_id(endpoint)}"

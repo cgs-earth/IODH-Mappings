@@ -1,6 +1,10 @@
+# Copyright 2025 Lincoln Institute of Land Policy
+# SPDX-License-Identifier: MIT
+
 import pytest
 import requests
 from rise.lib.location import LocationResponse
+
 
 @pytest.fixture
 def locationRespFixture():

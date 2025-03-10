@@ -1,3 +1,5 @@
+# Copyright 2025 Lincoln Institute of Land Policy
+# SPDX-License-Identifier: MIT
 
 import logging
 from typing import Optional
@@ -7,10 +9,8 @@ from rise.lib.location import LocationResponse
 
 LOGGER = logging.getLogger(__name__)
 
-    
 
-class LocationResponseWithResults():
-
+class LocationResponseWithResults:
     def __init__(self, base_response: LocationResponse, cache: RISECache):
         self.base_response = base_response
         self.cache = cache
@@ -22,7 +22,6 @@ class LocationResponseWithResults():
         """Given a location that contains just catalog item ids, fill in the catalog items with the full
         endpoint response for the given catalog item so it can be more easily used for complex joins
         """
-
 
         # Make a dictionary from an existing response, no fetch needed
         locationToCatalogItemUrls = self.base_response.get_catalogItemURLs()
@@ -37,8 +36,10 @@ class LocationResponseWithResults():
         resultUrls = [
             getResultUrlFromCatalogUrl(url, time_filter) for url in catalogItemUrls
         ]
-        assert len(resultUrls) == len(set(resultUrls)), "Duplicate result urls when adding results to the catalog items"
-        
+        assert len(resultUrls) == len(
+            set(resultUrls)
+        ), "Duplicate result urls when adding results to the catalog items"
+
         LOGGER.debug(f"Fetching {resultUrls}; {len(resultUrls)} in total")
         results = safe_run_async(self.cache.get_or_fetch_group(resultUrls))
 
@@ -51,13 +52,17 @@ class LocationResponseWithResults():
                 fetchedData = fetchedLocation.data
 
                 if "catalogItems" not in base_location_response.data[i].relationships:
-                    base_location_response.data[i].relationships.catalogItems = {"data": []}
+                    base_location_response.data[i].relationships.catalogItems = {
+                        "data": []
+                    }
 
                 base_location_response.data[i].relationships.catalogItems.data.append(
                     fetchedData
                 )
 
-                base_catalog_item_j = base_location_response.data[i].relationships.catalogItems.data[j]
+                base_catalog_item_j = base_location_response.data[
+                    i
+                ].relationships.catalogItems.data[j]
                 associated_res_url = getResultUrlFromCatalogUrl(
                     catalogItem, time_filter
                 )

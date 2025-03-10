@@ -1,3 +1,6 @@
+# Copyright 2025 Lincoln Institute of Land Policy
+# SPDX-License-Identifier: MIT
+
 # The template that we will fill in with data and return to the user
 from rise.lib.covjson.types.covjson import CoverageCollection
 

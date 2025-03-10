@@ -5,6 +5,7 @@ import pytest
 import requests
 from rise.lib.location import LocationResponse
 
+
 @pytest.fixture
 def locationRespFixture():
     url = "https://data.usbr.gov/rise/api/location/1?include=catalogRecords.catalogItems&page=1&itemsPerPage=5"
@@ -23,6 +24,7 @@ def test_get_catalogItemURLs(locationRespFixture: dict):
         "https://data.usbr.gov/rise/api/catalog-item/4225",
     ]:
         assert url in urls["/rise/api/location/1"]
+
 
 def test_filter_by_wkt(locationRespFixture: dict):
     model = LocationResponse.model_validate(locationRespFixture)

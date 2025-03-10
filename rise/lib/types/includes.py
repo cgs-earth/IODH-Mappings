@@ -9,6 +9,7 @@ This file contains the pydantic models for specifically the
 'includes:' key of the Rise JSON response
 """
 
+
 class RelationshipData(BaseModel):
     data: list[dict[Literal["id", "type"], str]]
 

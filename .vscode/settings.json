@@ -9,6 +9,6 @@
     "**/.pytest_cache/": true,
     // hide build artifacts
     "rise.egg-info": true,
-    "rise_edr.egg-info": true,
+    "rise_edr.egg-info": true
   }
 }
