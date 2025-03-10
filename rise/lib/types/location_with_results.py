@@ -6,9 +6,10 @@ from pydantic import BaseModel, Field
 
 from rise.lib.types.location import PointCoordinates, PolygonCoordinates
 
+
 class LocationDataAttributes(BaseModel):
-    """ 
-    The `attributes:` key within each `data:` key for location/ 
+    """
+    The `attributes:` key within each `data:` key for location/
     Thus, located at the following nesting:
         data:
             attributes:
@@ -37,12 +38,14 @@ class LocationDataAttributes(BaseModel):
     locationRegionNames: list[str]
     locationUnifiedRegionNames: list[str]
 
-    relationships: dict[Literal["relationships"], 
-                        dict[Literal["catalogItems"], list[str]]]
+    relationships: dict[
+        Literal["relationships"], dict[Literal["catalogItems"], list[str]]
+    ]
 
 
 class LocationDataWithResults(BaseModel):
     """the `data:` key of the location response"""
+
     id: str
     type: Literal["Location"]
     attributes: LocationDataAttributes

@@ -9,8 +9,9 @@ from rise.lib.location import LocationResponse
 
 LOGGER = logging.getLogger(__name__)
 
-class LocationResultBuilder():
-    def __init__(self, cache: RISECache,  base_response: LocationResponse):
+
+class LocationResultBuilder:
+    def __init__(self, cache: RISECache, base_response: LocationResponse):
         self.cache = cache
         self.base_response = base_response
 
@@ -49,17 +50,11 @@ class LocationResultBuilder():
                 fetchedData = model.data
 
                 if not model.data[i].relationships.catalogItems:
-                    model.data[i].relationships.catalogItems = {
-                        "data": []
-                    }
+                    model.data[i].relationships.catalogItems = {"data": []}
 
-                model.data[i].relationships.catalogItems.data.append(
-                    fetchedData
-                )
+                model.data[i].relationships.catalogItems.data.append(fetchedData)
 
-                base_catalog_item_j = model.data[
-                    i
-                ].relationships.catalogItems.data[j]
+                base_catalog_item_j = model.data[i].relationships.catalogItems.data[j]
                 associated_res_url = getResultUrlFromCatalogUrl(
                     catalogItem, time_filter
                 )

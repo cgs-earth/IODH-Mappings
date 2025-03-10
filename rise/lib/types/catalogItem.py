@@ -1,3 +1,6 @@
+# Copyright 2025 Lincoln Institute of Land Policy
+# SPDX-License-Identifier: MIT
+
 import logging
 from typing import Literal
 
@@ -5,9 +8,11 @@ from pydantic import BaseModel, Field
 
 LOGGER = logging.getLogger(__name__)
 
+
 class CatalogItemRelationships(BaseModel):
     parameter: dict[Literal["data"], dict[Literal["type", "id"], str]]
     catalogRecord: dict[Literal["data"], dict[Literal["type", "id"], str]]
+
 
 class CatalogItemAttributes(BaseModel):
     id: int = Field(..., alias="_id")
@@ -21,11 +26,13 @@ class CatalogItemAttributes(BaseModel):
     dataStructure: str
     matrix: dict
 
+
 class CatalogItemData(BaseModel):
     id: str
     type: Literal["CatalogItem"]
     attributes: CatalogItemAttributes
     relationships: CatalogItemRelationships
+
 
 class CatalogItemResponse(BaseModel):
     data: CatalogItemData

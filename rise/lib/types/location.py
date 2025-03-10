@@ -4,6 +4,7 @@
 from typing import Literal, Optional, Union
 from pydantic import BaseModel, Field, FiniteFloat
 
+
 class PointCoordinates(BaseModel):
     type: Literal["Point"]
     coordinates: tuple[
@@ -19,8 +20,8 @@ class PolygonCoordinates(BaseModel):
 
 
 class LocationDataAttributes(BaseModel):
-    """ 
-    The `attributes:` key within each `data:` key for location/ 
+    """
+    The `attributes:` key within each `data:` key for location/
     Thus, located at the following nesting:
         data:
             attributes:
@@ -52,6 +53,7 @@ class LocationDataAttributes(BaseModel):
 
 class LocationData(BaseModel):
     """the `data:` key of the location response"""
+
     id: str
     type: Literal["Location"]
     attributes: LocationDataAttributes

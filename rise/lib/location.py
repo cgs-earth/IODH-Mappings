@@ -6,7 +6,7 @@ from copy import deepcopy
 from datetime import datetime
 import json
 import logging
-from typing import Literal, NewType, Optional, assert_never
+from typing import Literal, Optional, assert_never
 from pydantic import BaseModel, field_validator
 import shapely
 import shapely.wkt
@@ -32,6 +32,7 @@ class LocationResponse(BaseModel):
     This class represents the top level location/ response that is returned from the API
     It is validated with pydantic on initialization and multiple methods are added to it to make it easier to manipulate data
     """
+
     # links and pagination may not be present if there is only one location
     links: Optional[dict[Literal["self", "first", "last", "next"], str]] = None
     meta: Optional[

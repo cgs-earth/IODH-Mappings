@@ -74,7 +74,9 @@ class CovJSONBuilder:
     def __init__(self, cache: RISECache):
         self._cache = cache
 
-    def _get_relevant_parameters(self, location_response: LocationResponseWithResults) -> set[str]:
+    def _get_relevant_parameters(
+        self, location_response: LocationResponseWithResults
+    ) -> set[str]:
         relevant_parameters = set()
         for location_feature in location_response.data:
             for param in location_feature.relationships.catalogItems.data:
@@ -110,7 +112,9 @@ class CovJSONBuilder:
 
         return paramNameToMetadata
 
-    def _get_coverages(self, location_response: LocationResponseWithResults) -> list[Coverage]:
+    def _get_coverages(
+        self, location_response: LocationResponseWithResults
+    ) -> list[Coverage]:
         """Return the data needed for the 'coverage' key in the covjson response"""
         coverages: list[Coverage] = []
 
