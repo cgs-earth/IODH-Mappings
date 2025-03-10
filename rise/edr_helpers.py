@@ -2,14 +2,12 @@
 # SPDX-License-Identifier: MIT
 
 from copy import deepcopy
-import datetime
 import json
 import logging
 from typing import Optional
 import shapely.wkt
-from typing_extensions import assert_never
 
-import shapely  # type: ignore
+import shapely  
 
 from pygeoapi.provider.base import (
     ProviderQueryError,
@@ -19,9 +17,10 @@ import asyncio
 from rise.custom_types import (
     JsonPayload,
     Url,
-    ZType,
 )
-from rise.cache import RISECache
+from rise.lib.cache import RISECache
+from rise.lib.helpers import parse_bbox, safe_run_async
+from rise.lib.location import LocationResponse
 
 
 LOGGER = logging.getLogger(__name__)
@@ -32,45 +31,6 @@ catalogItemEndpoint = str
 
 
 class LocationHelper:
-    @staticmethod
-    def get_catalogItemURLs(
-        location_response: LocationResponse,
-    ) -> dict[locationId, list[catalogItemEndpoint]]:
-        locationIdToCatalogRecord: dict[int, str] = {}
-
-        catalogRecordToCatalogItems: dict[str, list[str]] = {}
-
-        for included_item in location_response["included"]:
-            if included_item["type"] == "CatalogRecord":
-                catalogRecord = included_item["id"]
-                assert "location" in included_item["relationships"], included_item[
-                    "relationships"
-                ]
-                assert "data" in included_item["relationships"]["location"]
-                assert "id" in included_item["relationships"]["location"]["data"]
-                locationId = included_item["relationships"]["location"]["data"]["id"]
-                locationIdToCatalogRecord[locationId] = catalogRecord
-            elif included_item["type"] == "CatalogItem":
-                catalogItem = included_item["id"]
-                catalogRecord = included_item["relationships"]["catalogRecord"]["data"][
-                    "id"
-                ]
-                if catalogRecord not in catalogRecordToCatalogItems:
-                    catalogRecordToCatalogItems[catalogRecord] = []
-                catalogRecordToCatalogItems[catalogRecord].append(catalogItem)
-
-        join: dict[str, list[str]] = {}
-        for locationId, catalogRecord in locationIdToCatalogRecord.items():
-            if catalogRecord in catalogRecordToCatalogItems:
-                for catalogItem in catalogRecordToCatalogItems[catalogRecord]:
-                    catalogItemURL = f"https://data.usbr.gov{catalogItem}"
-                    if locationId not in join:
-                        join[str(locationId)] = [catalogItemURL]
-                    else:
-                        join[locationId].append(catalogItemURL)
-
-        return join
-
     locationId = str
     paramIdList = list[str | None]
 
@@ -122,154 +82,7 @@ class LocationHelper:
         assert len(locationToParams) == len(locationsToCatalogItemURLs)
         return locationToParams
 
-    @staticmethod
-    def drop_location(response: LocationResponse, location_id: int) -> LocationResponse:
-        new = response.copy()
 
-        filtered_locations = [
-            loc for loc in response["data"] if loc["attributes"]["_id"] != location_id
-        ]
-
-        new.update({"data": filtered_locations})
-
-        return new
-
-    @staticmethod
-    def filter_by_properties(
-        response: LocationResponse, select_properties: list[str] | str, cache: RISECache
-    ) -> LocationResponse:
-        """Filter a location by a list of properties. NOTE you can also do this directly in RISE. Make sure you actually need this and can't fetch up front."""
-        list_of_properties: list[str] = (
-            [select_properties]
-            if isinstance(select_properties, str)
-            else select_properties
-        )
-
-        locationsToParams = LocationHelper.get_parameters(response, cache)
-        for param in list_of_properties:
-            for location, paramList in locationsToParams.items():
-                if param not in paramList:
-                    response = LocationHelper.drop_location(response, int(location))
-
-        return response
-
-    @staticmethod
-    def filter_by_date(
-        location_response: LocationResponse, datetime_: str
-    ) -> LocationResponse:
-        """
-        Filter by date
-        """
-        if not location_response["data"][0]["attributes"]:
-            raise ProviderQueryError("Can't filter by date")
-
-        filteredResp = location_response.copy()
-
-        parsed_date: list[datetime.datetime] = parse_date(datetime_)
-
-        if len(parsed_date) == 2:
-            start, end = parsed_date
-
-            for i, location in enumerate(filteredResp["data"]):
-                updateDate = datetime.datetime.fromisoformat(
-                    location["attributes"]["updateDate"]
-                )
-                if updateDate < start or updateDate > end:
-                    filteredResp["data"].pop(i)
-
-        elif len(parsed_date) == 1:
-            parsed_date_str = str(parsed_date[0])
-            filteredResp["data"] = [
-                location
-                for location in filteredResp["data"]
-                if str(location["attributes"]["updateDate"]).startswith(parsed_date_str)
-            ]
-
-        else:
-            raise ProviderQueryError(
-                "datetime_ must be a date or date range with two dates separated by '/' but got {}".format(
-                    datetime_
-                )
-            )
-
-        return filteredResp
-
-    @staticmethod
-    def filter_by_wkt(
-        location_response: LocationResponse,
-        wkt: Optional[str] = None,
-        z: Optional[str] = None,
-    ) -> LocationResponse:
-        parsed_geo = shapely.wkt.loads(str(wkt)) if wkt else None
-        return LocationHelper._filter_by_geometry(location_response, parsed_geo, z)
-
-    @staticmethod
-    def filter_by_bbox(
-        location_response: LocationResponse,
-        bbox: Optional[list] = None,
-        z: Optional[str] = None,
-    ) -> LocationResponse:
-        if bbox:
-            parse_result = parse_bbox(bbox)
-            shapely_box = parse_result[0] if parse_result else None
-            z = parse_result[1] if parse_result else z
-
-        shapely_box = parse_bbox(bbox)[0] if bbox else None
-        # TODO what happens if they specify both a bbox with z and a z value?
-        z = parse_bbox(bbox)[1] if bbox else z
-
-        return LocationHelper._filter_by_geometry(location_response, shapely_box, z)
-
-    @staticmethod
-    def _filter_by_geometry(
-        location_response: LocationResponse,
-        geometry: Optional[shapely.geometry.base.BaseGeometry],
-        # Vertical level
-        z: Optional[str] = None,
-    ) -> LocationResponse:
-        # need to deep copy so we don't change the dict object
-        copy_to_return = deepcopy(location_response)
-        indices_to_pop = set()
-        parsed_z = parse_z(str(z)) if z else None
-
-        for i, v in enumerate(location_response["data"]):
-            try:
-                elevation = int(float(v["attributes"]["elevation"]))  # type: ignore
-            except (ValueError, TypeError):
-                LOGGER.error(f"Invalid elevation {v} for location {i}")
-                elevation = None
-
-            if parsed_z:
-                if elevation is None:
-                    indices_to_pop.add(i)
-                else:
-                    match parsed_z:
-                        case [ZType.RANGE, x]:
-                            if elevation < x[0] or elevation > x[1]:
-                                indices_to_pop.add(i)
-                        case [ZType.SINGLE, x]:
-                            if elevation != x[0]:
-                                indices_to_pop.add(i)
-                        case [ZType.ENUMERATED_LIST, x]:
-                            if elevation not in x:
-                                indices_to_pop.add(i)
-                        case _:
-                            assert_never(parsed_z)  # type: ignore
-
-            if geometry:
-                result_geo = shapely.geometry.shape(
-                    v["attributes"]["locationCoordinates"]  # type: ignore
-                )
-
-                if not geometry.contains(result_geo):
-                    indices_to_pop.add(i)
-
-        # by reversing the list we pop from the end so the
-        # indices will be in the correct even after removing items
-        for i in sorted(indices_to_pop, reverse=True):
-            copy_to_return["data"].pop(i)
-
-        return copy_to_return
 
     @staticmethod
     def filter_by_limit(

@@ -8,13 +8,13 @@ from pygeoapi.provider.base import (
     ProviderQueryError,
 )
 from pygeoapi.provider.base_edr import BaseEDRProvider
-from rise.covjson import CovJSONBuilder
-from rise.custom_types import LocationResponse
+from rise.lib.covjson.covjson import CovJSONBuilder
+from rise.lib.location import LocationResponse
 from rise.edr_helpers import (
-    RISECache,
     LocationHelper,
 )
-from rise.lib import merge_pages, get_only_key, safe_run_async
+from rise.lib.cache import RISECache
+from rise.lib.helpers import merge_pages, get_only_key, safe_run_async
 
 LOGGER = logging.getLogger(__name__)
 
@@ -53,13 +53,13 @@ class RiseEDRProvider(BaseEDRProvider):
         self.instances = []
 
     def get_or_fetch_all_param_filtered_pages(
-        self, properties: Optional[list[str]] = None
-    ) -> LocationResponse:
+        self, properties_to_filter_by: Optional[list[str]] = None
+    ):
         """Return all locations which contain"""
         # RISE has an API for fetching locations by property/param ids. Thus, we want to fetch only relevant properties if we have them
-        if properties:
+        if properties_to_filter_by:
             base_url = "https://data.usbr.gov/rise/api/location?&"
-            for prop in properties:
+            for prop in properties_to_filter_by:
                 assert isinstance(prop, str)
                 base_url += f"parameterId%5B%5D={prop}&"
             base_url = base_url.removesuffix("&")
@@ -135,10 +135,11 @@ class RiseEDRProvider(BaseEDRProvider):
 
         """
 
-        response = self.get_or_fetch_all_param_filtered_pages(select_properties)
+        raw_resp = self.get_or_fetch_all_param_filtered_pages(select_properties)
+        response = LocationResponse(**raw_resp)
 
         if datetime_:
-            response = LocationHelper.filter_by_date(response, datetime_)
+            response = response.filter_by_date(datetime_)
 
         response = LocationHelper.filter_by_bbox(response, bbox, z)
 
@@ -164,23 +165,19 @@ class RiseEDRProvider(BaseEDRProvider):
 
         """
 
-        response = self.get_or_fetch_all_param_filtered_pages(select_properties)
+        raw_resp = self.get_or_fetch_all_param_filtered_pages(select_properties)
+        response = LocationResponse(**raw_resp)
 
         if datetime_:
-            response = LocationHelper.filter_by_date(response, datetime_)
+            response = response.filter_by_date(datetime_)
 
-        response = LocationHelper.filter_by_wkt(response, wkt, z)
+        if wkt != "":
+            response = response.filter_by_wkt(wkt, z)
 
         return CovJSONBuilder(self.cache).render(response, datetime_)
 
     @BaseEDRProvider.register()
     def items(self, **kwargs):
-        """
-        Retrieve a collection of items.
-
-        :param kwargs: Additional parameters for the request.
-        :returns: A GeoJSON representation of the items.
-        """
         # We have to define this since pygeoapi has a limitation and needs both EDR and OAF for items
         # https://github.com/geopython/pygeoapi/issues/1748
         pass

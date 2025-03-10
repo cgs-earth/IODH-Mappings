@@ -7,7 +7,8 @@ from typing import Any, Coroutine, Optional, Tuple
 
 import shapely
 from pygeoapi.provider.base import ProviderQueryError
-from rise.custom_types import JsonPayload, Url, ZType
+from rise.custom_types import JsonPayload, Url
+from rise.lib.types.helpers import ZType
 
 
 def safe_run_async(coro: Coroutine[Any, Any, Any]) -> Any:

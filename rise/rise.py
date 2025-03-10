@@ -6,13 +6,13 @@ from typing import Optional
 
 
 from pygeoapi.provider.base import BaseProvider, ProviderNoDataError, ProviderQueryError
-from rise.custom_types import LocationResponse
+from rise.lib.cache import RISECache
+from rise.lib.location import LocationResponse
 from rise.rise_edr import RiseEDRProvider
 from rise.edr_helpers import (
-    LocationHelper,
-    RISECache,
+    LocationHelper
 )
-from rise.lib import get_only_key, merge_pages, safe_run_async
+from rise.lib.helpers import merge_pages, get_only_key
 
 LOGGER = logging.getLogger(__name__)
 
@@ -35,7 +35,7 @@ class RiseProvider(BaseProvider):
 
         super().__init__(provider_def)
 
-    def items(
+    async def items(
         self,
         bbox: list = [],
         datetime_: Optional[str] = None,
@@ -44,6 +44,7 @@ class RiseProvider(BaseProvider):
         offset: Optional[int] = 0,
         **kwargs,
     ):
+        response: LocationResponse
         if itemId:
             try:
                 str(int(itemId))
@@ -55,19 +56,20 @@ class RiseProvider(BaseProvider):
             # Instead of merging all location pages, just
             # fetch the location associated with the ID
             url: str = f"https://data.usbr.gov/rise/api/location/{itemId}"
-            response = safe_run_async(self.cache.get_or_fetch(url))
-
+            raw_resp = await self.cache.get_or_fetch(url)
+            response = LocationResponse(**raw_resp)
         else:
             all_location_responses = self.cache.get_or_fetch_all_pages(
                 RiseEDRProvider.LOCATION_API
             )
             merged_response = merge_pages(all_location_responses)
-            response: LocationResponse = get_only_key(merged_response)
-            if response is None:
+            raw_resp = get_only_key(merged_response)
+            if raw_resp is None:
                 raise ProviderNoDataError
+            response = LocationResponse(**raw_resp)
 
         if datetime_:
-            response = LocationHelper.filter_by_date(response, datetime_)
+            response = response.filter_by_date(datetime_)
 
         if offset:
             response = LocationHelper.remove_before_offset(response, offset)

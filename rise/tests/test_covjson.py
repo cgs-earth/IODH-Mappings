@@ -2,14 +2,13 @@
 # SPDX-License-Identifier: MIT
 
 import requests
-from rise.cache import RISECache
-from rise.covjson import CovJSONBuilder
-from rise.custom_types import LocationResponse
+from rise.lib.cache import RISECache
+from rise.lib.covjson.covjson import CovJSONBuilder
 
 
 def test_one_location():
     headers = {"accept": "application/vnd.api+json"}
-    r: LocationResponse = requests.get(
+    r = requests.get(
         "https://data.usbr.gov/rise/api/location/1?page=1&itemsPerPage=5&include=catalogRecords.catalogItems",
         headers=headers,
     ).json()

@@ -5,24 +5,17 @@ from datetime import timedelta
 import json
 import logging
 
-from rise.lib import (
-    getResultUrlFromCatalogUrl,
-    merge_pages,
-    safe_run_async,
-)
+from rise.lib.helpers import parse_z, safe_run_async, parse_bbox, merge_pages, parse_z
 import pytest
 import shapely.wkt
 
 from pygeoapi.provider.base import ProviderQueryError
 from rise.edr_helpers import (
     LocationHelper,
-    parse_bbox,
-    parse_z,
 )
 
-from rise.custom_types import ZType
 
-from rise.cache import RISECache, fetch_url
+from rise.lib.cache import RISECache, fetch_url
 
 import shapely
 

@@ -4,55 +4,18 @@
 from copy import deepcopy
 import logging
 from typing import Optional
-from rise.custom_types import (
+from rise.lib.covjson.types.covjson import (
     CoverageCollection,
     Coverage,
     CoverageRange,
-    LocationData,
-    LocationResponse,
     Parameter,
 )
-from rise.cache import RISECache
+from rise.lib.cache import RISECache
 from rise.edr_helpers import LocationHelper
-from rise.lib import flatten_values, getResultUrlFromCatalogUrl, safe_run_async
+from rise.lib.location import LocationResponse, LocationData
 
 LOGGER = logging.getLogger(__name__)
 
-# The template that we will fill in with data and return to the user
-COVJSON_TEMPLATE: CoverageCollection = {
-    "type": "CoverageCollection",
-    ## CoverageJSON makes us specify a list of parameters that are relevant for the entire coverage collection
-    "parameters": {},
-    "referencing": [
-        {
-            "coordinates": ["x", "y"],
-            "system": {
-                "type": "GeographicCRS",
-                "id": "http://www.opengis.net/def/crs/OGC/1.3/CRS84",
-            },
-        },
-        {
-            "coordinates": ["z"],
-            "system": {
-                "type": "VerticalCRS",
-                "cs": {
-                    "csAxes": [
-                        {
-                            "name": {"en": "time"},
-                            "direction": "down",
-                            "unit": {"symbol": "time"},
-                        }
-                    ]
-                },
-            },
-        },
-        {
-            "coordinates": ["t"],
-            "system": {"type": "TemporalRS", "calendar": "Gregorian"},
-        },
-    ],
-    "coverages": {},  # type: ignore this w/ static type checks since it is a template and intended to be empty
-}
 
 
 def _generate_coverage_item(
