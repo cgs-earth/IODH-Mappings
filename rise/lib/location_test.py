@@ -3,7 +3,7 @@
 
 import pytest
 import requests
-from rise.lib.location import LocationResponse, LocationResponseWithIncluded
+from rise.lib.location import LocationResponseWithIncluded
 
 
 @pytest.fixture

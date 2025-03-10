@@ -9,7 +9,7 @@ from pygeoapi.provider.base import BaseProvider, ProviderQueryError
 from rise.lib.cache import RISECache
 from rise.lib.location import LocationResponse
 from rise.rise_edr import RiseEDRProvider
-from rise.lib.helpers import merge_pages, get_only_key, safe_run_async
+from rise.lib.helpers import merge_pages, safe_run_async
 
 LOGGER = logging.getLogger(__name__)
 

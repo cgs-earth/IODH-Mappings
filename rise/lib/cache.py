@@ -7,7 +7,7 @@ import logging
 import math
 from typing import Literal, Optional
 from typing_extensions import assert_never
-from pygeoapi.provider.base import ProviderConnectionError, ProviderNoDataError
+from pygeoapi.provider.base import ProviderConnectionError
 from rise.custom_types import JsonPayload, Url
 import aiohttp
 import redis

@@ -6,7 +6,6 @@ from copy import deepcopy
 from datetime import datetime
 import json
 import logging
-from re import I
 from typing import Literal, Optional, assert_never
 from pydantic import BaseModel, field_validator
 import shapely
@@ -35,9 +34,9 @@ class LocationResponse(BaseModel):
     """
 
     # links and pagination may not be present if there is only one location
-    links: Optional[PageLinks]= None 
+    links: Optional[PageLinks] = None
     meta: Optional[
-        dict[ 
+        dict[
             Literal["totalItems", "itemsPerPage", "currentPage"],
             int,
         ]
@@ -59,8 +58,6 @@ class LocationResponse(BaseModel):
         if not isinstance(data, list):
             return [data]
         return data
-
-    
 
     def filter_by_date(self, datetime_: str):
         """
@@ -168,8 +165,6 @@ class LocationResponse(BaseModel):
 
         return new
 
-
-
     def filter_by_bbox(
         self,
         bbox: Optional[list] = None,
@@ -226,7 +221,9 @@ class LocationResponse(BaseModel):
                     "name": location_feature.attributes.locationName,
                     "id": location_feature.attributes.id,
                     "Locations": [
-                        {"location": location_feature.attributes.locationCoordinates.model_dump()}
+                        {
+                            "location": location_feature.attributes.locationCoordinates.model_dump()
+                        }
                     ],
                 },
                 "geometry": location_feature.attributes.locationCoordinates.model_dump(),
@@ -253,7 +250,6 @@ class LocationResponse(BaseModel):
 class LocationResponseWithIncluded(LocationResponse):
     # included represents the additional data that is explicitly requested in the fetch request
     included: list[LocationIncluded]
-
 
     def get_catalogItemURLs(self) -> dict[str, list[str]]:
         """Get all catalog items associated with a particular location"""
@@ -288,7 +284,7 @@ class LocationResponseWithIncluded(LocationResponse):
                         join[locationId].append(catalogItemURL)
 
         return join
-    
+
     def get_parameters(
         self,
         cache: RISECache,
