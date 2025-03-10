@@ -5,7 +5,7 @@ from datetime import timedelta
 import json
 import logging
 
-from rise.lib.helpers import parse_z, safe_run_async, parse_bbox, merge_pages, parse_z
+from rise.lib.helpers import getResultUrlFromCatalogUrl, parse_z, safe_run_async, parse_bbox, merge_pages, parse_z
 import pytest
 import shapely.wkt
 
@@ -23,6 +23,8 @@ import asyncio
 
 import requests
 import time
+
+from rise.lib.types.helpers import ZType
 
 LOGGER = logging.getLogger(__name__)
 

@@ -9,9 +9,6 @@ from pygeoapi.provider.base import BaseProvider, ProviderNoDataError, ProviderQu
 from rise.lib.cache import RISECache
 from rise.lib.location import LocationResponse
 from rise.rise_edr import RiseEDRProvider
-from rise.edr_helpers import (
-    LocationHelper
-)
 from rise.lib.helpers import merge_pages, get_only_key
 
 LOGGER = logging.getLogger(__name__)
@@ -72,16 +69,16 @@ class RiseProvider(BaseProvider):
             response = response.filter_by_date(datetime_)
 
         if offset:
-            response = LocationHelper.remove_before_offset(response, offset)
+            response = response.remove_before_offset(offset)
 
         if limit:
-            response = LocationHelper.filter_by_limit(response, limit)
+            response = response.filter_by_limit(limit)
 
         # Even though bbox is required, it can be an empty list. If it is empty just skip filtering
         if bbox:
-            response = LocationHelper.filter_by_bbox(response, bbox)
+            response = response.filter_by_bbox(bbox)
 
-        return LocationHelper.to_geojson(response, single_feature=itemId is not None)
+        return response.to_geojson(single_feature=itemId is not None)
 
     def query(self, **kwargs):
         return self.items(**kwargs)

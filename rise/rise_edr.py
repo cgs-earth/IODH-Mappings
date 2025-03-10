@@ -10,11 +10,8 @@ from pygeoapi.provider.base import (
 from pygeoapi.provider.base_edr import BaseEDRProvider
 from rise.lib.covjson.covjson import CovJSONBuilder
 from rise.lib.location import LocationResponse
-from rise.edr_helpers import (
-    LocationHelper,
-)
 from rise.lib.cache import RISECache
-from rise.lib.helpers import merge_pages, get_only_key, safe_run_async
+from rise.lib.helpers import safe_run_async
 
 LOGGER = logging.getLogger(__name__)
 
@@ -66,10 +63,7 @@ class RiseEDRProvider(BaseEDRProvider):
         else:
             base_url = "https://data.usbr.gov/rise/api/location?"
         base_url += "&include=catalogRecords.catalogItems"
-        response = self.cache.get_or_fetch_all_pages(base_url)
-        response = merge_pages(response)
-        response = get_only_key(response)
-        return response
+        return self.cache.get_or_fetch_all_pages(base_url)
 
     @BaseEDRProvider.register()
     def locations(
@@ -87,18 +81,17 @@ class RiseEDRProvider(BaseEDRProvider):
         if not location_id and datetime_:
             raise ProviderQueryError("Can't filter by date on the entire ")
 
-        LOGGER.warning(datetime_)
-
         if location_id:
             url: str = f"https://data.usbr.gov/rise/api/location/{location_id}?include=catalogRecords.catalogItems"
-            response = safe_run_async(self.cache.get_or_fetch(url))
+            raw_resp = safe_run_async(self.cache.get_or_fetch(url))
+            response = LocationResponse(**raw_resp)
         else:
-            response = self.get_or_fetch_all_param_filtered_pages(select_properties)
+            raw_resp = self.get_or_fetch_all_param_filtered_pages(select_properties)
+            response = LocationResponse.from_api_pages(raw_resp)
 
         # FROM SPEC: If a location id is not defined the API SHALL return a GeoJSON features array of valid location identifiers,
         if not any([crs, datetime_, location_id]) or format_ == "geojson":
-            return LocationHelper.to_geojson(
-                response,
+            return response.to_geojson(
                 single_feature=True
                 if location_id
                 else False,  # Geojson is redered differently if there is just one feature
@@ -108,6 +101,7 @@ class RiseEDRProvider(BaseEDRProvider):
             return CovJSONBuilder(self.cache).render(response, datetime_)
 
     def get_fields(self):
+        """Get the list of all parameters (i.e. fields) that the user can filter by"""
         if self._fields:
             return self._fields
 
@@ -136,12 +130,12 @@ class RiseEDRProvider(BaseEDRProvider):
         """
 
         raw_resp = self.get_or_fetch_all_param_filtered_pages(select_properties)
-        response = LocationResponse(**raw_resp)
+        response = LocationResponse.from_api_pages(raw_resp)
 
         if datetime_:
             response = response.filter_by_date(datetime_)
 
-        response = LocationHelper.filter_by_bbox(response, bbox, z)
+        response = response.filter_by_bbox(bbox, z)
 
         # match format_:
         #     case "json" | "GeoJSON" | _:
@@ -166,7 +160,7 @@ class RiseEDRProvider(BaseEDRProvider):
         """
 
         raw_resp = self.get_or_fetch_all_param_filtered_pages(select_properties)
-        response = LocationResponse(**raw_resp)
+        response = LocationResponse.from_api_pages(raw_resp)
 
         if datetime_:
             response = response.filter_by_date(datetime_)

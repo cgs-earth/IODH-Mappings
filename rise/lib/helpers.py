@@ -3,7 +3,7 @@
 
 import asyncio
 import datetime
-from typing import Any, Coroutine, Optional, Tuple
+from typing import Optional, Tuple
 
 import shapely
 from pygeoapi.provider.base import ProviderQueryError
@@ -11,7 +11,7 @@ from rise.custom_types import JsonPayload, Url
 from rise.lib.types.helpers import ZType
 
 
-def safe_run_async(coro: Coroutine[Any, Any, Any]) -> Any:
+def safe_run_async(coro):
     """
     Run an asyncio coroutine, ensuring it works even if an event loop is already running.
     """
@@ -23,14 +23,12 @@ def safe_run_async(coro: Coroutine[Any, Any, Any]) -> Any:
         return loop.run_until_complete(coro)
 
 
-def merge_pages(pages: dict[Url, JsonPayload]):
-    # Initialize variables to hold the URL and combined data
-    combined_url = None
-    combined_data = None
+def merge_pages(pages: dict[Url, JsonPayload]) -> dict:
+    """Given multiple different pages of data, merge them together"""
 
-    for url, content in pages.items():
-        if combined_url is None:
-            combined_url = url  # Set the URL from the first dictionary
+    combined_data = {}
+
+    for _, content in pages.items():
         if combined_data is None:
             combined_data = content
         else:
@@ -40,13 +38,10 @@ def merge_pages(pages: dict[Url, JsonPayload]):
 
             combined_data["data"].extend(data)
 
-    # Create the merged dictionary with the combined URL and data
-    merged_dict = {combined_url: combined_data}
-
-    return merged_dict
+    return combined_data
 
 
-def flatten_values(input: dict[str, list[str]]) -> list[str]:
+def flatten_values(input: dict[str, list]) -> list:
     output = []
     for _, v in input.items():
         for i in v:

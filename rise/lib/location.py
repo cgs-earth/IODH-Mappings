@@ -1,15 +1,17 @@
 # Copyright 2025 Lincoln Institute of Land Policy
 # SPDX-License-Identifier: MIT
 
+import asyncio
 from copy import deepcopy
 from datetime import datetime
+import json
 import logging
 from typing import Literal, NewType, Optional, assert_never
 from pydantic import BaseModel, field_validator
 import shapely
 import shapely.wkt
 from rise.lib.cache import RISECache
-from rise.lib.helpers import parse_bbox, parse_date, parse_z
+from rise.lib.helpers import get_trailing_id, merge_pages, parse_bbox, parse_date, parse_z, safe_run_async
 from rise.lib.types.helpers import ZType
 from rise.lib.types.includes import LocationIncluded
 from rise.lib.types.location import LocationData
@@ -28,6 +30,11 @@ class LocationResponse(BaseModel):
     ] = None
     included: list[LocationIncluded]
     data: list[LocationData]
+
+
+    @classmethod
+    def from_api_pages(cls, pages: dict[str, dict]):
+        return cls(**merge_pages(pages))
 
     @field_validator("data", check_fields=True, mode="before")
     @classmethod
@@ -188,7 +195,56 @@ class LocationResponse(BaseModel):
         new.data = filtered_locations
 
         return new
-    
+
+
+    def get_parameters(
+        self,
+        cache: RISECache,
+    ) -> dict[str, list[str | None]]:
+        locationsToCatalogItemURLs = self.get_catalogItemURLs()
+
+        locationToParams: dict[str, list[str | None]] = {}
+
+        async def get_all_params_for_location(location, catalogItems):
+            # Map a location to a list of catalog item responses
+            urlItemMapper: dict[str, dict] = await cache.get_or_fetch_group(
+                catalogItems
+            )
+
+            try:
+                allParams = []
+
+                for item in urlItemMapper.values():
+                    if item is not None:
+                        res = CatalogItem.get_parameter(item)
+                        if res is not None:
+                            allParams.append(res["id"])
+
+            except KeyError:
+                with open("rise/tests/data/debug.json", "w") as f:
+                    json.dump(urlItemMapper, f)
+                raise ProviderQueryError("Could not get parameters")
+
+            # drop all empty params
+            allParams = list(filter(lambda x: x is not None, allParams))
+            return location, allParams
+
+        async def gather_parameters():
+            """Asynchronously fetch all parameters for all locations"""
+            tasks = [
+                get_all_params_for_location(location, catalogItemURLs)
+                for location, catalogItemURLs in locationsToCatalogItemURLs.items()
+            ]
+            results = await asyncio.gather(*tasks)
+            return {location: params for location, params in results}
+
+        locationToParams = safe_run_async(gather_parameters())
+
+        # should have the same number of locations in each
+        assert len(locationToParams) == len(locationsToCatalogItemURLs)
+        return locationToParams
+
+
     def filter_by_properties(
         self, select_properties: list[str] | str, cache: RISECache
     ):
@@ -199,6 +255,7 @@ class LocationResponse(BaseModel):
             else select_properties
         )
 
+        response = self
         locationsToParams = self.get_parameters(cache)
         for param in list_of_properties:
             for location, paramList in locationsToParams.items():
@@ -206,6 +263,7 @@ class LocationResponse(BaseModel):
                     response = self.drop_location(int(location))
 
         return response
+        
     
     def filter_by_bbox(
         self,
@@ -222,3 +280,77 @@ class LocationResponse(BaseModel):
         z = parse_bbox(bbox)[1] if bbox else z
 
         return self._filter_by_geometry(shapely_box, z)
+    
+
+    def filter_by_limit(
+        self,
+        limit: int
+    ):
+        self.data = self.data[:limit]
+        return self
+
+    def remove_before_offset(self,
+        offset: int
+    ):
+        self.data = self.data[offset:]
+        return self
+
+    def filter_by_id(
+        self,
+        identifier: Optional[str] = None,
+    ):
+        self.data = [
+            location
+            for location in self.data
+            if str(location.attributes.id) == identifier
+        ]
+        return self
+
+    def to_geojson(
+        self,
+        single_feature: bool = False
+    ) -> dict:
+        features = []
+
+        for location_feature in self.data:
+            # z = location_feature["attributes"]["elevation"]
+            # if z is not None:
+            #     location_feature["attributes"]["locationCoordinates"][
+            #         "coordinates"
+            #     ].append(float(z))
+            #     LOGGER.error(
+            #         location_feature["attributes"]["locationCoordinates"]["coordinates"]
+            #     )
+
+            feature_as_geojson = {
+                "type": "Feature",
+                "id": location_feature.attributes.id,
+                "properties": {
+                    "Locations@iot.count": 1,
+                    "name": location_feature.attributes.locationName,
+                    "id": location_feature.attributes.id,
+                    "Locations": [
+                        {
+                            "location": location_feature.attributes.locationCoordinates
+                        }
+                    ],
+                },
+                "geometry": location_feature.attributes.locationCoordinates,
+            }
+            features.append(feature_as_geojson)
+            if single_feature:
+                return feature_as_geojson
+
+        return {"type": "FeatureCollection", "features": features}
+
+    def get_results(self, 
+        catalogItemEndpoints: list[str], cache: RISECache
+    ) -> dict[str, str]:
+        result_endpoints = [
+            f"https://data.usbr.gov/rise/api/result?page=1&itemsPerPage=25&itemId={get_trailing_id(endpoint)}"
+            for endpoint in catalogItemEndpoints
+        ]
+
+        fetched_result = safe_run_async(cache.get_or_fetch_group(result_endpoints))
+
+        return fetched_result

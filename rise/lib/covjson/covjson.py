@@ -1,9 +1,9 @@
 # Copyright 2025 Lincoln Institute of Land Policy
 # SPDX-License-Identifier: MIT
 
-from copy import deepcopy
 import logging
 from typing import Optional
+from rise.lib.covjson.template import COVJSON_TEMPLATE
 from rise.lib.covjson.types.covjson import (
     CoverageCollection,
     Coverage,
@@ -11,8 +11,8 @@ from rise.lib.covjson.types.covjson import (
     Parameter,
 )
 from rise.lib.cache import RISECache
-from rise.edr_helpers import LocationHelper
-from rise.lib.location import LocationResponse, LocationData
+from rise.lib.helpers import flatten_values, getResultUrlFromCatalogUrl, safe_run_async
+from rise.lib.location import CatalogItem, LocationResponse, LocationData
 
 LOGGER = logging.getLogger(__name__)
 
@@ -24,11 +24,11 @@ def _generate_coverage_item(
     times: list[str],
 ) -> Coverage:
     # if it is a point it will have different geometry
-    isPoint = location_feature["attributes"]["locationCoordinates"]["type"] == "Point"
+    isPoint = location_feature.attributes.locationCoordinates.type == "Point"
 
     if isPoint:
         # z = location_feature["attributes"]["elevation"]
-        coords = location_feature["attributes"]["locationCoordinates"]["coordinates"]
+        coords = location_feature.attributes.locationCoordinates.coordinates
         x, y = coords[0], coords[1]
 
         coverage_item: Coverage = {
@@ -53,14 +53,10 @@ def _generate_coverage_item(
                 "type": "Domain",
                 "axes": {
                     "composite": {
-                        "dataType": location_feature["attributes"][
-                            "locationCoordinates"
-                        ]["type"],
+                        "dataType": location_feature.attributes.locationCoordinates.type,
                         "coordinates": ["x", "y"],
                         "values": [
-                            location_feature["attributes"]["locationCoordinates"][
-                                "coordinates"
-                            ]
+                            location_feature.attributes.locationCoordinates.coordinates
                         ],
                     },
                     "t": {"values": times},
@@ -82,8 +78,8 @@ class CovJSONBuilder:
 
     def _get_relevant_parameters(self, location_response: LocationResponse) -> set[str]:
         relevant_parameters = set()
-        for location_feature in location_response["data"]:
-            for param in location_feature["relationships"]["catalogItems"]["data"]:
+        for location_feature in location_response.data:
+            for param in location_feature.relationships.catalogItems.data:
                 id = str(param["attributes"]["parameterId"])
                 relevant_parameters.add(id)
         return relevant_parameters
@@ -116,81 +112,17 @@ class CovJSONBuilder:
 
         return paramNameToMetadata
 
-    def get_location_response_with_results(
-        self,
-        base_location_response: LocationResponse,
-        time_filter: Optional[str] = None,
-    ) -> LocationResponse:
-        """Given a location that contains just catalog item ids, fill in the catalog items with the full
-        endpoint response for the given catalog item so it can be more easily used for complex joins
-        """
-
-        new = deepcopy(base_location_response)
-
-        # Make a dictionary from an existing response, no fetch needed
-        locationToCatalogItemUrls: dict[str, list[str]] = (
-            LocationHelper.get_catalogItemURLs(new)
-        )
-
-        catalogItemUrls = flatten_values(locationToCatalogItemUrls)
-
-        catalogItemUrlToResponse = safe_run_async(
-            self._cache.get_or_fetch_group(catalogItemUrls)
-        )
-
-        # Fetch all results in parallel before looping through each location to add them in the json
-        resultUrls = [
-            getResultUrlFromCatalogUrl(url, time_filter) for url in catalogItemUrls
-        ]
-        assert len(resultUrls) == len(set(resultUrls)), LOGGER.error(
-            "Duplicate result urls when adding results to the catalog items"
-        )
-        LOGGER.debug(f"Fetching {resultUrls}; {len(resultUrls)} in total")
-        results = safe_run_async(self._cache.get_or_fetch_group(resultUrls))
-
-        if type(new["data"]) is not list:
-            new["data"] = [new["data"]]
-
-        for i, location in enumerate(new["data"]):
-            catalogItemUrls = locationToCatalogItemUrls.get(location["id"])
-            if not catalogItemUrls:
-                continue
-            for j, catalogItem in enumerate(catalogItemUrls):
-                fetchedData = catalogItemUrlToResponse[catalogItem]["data"]
-
-                if "catalogItems" not in new["data"][i]["relationships"]:
-                    new["data"][i]["relationships"]["catalogItems"] = {"data": []}
-
-                new["data"][i]["relationships"]["catalogItems"]["data"].append(
-                    fetchedData
-                )
-
-                base_catalog_item_j = new["data"][i]["relationships"]["catalogItems"][
-                    "data"
-                ][j]
-                associated_res_url = getResultUrlFromCatalogUrl(
-                    catalogItem, time_filter
-                )
-                if not associated_res_url:
-                    results_for_catalog_item_j = None
-                else:
-                    results_for_catalog_item_j = results[associated_res_url].get(
-                        "data", None
-                    )
-                    base_catalog_item_j["results"] = results_for_catalog_item_j
-
-        return new
-
+    
     def _get_coverages(self, location_response: LocationResponse) -> list[Coverage]:
         """Return the data needed for the 'coverage' key in the covjson response"""
         coverages: list[Coverage] = []
 
-        for location_feature in location_response["data"]:
+        for location_feature in location_response.data:
             # CoverageJSON needs a us to associated every parameter with data
             # This data is grouped independently for each location
             paramToCoverage: dict[str, CoverageRange] = {}
 
-            for param in location_feature["relationships"]["catalogItems"]["data"]:
+            for param in location_feature.relationships.catalogItems.data:
                 if not (  # ensure param contains data so it can be used for covjson
                     param["results"] is not None
                     and len(param["results"]) > 0
