@@ -16,7 +16,6 @@ def resultRespFixture():
 
 def test_location_parse(resultRespFixture: dict):
     serializedResp = ResultResponse.model_validate(resultRespFixture)
-    assert serializedResp
     assert serializedResp.get_results()
     assert serializedResp.get_dates()
     assert serializedResp.get_parameter_id() == "3"

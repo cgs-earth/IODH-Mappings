@@ -148,10 +148,9 @@ class CovJSONBuilder:
         templated_covjson: CoverageCollection = COVJSON_TEMPLATE
         
 
-        paramsToGeoJsonOutput = self._cache.get_or_fetch_parameters()
-
-        templated_covjson["coverages"] = self._get_coverages(location_response, paramsToGeoJsonOutput)
-        templated_covjson["parameters"] = self._insert_parameter_metadata(paramsToGeoJsonOutput,
+        paramIdToMetadata = self._cache.get_or_fetch_parameters()
+        templated_covjson["coverages"] = self._get_coverages(location_response, paramIdToMetadata)
+        templated_covjson["parameters"] = self._insert_parameter_metadata(paramIdToMetadata,
             location_response=location_response
         )
 
