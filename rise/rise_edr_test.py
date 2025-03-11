@@ -64,9 +64,9 @@ def test_get_or_fetch_all_param_filtered_pages(edr_config: dict):
     one_resp = merge_pages(oneparam)
     assert len(one_resp["data"]) == 13
 
-    assert len(merge_resp["data"]) > len(
-        one_resp["data"]
-    ), "both params should have more data than one param"
+    assert len(merge_resp["data"]) > len(one_resp["data"]), (
+        "both params should have more data than one param"
+    )
 
 
 def test_location_select_properties(edr_config: dict):

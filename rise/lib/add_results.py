@@ -63,9 +63,9 @@ class LocationResultBuilder:
         resultUrls = [
             getResultUrlFromCatalogUrl(url, time_filter) for url in catalogItemUrls
         ]
-        assert len(resultUrls) == len(
-            set(resultUrls)
-        ), "Duplicate result urls when adding results to the catalog items"
+        assert len(resultUrls) == len(set(resultUrls)), (
+            "Duplicate result urls when adding results to the catalog items"
+        )
         LOGGER.debug(f"Fetching {resultUrls}; {len(resultUrls)} in total")
         return safe_run_async(self.cache.get_or_fetch_group(resultUrls))
 
