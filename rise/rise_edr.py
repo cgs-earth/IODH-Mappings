@@ -9,7 +9,7 @@ from pygeoapi.provider.base import (
 )
 from pygeoapi.provider.base_edr import BaseEDRProvider
 from rise.lib.covjson.covjson import CovJSONBuilder
-from rise.lib.location import LocationResponse, LocationResponseWithIncluded
+from rise.lib.location import LocationResponseWithIncluded
 from rise.lib.cache import RISECache
 from rise.lib.helpers import safe_run_async
 from rise.lib.add_results import LocationResultBuilder

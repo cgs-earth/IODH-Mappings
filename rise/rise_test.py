@@ -17,6 +17,7 @@ def test_get_all_pages_for_items():
     response = LocationResponse(**merged_response)
     assert response
 
+
 @pytest.fixture()
 def oaf_config(request: type[FixtureRequest]):
     config = {

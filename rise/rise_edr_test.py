@@ -29,9 +29,11 @@ def test_location_locationId(edr_config: dict):
 
     p = RiseEDRProvider(edr_config)
     out = p.locations(location_id=1, format_="covjson")
-    assert (SAME_NUMBER_COVERAGES_AS_CATALOG_ITEMS := len(out["coverages"]) == catalogItems)
+    assert (
+        SAME_NUMBER_COVERAGES_AS_CATALOG_ITEMS := len(out["coverages"]) == catalogItems
+    )
 
-    geojson_out: dict = p.locations(location_id=1, format_="geojson") # type: ignore Have to ignore this since we know it is geojson
+    geojson_out: dict = p.locations(location_id=1, format_="geojson")  # type: ignore Have to ignore this since we know it is geojson
     assert geojson_out["type"] == "Feature"
     assert geojson_out["id"] == 1
 
@@ -118,8 +120,6 @@ def test_area(edr_config: dict):
         wkt=victoriaTexas,
     )
     assert response["coverages"]
-
-
 
 
 def test_cube(edr_config: dict):

@@ -26,6 +26,7 @@ class DataNeededForCovjson(BaseModel):
     This class represents the smallest amount of data needed for making covjson
     from rise. We pass around a small class in an effort to make the ETL cleaner and simpler
     """
+
     location: str
     locationType: Literal["Point", "Polygon", "LineString"]
     geometry: list[Any] | Tuple[float, float]
@@ -89,7 +90,7 @@ class LocationResultBuilder:
                 timeseriesModel = ResultResponse.model_validate(timseriesResults)
                 # it is possible for a catalog item to have an associated result endpoint but no data inside of it
                 if not timeseriesModel.data:
-                    continue 
+                    continue
 
                 paramAndResults.append(
                     ParameterWithResults(

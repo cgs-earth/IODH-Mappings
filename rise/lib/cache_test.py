@@ -1,3 +1,5 @@
+# Copyright 2025 Lincoln Institute of Land Policy
+# SPDX-License-Identifier: MIT
 
 import asyncio
 from datetime import timedelta
@@ -12,12 +14,13 @@ from rise.lib.helpers import safe_run_async
 def test_simple_redis_serialization():
     cache = RISECache("redis")
 
-    data = json.loads("{\"test\": 1}")
+    data = json.loads('{"test": 1}')
     cache.set("test_url_location", data, timedelta(milliseconds=1000))  # noqa: F821
     # our interface does not export an atomic set operation, so we need to just block heuristically
     time.sleep(0.2)
     val = cache.get("test_url_location")
     assert val == data
+
 
 def test_redis_wrapper():
     cache = RISECache("redis")
@@ -27,6 +30,7 @@ def test_redis_wrapper():
     time.sleep(1)
     with pytest.raises(KeyError):
         cache.get("test_url_catalog_item")
+
 
 class TestFnsWithCaching:
     def test_fetch_group(self):
