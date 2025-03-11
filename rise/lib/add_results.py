@@ -77,12 +77,20 @@ class LocationResultBuilder:
 
         for location in self.base_response.data:
             paramAndResults: list[ParameterWithResults] = []
-            for catalogItemUrl in self.locationToCatalogItemUrls[location.id]:
+
+            associatedCatalogItems = self.locationToCatalogItemUrls.get(location.id)
+            if not associatedCatalogItems:
+                continue
+            for catalogItemUrl in associatedCatalogItems:
                 catalogUrlAsResultUrl = getResultUrlFromCatalogUrl(
                     catalogItemUrl, time_filter
                 )
                 timseriesResults = self.timeseriesResults[catalogUrlAsResultUrl]
                 timeseriesModel = ResultResponse.model_validate(timseriesResults)
+                # it is possible for a catalog item to have an associated result endpoint but no data inside of it
+                if not timeseriesModel.data:
+                    continue 
+
                 paramAndResults.append(
                     ParameterWithResults(
                         catalogItemId=catalogItemUrl,

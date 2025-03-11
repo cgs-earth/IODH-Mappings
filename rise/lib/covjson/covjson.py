@@ -147,13 +147,13 @@ class CovJSONBuilder:
                 )
 
                 coverages.append(coverage_item)
+
         return coverages
 
     def fill_template(
         self, location_response: list[DataNeededForCovjson]
     ) -> CoverageCollection:
         templated_covjson: CoverageCollection = COVJSON_TEMPLATE
-
         paramIdToMetadata = self._cache.get_or_fetch_parameters()
         templated_covjson["coverages"] = self._get_coverages(
             location_response, paramIdToMetadata

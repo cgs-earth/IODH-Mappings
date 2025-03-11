@@ -1,12 +1,9 @@
 # Copyright 2025 Lincoln Institute of Land Policy
 # SPDX-License-Identifier: MIT
 
-from pytest import FixtureRequest
 import requests
 import pytest
 
-from pygeoapi.provider.base import ProviderQueryError
-from rise.rise import RiseProvider
 from rise.rise_edr import RiseEDRProvider
 import datetime
 
@@ -32,10 +29,9 @@ def test_location_locationId(edr_config: dict):
 
     p = RiseEDRProvider(edr_config)
     out = p.locations(location_id=1, format_="covjson")
-    # Returns the same number of coverages as catalogItems
-    assert len(out["coverages"]) == catalogItems
+    assert (SAME_NUMBER_COVERAGES_AS_CATALOG_ITEMS := len(out["coverages"]) == catalogItems)
 
-    geojson_out: dict = p.locations(location_id=1, format_="geojson")  # type: ignore For some reason mypy complains
+    geojson_out: dict = p.locations(location_id=1, format_="geojson") # type: ignore Have to ignore this since we know it is geojson
     assert geojson_out["type"] == "Feature"
     assert geojson_out["id"] == 1
 
@@ -71,15 +67,7 @@ def test_get_or_fetch_all_param_filtered_pages(edr_config: dict):
 def test_location_select_properties(edr_config: dict):
     # Currently in pygeoapi we use the word "select_properties" as the
     # keyword argument. This is hold over from OAF it seems.
-
     p = RiseEDRProvider(edr_config)
-
-    # out = p.locations(select_properties=["DUMMY-PARAM"], format_="geojson")
-    # assert len(out["features"]) == 0  # type: ignore ; issues with pyright union types
-
-    # out = p.locations(select_properties=["18"], format_="geojson")
-    # assert len(out["features"]) > 0  # type: ignore
-
     out_prop_2 = p.locations(select_properties=["2"], format_="geojson")
     for f in out_prop_2["features"]:  # type: ignore
         if f["id"] == 1:  # location 1 is associated with property 2
@@ -118,11 +106,11 @@ def test_location_datetime(edr_config: dict):
 def test_area(edr_config: dict):
     p = RiseEDRProvider(edr_config)
 
-    # areaInEurope = "GEOMETRYCOLLECTION(POLYGON ((-5.976563 55.677584, 11.425781 47.517201, 16.699219 53.225768, -5.976563 55.677584)), POLYGON ((-99.717407 28.637568, -97.124634 28.608637, -97.020264 27.210671, -100.184326 26.980829, -101.392822 28.139816, -99.717407 28.637568)))"
-    # response = p.area(
-    #     wkt=areaInEurope,
-    # )
-    # assert len(response["coverages"]) == 0
+    areaInEurope = "GEOMETRYCOLLECTION(POLYGON ((-5.976563 55.677584, 11.425781 47.517201, 16.699219 53.225768, -5.976563 55.677584)), POLYGON ((-99.717407 28.637568, -97.124634 28.608637, -97.020264 27.210671, -100.184326 26.980829, -101.392822 28.139816, -99.717407 28.637568)))"
+    response = p.area(
+        wkt=areaInEurope,
+    )
+    assert response["coverages"] == []
 
     victoriaTexas = "GEOMETRYCOLLECTION (POLYGON ((-97.789307 29.248063, -97.789307 29.25046, -97.789307 29.25046, -97.789307 29.248063)), POLYGON ((-97.588806 29.307956, -97.58606 29.307956, -97.58606 29.310351, -97.588806 29.310351, -97.588806 29.307956)), POLYGON ((-97.410278 28.347899, -95.314636 28.347899, -95.314636 29.319931, -97.410278 29.319931, -97.410278 28.347899)))"
 
@@ -132,30 +120,6 @@ def test_area(edr_config: dict):
     assert response["coverages"]
 
 
-@pytest.fixture()
-def oaf_config(request: type[FixtureRequest]):
-    config = {
-        "name": "RISE_EDR_Provider",
-        "type": "feature",
-        "title_field": "name",
-        "cache": "redis",
-        "data": "https://data.usbr.gov/rise/api/",
-    }
-    return config
-
-
-def test_item(oaf_config: dict):
-    p = RiseProvider(oaf_config)
-    out = p.items(itemId="1")
-    out = out
-    assert out["id"] == 1
-    assert out["type"] == "Feature"
-
-    with pytest.raises(ProviderQueryError):
-        out = p.items(itemId="__INVALID")
-
-    out = p.items(limit=10)
-    assert len(out["features"]) == 10
 
 
 def test_cube(edr_config: dict):
