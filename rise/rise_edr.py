@@ -139,9 +139,6 @@ class RiseEDRProvider(BaseEDRProvider):
 
         response = response.filter_by_bbox(bbox, z)
 
-        # match format_:
-        #     case "json" | "GeoJSON" | _:
-        # return LocationHelper.to_geojson(response)
         builder = LocationResultBuilder(cache=self.cache, base_response=response)
         response_with_results = builder.load_results(time_filter=datetime_)
         return CovJSONBuilder(self.cache).fill_template(response_with_results)
@@ -159,8 +156,7 @@ class RiseEDRProvider(BaseEDRProvider):
     ):
         """
         Extract and return coverage data from a specified area.
-        Example: http://localhost:5000/collections/rise-edr/area?coords=POLYGON((-124.566244%2042.000709%2C%20-124.566244%2046.292035%2C%20-116.463262%2046.292035%2C%20-116.463262%2042.000709%2C%20-124.566244%2042.000709))
-
+        Example: http://localhost:5000/collections/rise-edr/area?coords=POLYGON%20((-109.204102%2047.010226,%20-104.655762%2047.010226,%20-104.655762%2049.267805,%20-109.204102%2049.267805,%20-109.204102%2047.010226))&f=json
         """
 
         raw_resp = self.get_or_fetch_all_param_filtered_pages(select_properties)

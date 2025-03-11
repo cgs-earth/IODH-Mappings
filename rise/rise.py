@@ -43,13 +43,6 @@ class RiseProvider(BaseProvider):
     ):
         response: LocationResponse
         if itemId:
-            try:
-                str(int(itemId))
-            except ValueError:
-                raise ProviderQueryError(
-                    f"ID should be able to be converted to int but got: {itemId}"
-                )
-
             # Instead of merging all location pages, just
             # fetch the location associated with the ID
             url: str = f"https://data.usbr.gov/rise/api/location/{itemId}"
