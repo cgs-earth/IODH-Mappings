@@ -41,3 +41,6 @@ dev = [
 
 [tool.uv.sources]
 rise-edr = { workspace = true }
+
+[tool.pyright]
+reportMissingModuleSource = false

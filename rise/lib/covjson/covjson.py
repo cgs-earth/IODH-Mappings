@@ -5,7 +5,7 @@ import logging
 from typing import Any, Tuple
 
 from rise.lib.covjson.template import COVJSON_TEMPLATE
-from rise.lib.covjson.types.covjson import (
+from rise.lib.covjson.types import (
     CoverageCollection,
     Coverage,
     CoverageRange,
@@ -21,7 +21,7 @@ LOGGER = logging.getLogger(__name__)
 def _generate_coverage_item(
     location_type: str,
     coords: list[Any] | Tuple[float, float],
-    times: list[str],
+    times: list[str | None],
     paramToCoverage: dict[str, CoverageRange],
 ) -> Coverage:
     # if it is a point it will have different geometry

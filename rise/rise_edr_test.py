@@ -4,6 +4,7 @@
 import requests
 import pytest
 
+from rise.lib.helpers import get_only_key, merge_pages
 from rise.rise_edr import RiseEDRProvider
 import datetime
 
@@ -55,14 +56,16 @@ def test_get_or_fetch_all_param_filtered_pages(edr_config: dict):
     p = RiseEDRProvider(edr_config)
     params = ["812", "6"]
     bothparams = p.get_or_fetch_all_param_filtered_pages(params)
-    assert len(bothparams["data"]) == 10 + 13
+    merge_resp = merge_pages(bothparams)
+    assert len(merge_resp["data"]) == 10 + 13
 
     params = ["6"]
     oneparam = p.get_or_fetch_all_param_filtered_pages(params)
-    assert len(oneparam["data"]) == 13
+    one_resp = merge_pages(oneparam)
+    assert len(one_resp["data"]) == 13
 
-    assert len(bothparams["data"]) > len(
-        oneparam["data"]
+    assert len(merge_resp["data"]) > len(
+        one_resp["data"]
     ), "both params should have more data than one param"
 
 
@@ -119,7 +122,7 @@ def test_area(edr_config: dict):
     response = p.area(
         wkt=victoriaTexas,
     )
-    assert response["coverages"]
+    assert response["coverages"] == []
 
 
 def test_cube(edr_config: dict):

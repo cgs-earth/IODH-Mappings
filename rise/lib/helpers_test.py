@@ -5,7 +5,7 @@ import pytest
 import requests
 import shapely.wkt
 from rise.lib.cache import RISECache
-from rise.lib.helpers import merge_pages, parse_bbox, parse_z
+from rise.lib.helpers import merge_pages, parse_bbox, parse_z, safe_run_async
 from rise.lib.types.helpers import ZType
 
 
@@ -36,19 +36,16 @@ def test_merge_pages():
 
 def test_integration_merge_pages():
     url = "https://data.usbr.gov/rise/api/location"
-
-    totalitems = requests.get(
-        url, headers={"accept": "application/vnd.api+json"}
-    ).json()["meta"]["totalItems"]
+    cache = RISECache("redis")
+    totalitems = safe_run_async(cache.get_or_fetch(url))["meta"]["totalItems"]
 
     cache = RISECache("redis")
     pages = cache.get_or_fetch_all_pages(url, force_fetch=True)
     merged = merge_pages(pages)
-    for url, content in merged.items():
-        assert content is not None
-        assert content["data"]
-        assert len(content["data"]) == totalitems
-        break
+    assert merged is not None
+    assert "data" in merged
+    assert merged["data"], merged
+    assert len(merged["data"]) == totalitems, merged["data"]
 
 
 def test_z_parse():

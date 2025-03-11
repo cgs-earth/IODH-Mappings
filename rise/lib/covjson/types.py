@@ -16,7 +16,7 @@ class CoverageRange(TypedDict):
     dataType: Literal["float"]
     axisNames: list[str]
     shape: list[int]
-    values: list[float]
+    values: list[float | None]
 
 
 class Coverage(TypedDict):
