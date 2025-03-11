@@ -7,7 +7,7 @@ from pydantic import BaseModel, Field, FiniteFloat
 
 class PageLinks(BaseModel):
     first: Optional[str] = None
-    last: Optional[str] = None 
+    last: Optional[str] = None
     self: str
     next: Optional[str] = None
     prev: Optional[str] = None

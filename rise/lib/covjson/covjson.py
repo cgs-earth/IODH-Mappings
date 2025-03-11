@@ -51,9 +51,7 @@ def _generate_coverage_item(
                     "composite": {
                         "dataType": location_type,
                         "coordinates": ["x", "y"],
-                        "values": [
-                            coords
-                        ],
+                        "values": [coords],
                     },
                     "t": {"values": times},
                 },
@@ -70,8 +68,9 @@ class CovJSONBuilder:
     def __init__(self, cache: RISECache):
         self._cache = cache
 
-
-    def _get_parameter_metadata(self, location_response: list[TransformedLocationWithResults]):
+    def _get_parameter_metadata(
+        self, location_response: list[TransformedLocationWithResults]
+    ):
         relevant_parameters = []
         for location in location_response:
             for p in location.parameters:
@@ -81,8 +80,10 @@ class CovJSONBuilder:
 
         paramsToGeoJsonOutput = self._cache.get_or_fetch_parameters()
         for param_id in relevant_parameters:
-            if param_id not in paramsToGeoJsonOutput: 
-                LOGGER.error(f"Could not find metadata for {param_id} in {sorted(paramsToGeoJsonOutput.keys())}")
+            if param_id not in paramsToGeoJsonOutput:
+                LOGGER.error(
+                    f"Could not find metadata for {param_id} in {sorted(paramsToGeoJsonOutput.keys())}"
+                )
                 continue
 
             associatedData = paramsToGeoJsonOutput[param_id]
@@ -101,7 +102,9 @@ class CovJSONBuilder:
 
         return paramNameToMetadata
 
-    def _get_coverages(self, locationsWithResults: list[TransformedLocationWithResults]) -> list[Coverage]:
+    def _get_coverages(
+        self, locationsWithResults: list[TransformedLocationWithResults]
+    ) -> list[Coverage]:
         """Return the data needed for the 'coverage' key in the covjson response"""
 
         coverages = []
@@ -127,13 +130,18 @@ class CovJSONBuilder:
                 }
 
                 coverage_item = _generate_coverage_item(
-                    location_feature.locationType, location_feature.geometry, param.timeseriesDates, paramToCoverage
+                    location_feature.locationType,
+                    location_feature.geometry,
+                    param.timeseriesDates,
+                    paramToCoverage,
                 )
 
                 coverages.append(coverage_item)
         return coverages
 
-    def fill_template(self, location_response: list[TransformedLocationWithResults]) -> CoverageCollection:
+    def fill_template(
+        self, location_response: list[TransformedLocationWithResults]
+    ) -> CoverageCollection:
         templated_covjson: CoverageCollection = COVJSON_TEMPLATE
         templated_covjson["coverages"] = self._get_coverages(location_response)
         templated_covjson["parameters"] = self._get_parameter_metadata(

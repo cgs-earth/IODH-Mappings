@@ -1,3 +1,6 @@
+# Copyright 2025 Lincoln Institute of Land Policy
+# SPDX-License-Identifier: MIT
+
 import pytest
 import requests
 
@@ -12,6 +15,7 @@ def locationRespFixture():
     resp = requests.get(url, headers={"accept": "application/vnd.api+json"})
     assert resp.ok, resp.text
     return resp.json()
+
 
 def test_add_results_to_location(locationRespFixture: dict):
     model = LocationResponseWithIncluded.model_validate(locationRespFixture)

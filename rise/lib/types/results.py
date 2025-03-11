@@ -1,11 +1,13 @@
-
+# Copyright 2025 Lincoln Institute of Land Policy
+# SPDX-License-Identifier: MIT
 
 from pydantic import BaseModel, field_validator
 
+
 class ResultAttributes(BaseModel):
-    itemId: int 
-    locationId: int 
-    result: float 
+    itemId: int
+    locationId: int
+    result: float
     parameterId: str
 
     @field_validator("parameterId", check_fields=True, mode="before")
@@ -15,11 +17,13 @@ class ResultAttributes(BaseModel):
         if not isinstance(parameterId, str):
             return str(parameterId)
         return parameterId
-    
+
     dateTime: str
+
 
 class ResultData(BaseModel):
     attributes: ResultAttributes
+
 
 class ResultResponse(BaseModel):
     data: list[ResultData]
@@ -32,11 +36,11 @@ class ResultResponse(BaseModel):
                 param = d.attributes.parameterId
             elif param != d.attributes.parameterId:
                 raise Exception("Multiple parameters in response")
-        
+
         return self.data[0].attributes.parameterId
 
     def get_results(self):
         return [d.attributes.result for d in self.data]
-    
+
     def get_dates(self):
         return [d.attributes.dateTime for d in self.data]
