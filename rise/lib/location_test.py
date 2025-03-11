@@ -27,6 +27,7 @@ def test_get_catalogItemURLs(locationRespFixture: dict):
     ]:
         assert url in urls["/rise/api/location/1"]
 
+
 def test_associated_results_have_data(locationRespFixture: dict):
     cache = RISECache("redis")
     model = LocationResponseWithIncluded.model_validate(locationRespFixture)

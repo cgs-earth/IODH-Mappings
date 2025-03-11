@@ -18,6 +18,7 @@ This file represents all code that is used to add the results to the location re
 This is essentially used to prepare the location response to covjson output
 """
 
+
 class ParameterWithResults(BaseModel):
     catalogItemId: str
     parameterId: str
@@ -26,7 +27,7 @@ class ParameterWithResults(BaseModel):
     # length; thus if a coverage is missing data, it needs to be explicitly filled in with None
     # unless the entire coverage is missing whereupon it will be entirely skipped
     timeseriesResults: list[float | None]
-    timeseriesDates: list[str | None] 
+    timeseriesDates: list[str | None]
 
 
 class DataNeededForCovjson(BaseModel):
