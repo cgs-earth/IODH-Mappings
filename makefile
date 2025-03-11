@@ -7,6 +7,7 @@ deps:
 
 # serve the api (requires redis to be running)
 dev: 
+	pygeoapi openapi generate local.config.yml --output-file local.openapi.yml
 	PYGEOAPI_CONFIG=local.config.yml PYGEOAPI_OPENAPI=local.openapi.yml pygeoapi serve --starlette
 
 # run pyright to type check the codebase
@@ -14,4 +15,4 @@ types:
 	uv tool run pyright
 
 test:
-	pytest -xn auto
+	 pytest -n auto -x --maxfail=1
