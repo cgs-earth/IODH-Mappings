@@ -3,6 +3,8 @@
 
 import pytest
 import requests
+from rise.lib.cache import RISECache
+from rise.lib.helpers import getResultUrlFromCatalogUrl, safe_run_async
 from rise.lib.location import LocationResponseWithIncluded
 
 
@@ -25,6 +27,15 @@ def test_get_catalogItemURLs(locationRespFixture: dict):
     ]:
         assert url in urls["/rise/api/location/1"]
 
+def test_associated_results_have_data(locationRespFixture: dict):
+    cache = RISECache("redis")
+    model = LocationResponseWithIncluded.model_validate(locationRespFixture)
+    urls = model.get_catalogItemURLs()
+    for url in urls:
+        resultUrl = getResultUrlFromCatalogUrl(url, datetime_=None)
+        resp = safe_run_async(cache.get_or_fetch(resultUrl))
+        assert resp["data"], resp["data"]
+
 
 def test_filter_by_wkt(locationRespFixture: dict):
     model = LocationResponseWithIncluded.model_validate(locationRespFixture)
@@ -41,3 +52,6 @@ def test_drop_locationid(locationRespFixture: dict):
     # since the fixture is for location 1, make sure that if we drop location 1 everything is gone
     droppedModel = model.drop_location(location_id=1)
     assert len(droppedModel.data) == 0
+
+    sameModel = model.drop_location(location_id=2)
+    assert len(sameModel.data) == len(model.data)

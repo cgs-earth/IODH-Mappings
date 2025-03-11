@@ -13,12 +13,20 @@ from rise.lib.types.results import ResultResponse
 
 LOGGER = logging.getLogger(__name__)
 
+"""
+This file represents all code that is used to add the results to the location response
+This is essentially used to prepare the location response to covjson output
+"""
 
 class ParameterWithResults(BaseModel):
     catalogItemId: str
     parameterId: str
-    timeseriesResults: list
-    timeseriesDates: list[str]
+
+    # We allow None since each coverage could have different length but they share the same x-axis
+    # length; thus if a coverage is missing data, it needs to be explicitly filled in with None
+    # unless the entire coverage is missing whereupon it will be entirely skipped
+    timeseriesResults: list[float | None]
+    timeseriesDates: list[str | None] 
 
 
 class DataNeededForCovjson(BaseModel):
@@ -89,14 +97,17 @@ class LocationResultBuilder:
                 timseriesResults = self.timeseriesResults[catalogUrlAsResultUrl]
                 timeseriesModel = ResultResponse.model_validate(timseriesResults)
                 # it is possible for a catalog item to have an associated result endpoint but no data inside of it
-                if not timeseriesModel.data:
+                if not timeseriesModel.data or not timeseriesModel:
                     continue
-
+                results = timeseriesModel.get_results()
+                dates = timeseriesModel.get_dates()
+                if not results or not dates:
+                    continue
                 paramAndResults.append(
                     ParameterWithResults(
                         catalogItemId=catalogItemUrl,
-                        timeseriesResults=timeseriesModel.get_results(),
-                        timeseriesDates=timeseriesModel.get_dates(),
+                        timeseriesResults=results,
+                        timeseriesDates=dates,
                         parameterId=timeseriesModel.get_parameter_id(),
                     )
                 )
