@@ -5,7 +5,7 @@ import logging
 from typing import Optional
 
 
-from pygeoapi.provider.base import BaseProvider, ProviderQueryError
+from pygeoapi.provider.base import BaseProvider
 from rise.lib.cache import RISECache
 from rise.lib.location import LocationResponse
 from rise.rise_edr import RiseEDRProvider
