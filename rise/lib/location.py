@@ -238,6 +238,8 @@ class LocationResponseWithIncluded(LocationResponse):
         """Get all catalog items associated with a particular location"""
         locationIdToCatalogRecord: dict[str, str] = {}
 
+        foundCatalogItems = set()
+
         catalogRecordToCatalogItems: dict[str, list[str]] = {}
 
         for included_item in self.included:
@@ -247,14 +249,34 @@ class LocationResponseWithIncluded(LocationResponse):
                 assert locationId is not None
                 locationId = locationId.data[0].id
                 locationIdToCatalogRecord[locationId] = catalogRecord
+
+                # if the catalogrecord doesn't have associated catalogitems, skip it
+                if not included_item.relationships.catalogItems:
+                    continue
+
+                for catalogItem in included_item.relationships.catalogItems.data:
+
+                    if catalogItem.id in foundCatalogItems:
+                        continue
+
+                    if catalogRecord not in catalogRecordToCatalogItems:
+                        catalogRecordToCatalogItems[catalogRecord] = []
+                    catalogRecordToCatalogItems[catalogRecord].append(catalogItem.id)
+                    foundCatalogItems.add(catalogItem.id)
+
             elif included_item.type == "CatalogItem":
                 catalogItem = included_item.id
+                if catalogItem in foundCatalogItems:
+                    continue
+
                 catalogRecord = included_item.relationships.catalogRecord
                 assert catalogRecord is not None
+                # we use the first index since there should only be one catalog record for each catalog item
                 catalogRecord = catalogRecord.data[0].id
                 if catalogRecord not in catalogRecordToCatalogItems:
                     catalogRecordToCatalogItems[catalogRecord] = []
                 catalogRecordToCatalogItems[catalogRecord].append(catalogItem)
+                foundCatalogItems.add(catalogItem)
 
         join: dict[str, list[str]] = {}
         for locationId, catalogRecord in locationIdToCatalogRecord.items():

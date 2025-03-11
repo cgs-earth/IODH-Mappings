@@ -33,10 +33,13 @@ def merge_pages(pages: dict[Url, JsonPayload]) -> dict:
             combined_data = content
         else:
             data = content.get("data", [])
-            if not data:
-                continue
+            if data:
+                combined_data["data"].extend(data)
 
-            combined_data["data"].extend(data)
+            if "included" in content:
+                if "included" not in combined_data:
+                    combined_data["included"] = []
+                combined_data["included"].extend(content["included"])
 
     return combined_data
 

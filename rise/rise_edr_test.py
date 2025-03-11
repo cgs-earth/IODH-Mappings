@@ -124,6 +124,13 @@ def test_area(edr_config: dict):
     )
     assert response["coverages"] == []
 
+    areaInMontanaWithData = "POLYGON ((-109.204102 47.010226, -104.655762 47.010226, -104.655762 49.267805, -109.204102 49.267805, -109.204102 47.010226))"
+
+    response = p.area(
+        wkt=areaInMontanaWithData,
+    )
+    assert len(response["coverages"]) > 5
+
 
 def test_cube(edr_config: dict):
     p = RiseEDRProvider(edr_config)

@@ -63,9 +63,10 @@ class LocationResultBuilder:
         resultUrls = [
             getResultUrlFromCatalogUrl(url, time_filter) for url in catalogItemUrls
         ]
-        assert len(resultUrls) == len(set(resultUrls)), (
-            "Duplicate result urls when adding results to the catalog items"
-        )
+
+        if len(resultUrls) != len(set(resultUrls)):
+            raise RuntimeError("Got duplicate result urls when loading timeseries data:", set([x for x in resultUrls if resultUrls.count(x) > 1]))
+
         LOGGER.debug(f"Fetching {resultUrls}; {len(resultUrls)} in total")
         return safe_run_async(self.cache.get_or_fetch_group(resultUrls))
 
@@ -96,6 +97,10 @@ class LocationResultBuilder:
                     catalogItemUrl, time_filter
                 )
                 timseriesResults = self.timeseriesResults[catalogUrlAsResultUrl]
+                if timseriesResults.get("detail") == "Internal Server Error":
+                    self.cache.clear(catalogUrlAsResultUrl) # clear the cache url so it can be refetched
+                    raise RuntimeError(f"Got an error when fetching {catalogUrlAsResultUrl}:{timseriesResults}")
+
                 timeseriesModel = ResultResponse.model_validate(timseriesResults)
                 # it is possible for a catalog item to have an associated result endpoint but no data inside of it
                 if not timeseriesModel.data or not timeseriesModel:
