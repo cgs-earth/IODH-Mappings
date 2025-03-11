@@ -4,7 +4,7 @@
 import requests
 import pytest
 
-from rise.lib.helpers import get_only_key, merge_pages
+from rise.lib.helpers import merge_pages
 from rise.rise_edr import RiseEDRProvider
 import datetime
 

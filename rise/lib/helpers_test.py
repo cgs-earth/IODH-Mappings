@@ -2,7 +2,6 @@
 # SPDX-License-Identifier: MIT
 
 import pytest
-import requests
 import shapely.wkt
 from rise.lib.cache import RISECache
 from rise.lib.helpers import merge_pages, parse_bbox, parse_z, safe_run_async
