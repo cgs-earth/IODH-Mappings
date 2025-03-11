@@ -5,14 +5,11 @@ import logging
 from typing import Optional
 
 
-from pygeoapi.provider.base import BaseProvider, ProviderNoDataError, ProviderQueryError
-from rise.custom_types import LocationResponse
+from pygeoapi.provider.base import BaseProvider, ProviderQueryError
+from rise.lib.cache import RISECache
+from rise.lib.location import LocationResponse
 from rise.rise_edr import RiseEDRProvider
-from rise.edr_helpers import (
-    LocationHelper,
-    RISECache,
-)
-from rise.lib import get_only_key, merge_pages, safe_run_async
+from rise.lib.helpers import merge_pages, safe_run_async
 
 LOGGER = logging.getLogger(__name__)
 
@@ -29,10 +26,9 @@ class RiseProvider(BaseProvider):
         try:
             self.cache = RISECache(provider_def["cache"])
         except KeyError:
-            LOGGER.error(
+            raise Exception(
                 "You must specify a cache implementation in the config.yml for RISE"
             )
-            raise
 
         super().__init__(provider_def)
 
@@ -45,6 +41,7 @@ class RiseProvider(BaseProvider):
         offset: Optional[int] = 0,
         **kwargs,
     ):
+        response: LocationResponse
         if itemId:
             try:
                 str(int(itemId))
@@ -56,31 +53,29 @@ class RiseProvider(BaseProvider):
             # Instead of merging all location pages, just
             # fetch the location associated with the ID
             url: str = f"https://data.usbr.gov/rise/api/location/{itemId}"
-            response = safe_run_async(self.cache.get_or_fetch(url))
-
+            raw_resp = safe_run_async(self.cache.get_or_fetch(url))
+            response = LocationResponse(**raw_resp)
         else:
             all_location_responses = self.cache.get_or_fetch_all_pages(
                 RiseEDRProvider.LOCATION_API
             )
             merged_response = merge_pages(all_location_responses)
-            response: LocationResponse = get_only_key(merged_response)
-            if response is None:
-                raise ProviderNoDataError
+            response = LocationResponse(**merged_response)
 
         if datetime_:
-            response = LocationHelper.filter_by_date(response, datetime_)
+            response = response.filter_by_date(datetime_)
 
         if offset:
-            response = LocationHelper.remove_before_offset(response, offset)
+            response = response.remove_before_offset(offset)
 
         if limit:
-            response = LocationHelper.filter_by_limit(response, limit)
+            response = response.filter_by_limit(limit)
 
         # Even though bbox is required, it can be an empty list. If it is empty just skip filtering
         if bbox:
-            response = LocationHelper.filter_by_bbox(response, bbox)
+            response = response.filter_by_bbox(bbox)
 
-        return LocationHelper.to_geojson(response, single_feature=itemId is not None)
+        return response.to_geojson(single_feature=itemId is not None)
 
     def query(self, **kwargs):
         return self.items(**kwargs)

@@ -8,13 +8,11 @@ from pygeoapi.provider.base import (
     ProviderQueryError,
 )
 from pygeoapi.provider.base_edr import BaseEDRProvider
-from rise.covjson import CovJSONBuilder
-from rise.custom_types import LocationResponse
-from rise.edr_helpers import (
-    RISECache,
-    LocationHelper,
-)
-from rise.lib import merge_pages, get_only_key, safe_run_async
+from rise.lib.covjson.covjson import CovJSONBuilder
+from rise.lib.location import LocationResponseWithIncluded
+from rise.lib.cache import RISECache
+from rise.lib.helpers import safe_run_async
+from rise.lib.add_results import LocationResultBuilder
 
 LOGGER = logging.getLogger(__name__)
 
@@ -53,23 +51,20 @@ class RiseEDRProvider(BaseEDRProvider):
         self.instances = []
 
     def get_or_fetch_all_param_filtered_pages(
-        self, properties: Optional[list[str]] = None
-    ) -> LocationResponse:
+        self, properties_to_filter_by: Optional[list[str]] = None
+    ):
         """Return all locations which contain"""
         # RISE has an API for fetching locations by property/param ids. Thus, we want to fetch only relevant properties if we have them
-        if properties:
+        if properties_to_filter_by:
             base_url = "https://data.usbr.gov/rise/api/location?&"
-            for prop in properties:
+            for prop in properties_to_filter_by:
                 assert isinstance(prop, str)
                 base_url += f"parameterId%5B%5D={prop}&"
             base_url = base_url.removesuffix("&")
         else:
             base_url = "https://data.usbr.gov/rise/api/location?"
         base_url += "&include=catalogRecords.catalogItems"
-        response = self.cache.get_or_fetch_all_pages(base_url)
-        response = merge_pages(response)
-        response = get_only_key(response)
-        return response
+        return self.cache.get_or_fetch_all_pages(base_url)
 
     @BaseEDRProvider.register()
     def locations(
@@ -85,29 +80,30 @@ class RiseEDRProvider(BaseEDRProvider):
         Extract data from location
         """
         if not location_id and datetime_:
-            raise ProviderQueryError("Can't filter by date on the entire ")
-
-        LOGGER.warning(datetime_)
+            raise ProviderQueryError("Can't filter by date on every location")
 
         if location_id:
             url: str = f"https://data.usbr.gov/rise/api/location/{location_id}?include=catalogRecords.catalogItems"
-            response = safe_run_async(self.cache.get_or_fetch(url))
+            raw_resp = safe_run_async(self.cache.get_or_fetch(url))
+            response = LocationResponseWithIncluded(**raw_resp)
         else:
-            response = self.get_or_fetch_all_param_filtered_pages(select_properties)
+            raw_resp = self.get_or_fetch_all_param_filtered_pages(select_properties)
+            response = LocationResponseWithIncluded.from_api_pages(raw_resp)
 
         # FROM SPEC: If a location id is not defined the API SHALL return a GeoJSON features array of valid location identifiers,
         if not any([crs, datetime_, location_id]) or format_ == "geojson":
-            return LocationHelper.to_geojson(
-                response,
+            return response.to_geojson(
                 single_feature=True
                 if location_id
                 else False,  # Geojson is redered differently if there is just one feature
             )
-        else:
-            # When we return covjson we also end up filtering by datetime_ along the way
-            return CovJSONBuilder(self.cache).render(response, datetime_)
+        # if we are returning covjson we need to fetch the results and fill in the json
+        builder = LocationResultBuilder(cache=self.cache, base_response=response)
+        response_with_results = builder.load_results(time_filter=datetime_)
+        return CovJSONBuilder(self.cache).fill_template(response_with_results)
 
     def get_fields(self):
+        """Get the list of all parameters (i.e. fields) that the user can filter by"""
         if self._fields:
             return self._fields
 
@@ -135,17 +131,20 @@ class RiseEDRProvider(BaseEDRProvider):
 
         """
 
-        response = self.get_or_fetch_all_param_filtered_pages(select_properties)
+        raw_resp = self.get_or_fetch_all_param_filtered_pages(select_properties)
+        response = LocationResponseWithIncluded.from_api_pages(raw_resp)
 
         if datetime_:
-            response = LocationHelper.filter_by_date(response, datetime_)
+            response = response.filter_by_date(datetime_)
 
-        response = LocationHelper.filter_by_bbox(response, bbox, z)
+        response = response.filter_by_bbox(bbox, z)
 
         # match format_:
         #     case "json" | "GeoJSON" | _:
         # return LocationHelper.to_geojson(response)
-        return CovJSONBuilder(self.cache).render(response, datetime_)
+        builder = LocationResultBuilder(cache=self.cache, base_response=response)
+        response_with_results = builder.load_results(time_filter=datetime_)
+        return CovJSONBuilder(self.cache).fill_template(response_with_results)
 
     @BaseEDRProvider.register()
     def area(
@@ -164,23 +163,21 @@ class RiseEDRProvider(BaseEDRProvider):
 
         """
 
-        response = self.get_or_fetch_all_param_filtered_pages(select_properties)
+        raw_resp = self.get_or_fetch_all_param_filtered_pages(select_properties)
+        response = LocationResponseWithIncluded.from_api_pages(raw_resp)
 
         if datetime_:
-            response = LocationHelper.filter_by_date(response, datetime_)
+            response = response.filter_by_date(datetime_)
 
-        response = LocationHelper.filter_by_wkt(response, wkt, z)
+        if wkt != "":
+            response = response.filter_by_wkt(wkt, z)
 
-        return CovJSONBuilder(self.cache).render(response, datetime_)
+        builder = LocationResultBuilder(cache=self.cache, base_response=response)
+        response_with_results = builder.load_results(time_filter=datetime_)
+        return CovJSONBuilder(self.cache).fill_template(response_with_results)
 
     @BaseEDRProvider.register()
     def items(self, **kwargs):
-        """
-        Retrieve a collection of items.
-
-        :param kwargs: Additional parameters for the request.
-        :returns: A GeoJSON representation of the items.
-        """
         # We have to define this since pygeoapi has a limitation and needs both EDR and OAF for items
         # https://github.com/geopython/pygeoapi/issues/1748
         pass

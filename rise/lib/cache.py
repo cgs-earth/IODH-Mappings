@@ -2,26 +2,23 @@
 # SPDX-License-Identifier: MIT
 
 import asyncio
-import os
 import json
 import logging
 import math
-from typing import Literal, Optional, Protocol
+from typing import Literal, Optional
 from typing_extensions import assert_never
-from pygeoapi.provider.base import ProviderConnectionError, ProviderNoDataError
+from pygeoapi.provider.base import ProviderConnectionError
 from rise.custom_types import JsonPayload, Url
 import aiohttp
-from rise.lib import merge_pages, safe_run_async
 import redis
 from aiohttp import client_exceptions
 from datetime import timedelta
+from rise.env import REDIS_HOST, REDIS_PORT
+from rise.lib.helpers import merge_pages, safe_run_async
 
 HEADERS = {"accept": "application/vnd.api+json"}
 
 LOGGER = logging.getLogger(__name__)
-
-REDIS_HOST = os.getenv("REDIS_HOST", "localhost")
-REDIS_PORT: int = int(os.getenv("REDIS_PORT", "6379"))
 
 
 async def fetch_url(url: str) -> dict:
@@ -34,33 +31,7 @@ async def fetch_url(url: str) -> dict:
                 raise e
 
 
-class CacheInterface(Protocol):
-    """
-    A generic caching interface that supports key updates
-    and fetching url in groups. The client does not need
-    to be aware of whether or not the url is in the cache
-    """
-
-    def __init__(self):
-        if type(self) is super().__class__:
-            raise TypeError(
-                "Cannot instantiate an instance of the cache. You must use static methods on the class itself"
-            )
-
-    def set(
-        self, url: str, json_data: dict, _ttl: Optional[timedelta] = None
-    ) -> None: ...
-
-    def clear(self, url: str) -> None: ...
-
-    def contains(self, url: str) -> bool: ...
-
-    def get(self, url: str) -> dict: ...
-
-    def reset(self) -> None: ...
-
-
-class RedisCache(CacheInterface):
+class RedisCache:
     """A cache implementation using Redis with ttl support"""
 
     def __init__(self, ttl: timedelta = timedelta(hours=24)):
@@ -93,7 +64,7 @@ class RedisCache(CacheInterface):
         return json.loads(data)  # type: ignore
 
 
-class RISECache(CacheInterface):
+class RISECache:
     """
     Generic query class.
 
@@ -177,13 +148,6 @@ class RISECache(CacheInterface):
         for k, v in res.items():
             if k is None or v is None:
                 raise ProviderConnectionError("Error fetching parameters")
-
-        # get the value of a dict with one value without
-        # needed to know the key name. This is just the
-        # merged json payload
-        res: dict = next(iter(res.values()))
-        if res is None:
-            raise ProviderNoDataError
 
         for item in res["data"]:
             param = item["attributes"]

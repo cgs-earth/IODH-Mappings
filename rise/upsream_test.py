@@ -10,6 +10,9 @@ import shapely.geometry
 
 
 def test_rise_include_parameter_order_matters():
+    """
+    RISE has odd behavior where the order of the include parameters matters
+    """
     url1 = "https://data.usbr.gov/rise/api/location?include=catalogRecords.catalogItems&page=1&itemsPerPage=5"
     resp1 = requests.get(url1, headers={"accept": "application/vnd.api+json"})
     url1 = "https://data.usbr.gov/rise/api/location?include=catalogItems.catalogRecords&page=1&itemsPerPage=5"

@@ -7,4 +7,6 @@ import requests
 
 @pytest.fixture(scope="session", autouse=True)
 def setup_before_tests():
-    requests.packages.urllib3.util.connection.HAS_IPV6 = False
+    # RISE has issues with ipv6 connections and has much better
+    # performance with it disabled
+    requests.packages.urllib3.util.connection.HAS_IPV6 = False  # type: ignore
