@@ -9,19 +9,21 @@ from pydantic import BaseModel
 from rise.lib.cache import RISECache
 from rise.lib.helpers import flatten_values, getResultUrlFromCatalogUrl, safe_run_async
 from rise.lib.location import LocationResponseWithIncluded
+from rise.lib.types.results import ResultResponse
 
 LOGGER = logging.getLogger(__name__)
 
 
 class CatalogItemWithResults(BaseModel):
-    catalogItemName: str
-    catalogItemId: str
+    catalogItemId: str 
+    parameterId: str
     timeseriesResults: list
     timeseriesDates: list[str]
 
 class TransformedLocationWithResults(BaseModel):
     location: str 
     locationType: Literal["Point", "Polygon", "LineString"]
+    geometry: list
     parameters: list[CatalogItemWithResults]
 
 
@@ -72,17 +74,21 @@ class LocationResultBuilder:
         for location in self.base_response.data:
             paramAndResults: list[CatalogItemWithResults] = []
             for catalogItemUrl in self.locationToCatalogItemUrls[location.id]:
-                # timseriesResults = self.timeseriesResults[catalogItemUrl]
+
+                catalogUrlAsResultUrl = getResultUrlFromCatalogUrl(catalogItemUrl, time_filter)
+                timseriesResults = self.timeseriesResults[catalogUrlAsResultUrl]
+                timeseriesModel = ResultResponse.model_validate(timseriesResults)
                 paramAndResults.append(CatalogItemWithResults(
-                    catalogItemName=catalogItemUrl,
-                    timeseriesResults=[1,1,1,1],
-                    timeseriesDates=["2020-01-01", "2020-01-02", "2020-01-03", "2020-01-04"],
-                    catalogItemId=catalogItemUrl
+                    catalogItemId=catalogItemUrl,
+                    timeseriesResults=timeseriesModel.get_results(),
+                    timeseriesDates=timeseriesModel.get_dates(),
+                    parameterId=timeseriesModel.get_parameter_id()
                 ))
             locations_with_data.append(TransformedLocationWithResults(
                 locationType=location.attributes.locationCoordinates.type,
                 location=location.id,
-                parameters=paramAndResults
+                parameters=paramAndResults,
+                geometry=list(location.attributes.locationCoordinates.coordinates)
             ))
 
         return locations_with_data

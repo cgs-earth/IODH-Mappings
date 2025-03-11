@@ -10,7 +10,7 @@ from rise.lib.covjson.types.covjson import (
     Parameter,
 )
 from rise.lib.cache import RISECache
-from rise.lib.location_with_results import TransformedLocationWithResults
+from rise.lib.add_results import TransformedLocationWithResults
 
 LOGGER = logging.getLogger(__name__)
 
@@ -75,13 +75,14 @@ class CovJSONBuilder:
         relevant_parameters = []
         for location in location_response:
             for p in location.parameters:
-                relevant_parameters.append(p.catalogItemId)
+                relevant_parameters.append(p.parameterId)
 
         paramNameToMetadata: dict[str, Parameter] = {}
 
         paramsToGeoJsonOutput = self._cache.get_or_fetch_parameters()
-        for param_id in paramsToGeoJsonOutput:
-            if relevant_parameters and param_id not in relevant_parameters:
+        for param_id in relevant_parameters:
+            if param_id not in paramsToGeoJsonOutput: 
+                LOGGER.error(f"Could not find metadata for {param_id} in {sorted(paramsToGeoJsonOutput.keys())}")
                 continue
 
             associatedData = paramsToGeoJsonOutput[param_id]
@@ -117,7 +118,7 @@ class CovJSONBuilder:
                     # we can skip adding the parameter/location combination all together
                     continue
 
-                paramToCoverage[param.catalogItemId] = {
+                paramToCoverage[str(param.parameterId)] = {
                     "axisNames": ["t"],
                     "dataType": "float",
                     "shape": [len(param.timeseriesResults)],
@@ -126,7 +127,7 @@ class CovJSONBuilder:
                 }
 
                 coverage_item = _generate_coverage_item(
-                    "type", [0, 0], param.timeseriesDates, paramToCoverage
+                    location_feature.locationType, location_feature.geometry, param.timeseriesDates, paramToCoverage
                 )
 
                 coverages.append(coverage_item)

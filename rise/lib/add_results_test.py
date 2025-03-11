@@ -3,7 +3,7 @@ import requests
 
 from rise.lib.cache import RISECache
 from rise.lib.location import LocationResponseWithIncluded
-from rise.lib.location_with_results import LocationResultBuilder
+from rise.lib.add_results import LocationResultBuilder
 
 
 @pytest.fixture

@@ -12,7 +12,7 @@ from rise.lib.covjson.covjson import CovJSONBuilder
 from rise.lib.location import LocationResponse, LocationResponseWithIncluded
 from rise.lib.cache import RISECache
 from rise.lib.helpers import safe_run_async
-from rise.lib.location_with_results import LocationResultBuilder
+from rise.lib.add_results import LocationResultBuilder
 
 LOGGER = logging.getLogger(__name__)
 
