@@ -9,6 +9,7 @@ readme = "README.md"
 requires-python = ">=3.12"
 dependencies = [
     "aiohttp>=3.11.13",
+    "covjson-pydantic>=0.5.0",
     "jsonpatch>=1.33",
     "pytest>=8.3.4",
     "redis>=5.2.1",

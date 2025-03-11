@@ -2,7 +2,8 @@
 # SPDX-License-Identifier: MIT
 
 import logging
-from typing import Literal, Optional
+from re import A
+from typing import Any, Literal, Optional
 
 from pydantic import BaseModel
 
@@ -24,7 +25,7 @@ class CatalogItemWithResults(BaseModel):
 class TransformedLocationWithResults(BaseModel):
     location: str
     locationType: Literal["Point", "Polygon", "LineString"]
-    geometry: list
+    geometry: list[Any]
     parameters: list[CatalogItemWithResults]
 
 
@@ -92,7 +93,7 @@ class LocationResultBuilder:
                     locationType=location.attributes.locationCoordinates.type,
                     location=location.id,
                     parameters=paramAndResults,
-                    geometry=list(location.attributes.locationCoordinates.coordinates),
+                    geometry=location.attributes.locationCoordinates.coordinates,
                 )
             )
 

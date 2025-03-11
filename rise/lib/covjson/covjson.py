@@ -2,6 +2,7 @@
 # SPDX-License-Identifier: MIT
 
 import logging
+
 from rise.lib.covjson.template import COVJSON_TEMPLATE
 from rise.lib.covjson.types.covjson import (
     CoverageCollection,
@@ -9,6 +10,7 @@ from rise.lib.covjson.types.covjson import (
     CoverageRange,
     Parameter,
 )
+from covjson_pydantic.coverage import CoverageCollection as PydanticCoverageCollection
 from rise.lib.cache import RISECache
 from rise.lib.add_results import TransformedLocationWithResults
 
@@ -68,8 +70,8 @@ class CovJSONBuilder:
     def __init__(self, cache: RISECache):
         self._cache = cache
 
-    def _get_parameter_metadata(
-        self, location_response: list[TransformedLocationWithResults]
+    def _insert_parameter_metadata(
+        self, paramsToGeoJsonOutput: dict[str, dict], location_response: list[TransformedLocationWithResults]
     ):
         relevant_parameters = []
         for location in location_response:
@@ -78,7 +80,6 @@ class CovJSONBuilder:
 
         paramNameToMetadata: dict[str, Parameter] = {}
 
-        paramsToGeoJsonOutput = self._cache.get_or_fetch_parameters()
         for param_id in relevant_parameters:
             if param_id not in paramsToGeoJsonOutput:
                 LOGGER.error(
@@ -103,7 +104,7 @@ class CovJSONBuilder:
         return paramNameToMetadata
 
     def _get_coverages(
-        self, locationsWithResults: list[TransformedLocationWithResults]
+        self, locationsWithResults: list[TransformedLocationWithResults], paramsToGeoJsonOutput
     ) -> list[Coverage]:
         """Return the data needed for the 'coverage' key in the covjson response"""
 
@@ -121,7 +122,9 @@ class CovJSONBuilder:
                     # we can skip adding the parameter/location combination all together
                     continue
 
-                paramToCoverage[str(param.parameterId)] = {
+                naturalLanguageName = paramsToGeoJsonOutput[str(param.parameterId)]["title"]
+
+                paramToCoverage[naturalLanguageName] = {
                     "axisNames": ["t"],
                     "dataType": "float",
                     "shape": [len(param.timeseriesResults)],
@@ -143,9 +146,14 @@ class CovJSONBuilder:
         self, location_response: list[TransformedLocationWithResults]
     ) -> CoverageCollection:
         templated_covjson: CoverageCollection = COVJSON_TEMPLATE
-        templated_covjson["coverages"] = self._get_coverages(location_response)
-        templated_covjson["parameters"] = self._get_parameter_metadata(
+        
+
+        paramsToGeoJsonOutput = self._cache.get_or_fetch_parameters()
+
+        templated_covjson["coverages"] = self._get_coverages(location_response, paramsToGeoJsonOutput)
+        templated_covjson["parameters"] = self._insert_parameter_metadata(paramsToGeoJsonOutput,
             location_response=location_response
         )
 
+        PydanticCoverageCollection.model_validate(templated_covjson)
         return templated_covjson

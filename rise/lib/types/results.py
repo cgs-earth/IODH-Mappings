@@ -38,7 +38,7 @@ class ResultResponse(BaseModel):
                 raise Exception("Multiple parameters in response")
 
         return self.data[0].attributes.parameterId
-
+    
     def get_results(self):
         return [d.attributes.result for d in self.data]
 
