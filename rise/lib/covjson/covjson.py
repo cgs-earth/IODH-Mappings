@@ -10,22 +10,21 @@ from rise.lib.covjson.types.covjson import (
     Parameter,
 )
 from rise.lib.cache import RISECache
-from rise.lib.location import LocationData
-from rise.lib.types.includes import LocationIncluded
+from rise.lib.location_with_results import TransformedLocationWithResults
 
 LOGGER = logging.getLogger(__name__)
 
 
 def _generate_coverage_item(
-    paramToCoverage: dict[str, CoverageRange],
-    location_feature: LocationData,
+    location_type: str,
+    coords: list[float],
     times: list[str],
+    paramToCoverage: dict[str, CoverageRange],
 ) -> Coverage:
     # if it is a point it will have different geometry
 
-    if location_feature.attributes.locationCoordinates.type == "Point":
+    if location_type == "Point":
         # z = location_feature["attributes"]["elevation"]
-        coords = location_feature.attributes.locationCoordinates.coordinates
         x, y = coords[0], coords[1]
 
         coverage_item: Coverage = {
@@ -50,10 +49,10 @@ def _generate_coverage_item(
                 "type": "Domain",
                 "axes": {
                     "composite": {
-                        "dataType": location_feature.attributes.locationCoordinates.type,
+                        "dataType": location_type,
                         "coordinates": ["x", "y"],
                         "values": [
-                            location_feature.attributes.locationCoordinates.coordinates
+                            coords
                         ],
                     },
                     "t": {"values": times},
@@ -68,21 +67,15 @@ def _generate_coverage_item(
 class CovJSONBuilder:
     """A helper class for building CovJSON from a Rise JSON Response"""
 
-    _cache: RISECache  # The RISE Cache to use for storing and fetching data
-
     def __init__(self, cache: RISECache):
         self._cache = cache
 
-    def _get_relevant_parameters(self, location_response: LocationIncluded) -> set[str]:
-        relevant_parameters = set()
-        for location_feature in location_response.data:
-            for param in location_feature.relationships.catalogItems.data:
-                id = str(param["attributes"]["parameterId"])
-                relevant_parameters.add(id)
-        return relevant_parameters
 
-    def _get_parameter_metadata(self, location_response: LocationIncluded):
-        relevant_parameters = self._get_relevant_parameters(location_response)
+    def _get_parameter_metadata(self, location_response: list[TransformedLocationWithResults]):
+        relevant_parameters = []
+        for location in location_response:
+            for p in location.parameters:
+                relevant_parameters.append(p.catalogItemId)
 
         paramNameToMetadata: dict[str, Parameter] = {}
 
@@ -102,58 +95,44 @@ class CovJSONBuilder:
                     "label": {"en": associatedData["title"]},
                 },
             }
-            # TODO check default if _id isn't present
-
             natural_language_name = associatedData["title"]
             paramNameToMetadata[natural_language_name] = _param
 
         return paramNameToMetadata
 
-    def _get_coverages(self, location_response: LocationIncluded) -> list[Coverage]:
+    def _get_coverages(self, locationsWithResults: list[TransformedLocationWithResults]) -> list[Coverage]:
         """Return the data needed for the 'coverage' key in the covjson response"""
-        coverages: list[Coverage] = []
 
-        for location_feature in location_response.data:
+        coverages = []
+        for location_feature in locationsWithResults:
             # CoverageJSON needs a us to associated every parameter with data
             # This data is grouped independently for each location
             paramToCoverage: dict[str, CoverageRange] = {}
 
-            for param in location_feature.relationships.catalogItems.data:
+            for param in location_feature.parameters:
                 if not (  # ensure param contains data so it can be used for covjson
-                    param["results"] is not None
-                    and len(param["results"]) > 0
-                    and param["results"][0]["attributes"] is not None
+                    param.timeseriesResults
                 ):
                     # Since coveragejson does not allow a parameter without results,
                     # we can skip adding the parameter/location combination all together
                     continue
 
-                results: list[float] = [
-                    result["attributes"]["result"] for result in param["results"]
-                ]
-                times: list[str] = [
-                    result["attributes"]["dateTime"] for result in param["results"]
-                ]
-
-                # id = str(param["attributes"]["parameterId"])
-                id = param["attributes"]["parameterName"]
-
-                paramToCoverage[id] = {
+                paramToCoverage[param.catalogItemId] = {
                     "axisNames": ["t"],
                     "dataType": "float",
-                    "shape": [len(results)],
-                    "values": results,
+                    "shape": [len(param.timeseriesResults)],
+                    "values": param.timeseriesResults,
                     "type": "NdArray",
                 }
 
                 coverage_item = _generate_coverage_item(
-                    paramToCoverage, location_feature, times
+                    "type", [0, 0], param.timeseriesDates, paramToCoverage
                 )
 
                 coverages.append(coverage_item)
         return coverages
 
-    def fill_template(self, location_response: LocationIncluded) -> CoverageCollection:
+    def fill_template(self, location_response: list[TransformedLocationWithResults]) -> CoverageCollection:
         templated_covjson: CoverageCollection = COVJSON_TEMPLATE
         templated_covjson["coverages"] = self._get_coverages(location_response)
         templated_covjson["parameters"] = self._get_parameter_metadata(

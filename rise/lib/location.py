@@ -12,7 +12,6 @@ import shapely
 import shapely.wkt
 from rise.lib.cache import RISECache
 from rise.lib.helpers import (
-    get_trailing_id,
     merge_pages,
     parse_bbox,
     parse_date,
@@ -234,18 +233,6 @@ class LocationResponse(BaseModel):
 
         return {"type": "FeatureCollection", "features": features}
 
-    def get_results(
-        self, catalogItemEndpoints: list[str], cache: RISECache
-    ) -> dict[str, str]:
-        result_endpoints = [
-            f"https://data.usbr.gov/rise/api/result?page=1&itemsPerPage=25&itemId={get_trailing_id(endpoint)}"
-            for endpoint in catalogItemEndpoints
-        ]
-
-        fetched_result = safe_run_async(cache.get_or_fetch_group(result_endpoints))
-
-        return fetched_result
-
 
 class LocationResponseWithIncluded(LocationResponse):
     # included represents the additional data that is explicitly requested in the fetch request
@@ -262,13 +249,13 @@ class LocationResponseWithIncluded(LocationResponse):
                 catalogRecord = included_item.id
                 locationId = included_item.relationships.location
                 assert locationId is not None
-                locationId = locationId.data[0]["id"]
+                locationId = locationId.data[0].id
                 locationIdToCatalogRecord[locationId] = catalogRecord
             elif included_item.type == "CatalogItem":
                 catalogItem = included_item.id
                 catalogRecord = included_item.relationships.catalogRecord
                 assert catalogRecord is not None
-                catalogRecord = catalogRecord.data[0]["id"]
+                catalogRecord = catalogRecord.data[0].id
                 if catalogRecord not in catalogRecordToCatalogItems:
                     catalogRecordToCatalogItems[catalogRecord] = []
                 catalogRecordToCatalogItems[catalogRecord].append(catalogItem)

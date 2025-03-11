@@ -13,7 +13,6 @@ This file contains the pydantic models for specifically the
 class RelationshipDataDict(BaseModel):
     id: str
     type: str
-    timeseries: Optional[list] = None
 
 
 class RelationshipData(BaseModel):

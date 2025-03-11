@@ -99,7 +99,7 @@ class RiseEDRProvider(BaseEDRProvider):
             )
         # if we are returning covjson we need to fetch the results and fill in the json
         builder = LocationResultBuilder(cache=self.cache, base_response=response)
-        response_with_results = builder.fetch_results(time_filter=datetime_)
+        response_with_results = builder.load_results(time_filter=datetime_)
         return CovJSONBuilder(self.cache).fill_template(response_with_results)
 
     def get_fields(self):
@@ -132,7 +132,7 @@ class RiseEDRProvider(BaseEDRProvider):
         """
 
         raw_resp = self.get_or_fetch_all_param_filtered_pages(select_properties)
-        response = LocationResponse.from_api_pages(raw_resp)
+        response = LocationResponseWithIncluded.from_api_pages(raw_resp)
 
         if datetime_:
             response = response.filter_by_date(datetime_)
@@ -143,7 +143,7 @@ class RiseEDRProvider(BaseEDRProvider):
         #     case "json" | "GeoJSON" | _:
         # return LocationHelper.to_geojson(response)
         builder = LocationResultBuilder(cache=self.cache, base_response=response)
-        response_with_results = builder.fetch_results(time_filter=datetime_)
+        response_with_results = builder.load_results(time_filter=datetime_)
         return CovJSONBuilder(self.cache).fill_template(response_with_results)
 
     @BaseEDRProvider.register()
@@ -173,7 +173,7 @@ class RiseEDRProvider(BaseEDRProvider):
             response = response.filter_by_wkt(wkt, z)
 
         builder = LocationResultBuilder(cache=self.cache, base_response=response)
-        response_with_results = builder.fetch_results(time_filter=datetime_)
+        response_with_results = builder.load_results(time_filter=datetime_)
         return CovJSONBuilder(self.cache).fill_template(response_with_results)
 
     @BaseEDRProvider.register()

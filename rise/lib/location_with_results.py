@@ -2,12 +2,27 @@
 # SPDX-License-Identifier: MIT
 
 import logging
-from typing import Optional
+from typing import Literal, Optional
+
+from pydantic import BaseModel
+
 from rise.lib.cache import RISECache
 from rise.lib.helpers import flatten_values, getResultUrlFromCatalogUrl, safe_run_async
 from rise.lib.location import LocationResponseWithIncluded
 
 LOGGER = logging.getLogger(__name__)
+
+
+class CatalogItemWithResults(BaseModel):
+    catalogItemName: str
+    catalogItemId: str
+    timeseriesResults: list
+    timeseriesDates: list[str]
+
+class TransformedLocationWithResults(BaseModel):
+    location: str 
+    locationType: Literal["Point", "Polygon", "LineString"]
+    parameters: list[CatalogItemWithResults]
 
 
 class LocationResultBuilder:
@@ -19,12 +34,18 @@ class LocationResultBuilder:
     def __init__(self, cache: RISECache, base_response: LocationResponseWithIncluded):
         self.cache = cache
         self.base_response = base_response
+        self.locationToCatalogItemUrls = self.base_response.get_catalogItemURLs()
+        self.catalogItemToLocationId = {}
+        for location, catalogItems in self.locationToCatalogItemUrls.items():
+            for catalogItem in catalogItems:
+                self.catalogItemToLocationId[catalogItem] = location
+
 
     def _get_all_timeseries_data(
-        self, locationToCatalogItemUrls, time_filter: Optional[str] = None
+        self, time_filter: Optional[str] = None
     ):
         # Make a dictionary from an existing response
-        catalogItemUrls = flatten_values(locationToCatalogItemUrls)
+        catalogItemUrls = flatten_values(self.locationToCatalogItemUrls)
         resultUrls = [
             getResultUrlFromCatalogUrl(url, time_filter) for url in catalogItemUrls
         ]
@@ -32,34 +53,36 @@ class LocationResultBuilder:
             set(resultUrls)
         ), "Duplicate result urls when adding results to the catalog items"
         LOGGER.debug(f"Fetching {resultUrls}; {len(resultUrls)} in total")
-        timeseriesResults = safe_run_async(self.cache.get_or_fetch_group(resultUrls))
-        return timeseriesResults
+        return safe_run_async(self.cache.get_or_fetch_group(resultUrls))
 
-    def fetch_results(self, time_filter: Optional[str] = None):
+    def _get_timeseries_for_catalogitem(self, catalogItem):
+        if catalogItem not in self.timeseriesResults:
+            return None
+        return self.timeseriesResults[catalogItem]
+
+    def load_results(self, time_filter: Optional[str] = None) -> list[TransformedLocationWithResults]:
         """Given a location that contains just catalog item ids, fill in the catalog items with the full
         endpoint response for the given catalog item so it can be more easily used for complex joins
         """
 
-        locationToCatalogItemUrls = self.base_response.get_catalogItemURLs()
-        resultUrlToCatalogItem = {
-            getResultUrlFromCatalogUrl(url, time_filter): url
-            for url in flatten_values(locationToCatalogItemUrls)
-        }
+        self.timeseriesResults = self._get_all_timeseries_data(time_filter)
 
-        resultUrlToTimeseries = self._get_all_timeseries_data(
-            locationToCatalogItemUrls, time_filter
-        )
+        locations_with_data: list[TransformedLocationWithResults] = [] 
 
-        for i, location in enumerate(self.base_response.data):
-            catalogItemUrls = locationToCatalogItemUrls.get(location.id)
-            if not catalogItemUrls:
-                # if a location didn't have any catalogitems, it also can't
-                # have any timeseries data and thus should be skipped
-                continue
+        for location in self.base_response.data:
+            paramAndResults: list[CatalogItemWithResults] = []
+            for catalogItemUrl in self.locationToCatalogItemUrls[location.id]:
+                # timseriesResults = self.timeseriesResults[catalogItemUrl]
+                paramAndResults.append(CatalogItemWithResults(
+                    catalogItemName=catalogItemUrl,
+                    timeseriesResults=[1,1,1,1],
+                    timeseriesDates=["2020-01-01", "2020-01-02", "2020-01-03", "2020-01-04"],
+                    catalogItemId=catalogItemUrl
+                ))
+            locations_with_data.append(TransformedLocationWithResults(
+                locationType=location.attributes.locationCoordinates.type,
+                location=location.id,
+                parameters=paramAndResults
+            ))
 
-            for j, catalogItem in enumerate(catalogItemUrls):
-                self.base_response.included[
-                    i
-                ].relationships.catalogItems = timeseriesResults[j]
-
-        return self.base_response
+        return locations_with_data
