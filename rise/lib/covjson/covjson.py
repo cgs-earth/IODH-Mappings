@@ -71,7 +71,9 @@ class CovJSONBuilder:
         self._cache = cache
 
     def _insert_parameter_metadata(
-        self, paramsToGeoJsonOutput: dict[str, dict], location_response: list[TransformedLocationWithResults]
+        self,
+        paramsToGeoJsonOutput: dict[str, dict],
+        location_response: list[TransformedLocationWithResults],
     ):
         relevant_parameters = []
         for location in location_response:
@@ -104,7 +106,9 @@ class CovJSONBuilder:
         return paramNameToMetadata
 
     def _get_coverages(
-        self, locationsWithResults: list[TransformedLocationWithResults], paramsToGeoJsonOutput
+        self,
+        locationsWithResults: list[TransformedLocationWithResults],
+        paramsToGeoJsonOutput,
     ) -> list[Coverage]:
         """Return the data needed for the 'coverage' key in the covjson response"""
 
@@ -122,7 +126,9 @@ class CovJSONBuilder:
                     # we can skip adding the parameter/location combination all together
                     continue
 
-                naturalLanguageName = paramsToGeoJsonOutput[str(param.parameterId)]["title"]
+                naturalLanguageName = paramsToGeoJsonOutput[str(param.parameterId)][
+                    "title"
+                ]
 
                 paramToCoverage[naturalLanguageName] = {
                     "axisNames": ["t"],
@@ -146,12 +152,13 @@ class CovJSONBuilder:
         self, location_response: list[TransformedLocationWithResults]
     ) -> CoverageCollection:
         templated_covjson: CoverageCollection = COVJSON_TEMPLATE
-        
 
         paramIdToMetadata = self._cache.get_or_fetch_parameters()
-        templated_covjson["coverages"] = self._get_coverages(location_response, paramIdToMetadata)
-        templated_covjson["parameters"] = self._insert_parameter_metadata(paramIdToMetadata,
-            location_response=location_response
+        templated_covjson["coverages"] = self._get_coverages(
+            location_response, paramIdToMetadata
+        )
+        templated_covjson["parameters"] = self._insert_parameter_metadata(
+            paramIdToMetadata, location_response=location_response
         )
 
         PydanticCoverageCollection.model_validate(templated_covjson)

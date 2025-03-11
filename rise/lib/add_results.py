@@ -2,7 +2,6 @@
 # SPDX-License-Identifier: MIT
 
 import logging
-from re import A
 from typing import Any, Literal, Optional
 
 from pydantic import BaseModel
