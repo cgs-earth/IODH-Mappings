@@ -20,7 +20,6 @@ jobs:
           python -m venv .venv
           source .venv/bin/activate
           pip install -r requirements.txt
-          pip install https://github.com/francbartoli/pygeoapi/archive/refs/heads/feature/pydantic-v2.zip
 
       - run: echo "$PWD/.venv/bin" >> $GITHUB_PATH
 
