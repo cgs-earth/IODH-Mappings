@@ -30,9 +30,9 @@ def test_location_locationId(edr_config: dict):
 
     p = RiseEDRProvider(edr_config)
     out = p.locations(location_id=1, format_="covjson")
-    assert (
-        len(out["coverages"]) == catalogItems
-    ), "There must be the same number of catalogItems as there are coverages"
+    assert len(out["coverages"]) == catalogItems, (
+        "There must be the same number of catalogItems as there are coverages"
+    )
 
     geojson_out: dict = p.locations(location_id=1, format_="geojson")  # type: ignore Have to ignore this since we know it is geojson
     assert geojson_out["type"] == "Feature"
