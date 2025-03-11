@@ -2,7 +2,7 @@
 # SPDX-License-Identifier: MIT
 
 import logging
-from typing import Any, Literal, Optional
+from typing import Any, Literal, Optional, Tuple
 
 from pydantic import BaseModel
 
@@ -14,18 +14,22 @@ from rise.lib.types.results import ResultResponse
 LOGGER = logging.getLogger(__name__)
 
 
-class CatalogItemWithResults(BaseModel):
+class ParameterWithResults(BaseModel):
     catalogItemId: str
     parameterId: str
     timeseriesResults: list
     timeseriesDates: list[str]
 
 
-class TransformedLocationWithResults(BaseModel):
+class DataNeededForCovjson(BaseModel):
+    """
+    This class represents the smallest amount of data needed for making covjson
+    from rise. We pass around a small class in an effort to make the ETL cleaner and simpler
+    """
     location: str
     locationType: Literal["Point", "Polygon", "LineString"]
-    geometry: list[Any]
-    parameters: list[CatalogItemWithResults]
+    geometry: list[Any] | Tuple[float, float]
+    parameters: list[ParameterWithResults]
 
 
 class LocationResultBuilder:
@@ -62,17 +66,17 @@ class LocationResultBuilder:
 
     def load_results(
         self, time_filter: Optional[str] = None
-    ) -> list[TransformedLocationWithResults]:
+    ) -> list[DataNeededForCovjson]:
         """Given a location that contains just catalog item ids, fill in the catalog items with the full
         endpoint response for the given catalog item so it can be more easily used for complex joins
         """
 
         self.timeseriesResults = self._get_all_timeseries_data(time_filter)
 
-        locations_with_data: list[TransformedLocationWithResults] = []
+        locations_with_data: list[DataNeededForCovjson] = []
 
         for location in self.base_response.data:
-            paramAndResults: list[CatalogItemWithResults] = []
+            paramAndResults: list[ParameterWithResults] = []
             for catalogItemUrl in self.locationToCatalogItemUrls[location.id]:
                 catalogUrlAsResultUrl = getResultUrlFromCatalogUrl(
                     catalogItemUrl, time_filter
@@ -80,7 +84,7 @@ class LocationResultBuilder:
                 timseriesResults = self.timeseriesResults[catalogUrlAsResultUrl]
                 timeseriesModel = ResultResponse.model_validate(timseriesResults)
                 paramAndResults.append(
-                    CatalogItemWithResults(
+                    ParameterWithResults(
                         catalogItemId=catalogItemUrl,
                         timeseriesResults=timeseriesModel.get_results(),
                         timeseriesDates=timeseriesModel.get_dates(),
@@ -88,7 +92,7 @@ class LocationResultBuilder:
                     )
                 )
             locations_with_data.append(
-                TransformedLocationWithResults(
+                DataNeededForCovjson(
                     locationType=location.attributes.locationCoordinates.type,
                     location=location.id,
                     parameters=paramAndResults,

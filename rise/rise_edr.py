@@ -164,7 +164,7 @@ class RiseEDRProvider(BaseEDRProvider):
         """
 
         raw_resp = self.get_or_fetch_all_param_filtered_pages(select_properties)
-        response = LocationResponse.from_api_pages(raw_resp)
+        response = LocationResponseWithIncluded.from_api_pages(raw_resp)
 
         if datetime_:
             response = response.filter_by_date(datetime_)

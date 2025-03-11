@@ -272,68 +272,68 @@ class LocationResponseWithIncluded(LocationResponse):
 
         return join
 
-    def get_parameters(
-        self,
-        cache: RISECache,
-    ) -> dict[str, list[str | None]]:
-        locationsToCatalogItemURLs = self.get_catalogItemURLs()
+    # def get_parameters(
+    #     self,
+    #     cache: RISECache,
+    # ) -> dict[str, list[str | None]]:
+    #     locationsToCatalogItemURLs = self.get_catalogItemURLs()
 
-        locationToParams: dict[str, list[str | None]] = {}
+    #     locationToParams: dict[str, list[str | None]] = {}
 
-        async def get_all_params_for_location(location, catalogItems):
-            # Map a location to a list of catalog item responses
-            urlItemMapper: dict[str, dict] = await cache.get_or_fetch_group(
-                catalogItems
-            )
+    #     async def get_all_params_for_location(location, catalogItems):
+    #         # Map a location to a list of catalog item responses
+    #         urlItemMapper: dict[str, dict] = await cache.get_or_fetch_group(
+    #             catalogItems
+    #         )
 
-            try:
-                allParams = []
+    #         try:
+    #             allParams = []
 
-                for item in urlItemMapper.values():
-                    if item is not None:
-                        res = CatalogItem.get_parameter(item)
-                        if res is not None:
-                            allParams.append(res["id"])
+    #             for item in urlItemMapper.values():
+    #                 if item is not None:
+    #                     res = CatalogItem.get_parameter(item)
+    #                     if res is not None:
+    #                         allParams.append(res["id"])
 
-            except KeyError:
-                with open("rise/tests/data/debug.json", "w") as f:
-                    json.dump(urlItemMapper, f)
-                raise ProviderQueryError("Could not get parameters")
+    #         except KeyError:
+    #             with open("rise/tests/data/debug.json", "w") as f:
+    #                 json.dump(urlItemMapper, f)
+    #             raise ProviderQueryError("Could not get parameters")
 
-            # drop all empty params
-            allParams = list(filter(lambda x: x is not None, allParams))
-            return location, allParams
+    #         # drop all empty params
+    #         allParams = list(filter(lambda x: x is not None, allParams))
+    #         return location, allParams
 
-        async def gather_parameters():
-            """Asynchronously fetch all parameters for all locations"""
-            tasks = [
-                get_all_params_for_location(location, catalogItemURLs)
-                for location, catalogItemURLs in locationsToCatalogItemURLs.items()
-            ]
-            results = await asyncio.gather(*tasks)
-            return {location: params for location, params in results}
+    #     async def gather_parameters():
+    #         """Asynchronously fetch all parameters for all locations"""
+    #         tasks = [
+    #             get_all_params_for_location(location, catalogItemURLs)
+    #             for location, catalogItemURLs in locationsToCatalogItemURLs.items()
+    #         ]
+    #         results = await asyncio.gather(*tasks)
+    #         return {location: params for location, params in results}
 
-        locationToParams = safe_run_async(gather_parameters())
+    #     locationToParams = safe_run_async(gather_parameters())
 
-        # should have the same number of locations in each
-        assert len(locationToParams) == len(locationsToCatalogItemURLs)
-        return locationToParams
+    #     # should have the same number of locations in each
+    #     assert len(locationToParams) == len(locationsToCatalogItemURLs)
+    #     return locationToParams
 
-    def filter_by_properties(
-        self, select_properties: list[str] | str, cache: RISECache
-    ):
-        """Filter a location by a list of properties. NOTE you can also do this directly in RISE. Make sure you actually need this and can't fetch up front."""
-        list_of_properties: list[str] = (
-            [select_properties]
-            if isinstance(select_properties, str)
-            else select_properties
-        )
+    # def filter_by_properties(
+    #     self, select_properties: list[str] | str, cache: RISECache
+    # ):
+    #     """Filter a location by a list of properties. NOTE you can also do this directly in RISE. Make sure you actually need this and can't fetch up front."""
+    #     list_of_properties: list[str] = (
+    #         [select_properties]
+    #         if isinstance(select_properties, str)
+    #         else select_properties
+    #     )
 
-        response = self
-        locationsToParams = self.get_parameters(cache)
-        for param in list_of_properties:
-            for location, paramList in locationsToParams.items():
-                if param not in paramList:
-                    response = self.drop_location(int(location))
+    #     response = self
+    #     locationsToParams = self.get_parameters(cache)
+    #     for param in list_of_properties:
+    #         for location, paramList in locationsToParams.items():
+    #             if param not in paramList:
+    #                 response = self.drop_location(int(location))
 
-        return response
+    #     return response

@@ -2,6 +2,7 @@
 # SPDX-License-Identifier: MIT
 
 import logging
+from typing import Any, Tuple
 
 from rise.lib.covjson.template import COVJSON_TEMPLATE
 from rise.lib.covjson.types.covjson import (
@@ -12,14 +13,14 @@ from rise.lib.covjson.types.covjson import (
 )
 from covjson_pydantic.coverage import CoverageCollection as PydanticCoverageCollection
 from rise.lib.cache import RISECache
-from rise.lib.add_results import TransformedLocationWithResults
+from rise.lib.add_results import DataNeededForCovjson
 
 LOGGER = logging.getLogger(__name__)
 
 
 def _generate_coverage_item(
     location_type: str,
-    coords: list[float],
+    coords: list[Any] | Tuple[float, float],
     times: list[str],
     paramToCoverage: dict[str, CoverageRange],
 ) -> Coverage:
@@ -73,7 +74,7 @@ class CovJSONBuilder:
     def _insert_parameter_metadata(
         self,
         paramsToGeoJsonOutput: dict[str, dict],
-        location_response: list[TransformedLocationWithResults],
+        location_response: list[DataNeededForCovjson],
     ):
         relevant_parameters = []
         for location in location_response:
@@ -107,7 +108,7 @@ class CovJSONBuilder:
 
     def _get_coverages(
         self,
-        locationsWithResults: list[TransformedLocationWithResults],
+        locationsWithResults: list[DataNeededForCovjson],
         paramsToGeoJsonOutput,
     ) -> list[Coverage]:
         """Return the data needed for the 'coverage' key in the covjson response"""
@@ -149,7 +150,7 @@ class CovJSONBuilder:
         return coverages
 
     def fill_template(
-        self, location_response: list[TransformedLocationWithResults]
+        self, location_response: list[DataNeededForCovjson]
     ) -> CoverageCollection:
         templated_covjson: CoverageCollection = COVJSON_TEMPLATE
 
