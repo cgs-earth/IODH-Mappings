@@ -255,7 +255,6 @@ class LocationResponseWithIncluded(LocationResponse):
                     continue
 
                 for catalogItem in included_item.relationships.catalogItems.data:
-
                     if catalogItem.id in foundCatalogItems:
                         continue
 

@@ -14,6 +14,7 @@ def oneItemLocationRespFixture():
     resp = safe_run_async(cache.get_or_fetch(url))
     return resp
 
+
 def test_get_catalogItemURLs(oneItemLocationRespFixture: dict):
     """Test getting the associated catalog items from the location response"""
     model = LocationResponseWithIncluded.model_validate(oneItemLocationRespFixture)
@@ -58,13 +59,15 @@ def test_drop_locationid(oneItemLocationRespFixture: dict):
 
 @pytest.fixture
 def allItemsOnePageLocationRespFixture():
-    url = 'https://data.usbr.gov/rise/api/location?&include=catalogRecords.catalogItems?page=1&itemsPerPage=100'
+    url = "https://data.usbr.gov/rise/api/location?&include=catalogRecords.catalogItems?page=1&itemsPerPage=100"
     cache = RISECache("redis")
     resp = safe_run_async(cache.get_or_fetch(url))
     return resp
 
 
 def test_get_all_catalogItemURLs(allItemsOnePageLocationRespFixture: dict):
-    model = LocationResponseWithIncluded.model_validate(allItemsOnePageLocationRespFixture)
+    model = LocationResponseWithIncluded.model_validate(
+        allItemsOnePageLocationRespFixture
+    )
     urls = flatten_values(model.get_catalogItemURLs())
     assert len(urls) > 400
