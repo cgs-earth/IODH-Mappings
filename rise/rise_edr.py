@@ -25,7 +25,7 @@ class RiseEDRProvider(BaseEDRProvider):
     BASE_API: ClassVar[str] = "https://data.usbr.gov"
     cache: RISECache
 
-    def __init__(self, provider_def: dict[str, Any]):
+    def __init__(self):
         """
         Initialize object
 
@@ -34,7 +34,7 @@ class RiseEDRProvider(BaseEDRProvider):
         :returns: rise.base_edr.RiseEDRProvider
         """
         try:
-            self.cache = RISECache(provider_def["cache"])
+            self.cache = RISECache()
         except KeyError:
             LOGGER.error(
                 "You must specify a cache implementation in the config.yml for RISE"

@@ -54,3 +54,7 @@ rise-edr = { workspace = true }
 [tool.pyright]
 # we can't resolve shapely from source so we need to just disable this check
 reportMissingModuleSource = false
+
+[tool.pytest.ini_options]
+# needed to prevent a deprecation warning; doesnt really affect any behavior
+asyncio_default_fixture_loop_scope = "function"

@@ -2,7 +2,6 @@
 # SPDX-License-Identifier: MIT
 
 import asyncio
-from datetime import timedelta
 import json
 import time
 
@@ -15,7 +14,7 @@ from rise.lib.helpers import await_
 async def test_simple_redis_serialization():
     cache = RISECache()
     data = json.loads('{"test": 1}')
-    await cache.set("test_url_location", data, timedelta(milliseconds=1000))  # noqa: F821
+    await cache.set("test_url_location", data)  # noqa: F821
     # our interface does not export an atomic set operation, so we need to just block heuristically
     time.sleep(0.2)
     val = await cache.get("test_url_location")
@@ -26,7 +25,7 @@ async def test_simple_redis_serialization():
 async def test_redis_wrapper():
     cache = RISECache()
     await cache.clear("test_url_catalog_item")
-    await cache.set("test_url_catalog_item", {}, timedelta(milliseconds=1000))
+    await cache.set("test_url_catalog_item", {})
     assert await cache.get("test_url_catalog_item") == {}
     time.sleep(1)
     with pytest.raises(KeyError):

@@ -5,6 +5,7 @@ import requests
 import pytest
 
 from rise.lib.helpers import merge_pages
+from rise.lib.location import LocationResponseWithIncluded
 from rise.rise_edr import RiseEDRProvider
 import datetime
 
@@ -28,7 +29,7 @@ def test_location_locationId(edr_config: dict):
         [item["id"] for item in includedItems if item["type"] == "CatalogItem"]
     )
 
-    p = RiseEDRProvider(edr_config)
+    p = RiseEDRProvider()
     out = p.locations(location_id=1, format_="covjson")
     assert len(out["coverages"]) == catalogItems, (
         "There must be the same number of catalogItems as there are coverages"
@@ -40,7 +41,7 @@ def test_location_locationId(edr_config: dict):
 
 
 def test_get_fields(edr_config: dict):
-    p = RiseEDRProvider(edr_config)
+    p = RiseEDRProvider()
     fields = p.get_fields()
 
     # test to make sure a particular field is there
@@ -53,7 +54,7 @@ def test_get_fields(edr_config: dict):
 
 
 def test_get_or_fetch_all_param_filtered_pages(edr_config: dict):
-    p = RiseEDRProvider(edr_config)
+    p = RiseEDRProvider()
     params = ["812", "6"]
     bothparams = p.get_or_fetch_all_param_filtered_pages(params)
     merge_resp = merge_pages(bothparams)
@@ -68,11 +69,19 @@ def test_get_or_fetch_all_param_filtered_pages(edr_config: dict):
         "both params should have more data than one param"
     )
 
+    allparams = p.get_or_fetch_all_param_filtered_pages()
+    all_resp = merge_pages(allparams)
+    model = LocationResponseWithIncluded.model_validate(all_resp)
+    seenData = set()
+    for loc in model.data:
+        assert loc.attributes.id not in seenData, f"Got a duplicate location with id {loc.attributes.id} and name {loc.attributes.locationName} after scanning {len(seenData)} out of {len(model.data)} locations in total"
+        seenData.add(loc.attributes.id)
+
 
 def test_location_select_properties(edr_config: dict):
     # Currently in pygeoapi we use the word "select_properties" as the
     # keyword argument. This is hold over from OAF it seems.
-    p = RiseEDRProvider(edr_config)
+    p = RiseEDRProvider()
     out_prop_2 = p.locations(select_properties=["2"], format_="geojson")
     for f in out_prop_2["features"]:  # type: ignore
         if f["id"] == 1:  # location 1 is associated with property 2
@@ -96,7 +105,7 @@ def test_location_select_properties(edr_config: dict):
 
 
 def test_location_datetime(edr_config: dict):
-    p = RiseEDRProvider(edr_config)
+    p = RiseEDRProvider()
 
     out = p.locations(location_id=1536, datetime_="2017-01-01/2018-01-01")
 
@@ -109,7 +118,7 @@ def test_location_datetime(edr_config: dict):
 
 
 def test_area(edr_config: dict):
-    p = RiseEDRProvider(edr_config)
+    p = RiseEDRProvider()
 
     areaInEurope = "GEOMETRYCOLLECTION(POLYGON ((-5.976563 55.677584, 11.425781 47.517201, 16.699219 53.225768, -5.976563 55.677584)), POLYGON ((-99.717407 28.637568, -97.124634 28.608637, -97.020264 27.210671, -100.184326 26.980829, -101.392822 28.139816, -99.717407 28.637568)))"
     response = p.area(
@@ -122,7 +131,7 @@ def test_area(edr_config: dict):
     response = p.area(
         wkt=victoriaTexas,
     )
-    assert response["coverages"] == []
+    assert len(response["coverages"]) == 1, response["coverages"]
 
     areaInMontanaWithData = "POLYGON ((-109.204102 47.010226, -104.655762 47.010226, -104.655762 49.267805, -109.204102 49.267805, -109.204102 47.010226))"
 
@@ -133,7 +142,7 @@ def test_area(edr_config: dict):
 
 
 def test_cube(edr_config: dict):
-    p = RiseEDRProvider(edr_config)
+    p = RiseEDRProvider()
 
     # random location near corpus christi should return only one feature
     # TODO: test this more thoroughly
@@ -147,13 +156,13 @@ def test_cube(edr_config: dict):
     collection = p.area(
         wkt="POLYGON ((-64.8 32.3, -65.5 18.3, -80.3 25.2, -64.8 32.3))"
     )
-    assert collection
+    assert collection["coverages"] == []
 
 
 def test_polygon_output(edr_config: dict):
     """make sure that a location which has a polygon in it doesn't throw an error"""
     # location id 3526 is a polygon
-    p = RiseEDRProvider(edr_config)
+    p = RiseEDRProvider()
 
     out = p.locations(location_id=3526, format_="covjson")
 

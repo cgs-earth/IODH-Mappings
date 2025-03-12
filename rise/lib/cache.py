@@ -5,7 +5,7 @@ import asyncio
 import json
 import logging
 import math
-from typing import Coroutine, Optional
+from typing import Coroutine
 import redis.asyncio as redis
 from pygeoapi.provider.base import ProviderConnectionError
 from rise.custom_types import JsonPayload, Url
@@ -33,16 +33,16 @@ async def fetch_url(url: str) -> dict:
 class RISECache:
     """A cache implementation using Redis with ttl support"""
 
+
     def __init__(self, ttl: timedelta = timedelta(hours=24)):
         self.db = redis.Redis(host=REDIS_HOST, port=REDIS_PORT, decode_responses=False)
         self.ttl = ttl
 
-    async def set(self, url: str, json_data: dict, _ttl: Optional[timedelta] = None):
+    async def set(self, url: str, json_data: dict ):
         """Associate a url key with json data in the cache"""
         # Serialize the data before storing it in Redis
-        await self.db.set(url, json.dumps(json_data))
-        ttl = min(_ttl, self.ttl) if _ttl else self.ttl
-        self.db.expire(url, time=ttl)
+        await self.db.set(name = url,  value = json.dumps(json_data))
+        await self.db.expire(name=url, time=self.ttl)
 
     async def reset(self):
         """Delete all keys in the current Redis database"""
