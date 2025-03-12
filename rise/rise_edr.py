@@ -18,7 +18,7 @@ LOGGER = logging.getLogger(__name__)
 
 
 class RiseEDRProvider(BaseEDRProvider):
-    """Base EDR Provider"""
+    """The EDR Provider for the USBR Rise API"""
 
     LOCATION_API: ClassVar[str] = "https://data.usbr.gov/rise/api/location"
     BASE_API: ClassVar[str] = "https://data.usbr.gov"
@@ -89,14 +89,14 @@ class RiseEDRProvider(BaseEDRProvider):
         else:
             raw_resp = self.get_or_fetch_all_param_filtered_pages(select_properties)
             response = LocationResponseWithIncluded.from_api_pages(raw_resp)
+        
+        # If a location exists but has no CatalogItems, it should not appear in locations
+        response = response.drop_locations_without_catalogitems()
 
         # FROM SPEC: If a location id is not defined the API SHALL return a GeoJSON features array of valid location identifiers,
         if not any([crs, datetime_, location_id]) or format_ == "geojson":
-            return response.to_geojson(
-                single_feature=True
-                if location_id
-                else False,  # Geojson is redered differently if there is just one feature
-            )
+            return response.to_geojson()
+        
         # if we are returning covjson we need to fetch the results and fill in the json
         builder = LocationResultBuilder(cache=self.cache, base_response=response)
         response_with_results = builder.load_results(time_filter=datetime_)
@@ -128,16 +128,15 @@ class RiseEDRProvider(BaseEDRProvider):
         :param datetime_: temporal (datestamp or extent)
         :param z: vertical level(s)
         :param format_: data format of output
-
         """
 
         raw_resp = self.get_or_fetch_all_param_filtered_pages(select_properties)
         response = LocationResponseWithIncluded.from_api_pages(raw_resp)
 
         if datetime_:
-            response = response.filter_by_date(datetime_)
+            response = response.drop_outside_of_date_range(datetime_)
 
-        response = response.filter_by_bbox(bbox, z)
+        response = response.drop_outside_of_bbox(bbox, z)
 
         builder = LocationResultBuilder(cache=self.cache, base_response=response)
         response_with_results = builder.load_results(time_filter=datetime_)
@@ -163,10 +162,10 @@ class RiseEDRProvider(BaseEDRProvider):
         response = LocationResponseWithIncluded.from_api_pages(raw_resp)
 
         if datetime_:
-            response = response.filter_by_date(datetime_)
+            response = response.drop_outside_of_date_range(datetime_)
 
         if wkt != "":
-            response = response.filter_by_wkt(wkt, z)
+            response = response.drop_outside_of_wkt(wkt, z)
 
         builder = LocationResultBuilder(cache=self.cache, base_response=response)
         response_with_results = builder.load_results(time_filter=datetime_)

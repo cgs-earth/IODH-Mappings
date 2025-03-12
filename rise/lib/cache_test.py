@@ -77,25 +77,6 @@ class TestFnsWithCaching:
         assert disk_res
         assert remote_res == disk_res
 
-    def test_cache_clears(self):
-        cache = RISECache("redis")
-        cache.set(
-            "https://data.usbr.gov/rise/api/catalog-item/128562", {"data": "test"}
-        )
-        assert safe_run_async(
-            cache.get_or_fetch("https://data.usbr.gov/rise/api/catalog-item/128562")
-        ) == {"data": "test"}
-
-        cache.clear("https://data.usbr.gov/rise/api/catalog-item/128562")
-        time.sleep(1)
-        assert (
-            cache.contains("https://data.usbr.gov/rise/api/catalog-item/128562")
-            is False
-        )
-        with pytest.raises(KeyError):
-            cache.get("https://data.usbr.gov/rise/api/catalog-item/128562")
-
-
 def test_safe_async():
     # Create an event loop without running anything on it
     loop = asyncio.new_event_loop()

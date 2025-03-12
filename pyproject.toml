@@ -15,7 +15,8 @@ dependencies = [
     "redis>=5.2.1",
     "starlette>=0.46.0",
     "uvicorn>=0.34.0",
-    "pygeoapi@git+https://github.com/webb-ben/pygeoapi.git@pydantic"
+    "pygeoapi@git+https://github.com/webb-ben/pygeoapi.git@pydantic",
+    "geojson-pydantic>=1.2.0",
 ]
 
 classifiers = [

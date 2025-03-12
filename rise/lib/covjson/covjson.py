@@ -162,5 +162,6 @@ class CovJSONBuilder:
             paramIdToMetadata, location_response=location_response
         )
 
+        # don't actually care about the pydantic model, we just want to use it to validate
         PydanticCoverageCollection.model_validate(templated_covjson)
         return templated_covjson

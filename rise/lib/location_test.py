@@ -40,20 +40,20 @@ def test_associated_results_have_data(oneItemLocationRespFixture: dict):
 def test_filter_by_wkt(oneItemLocationRespFixture: dict):
     model = LocationResponseWithIncluded.model_validate(oneItemLocationRespFixture)
     squareInOcean = "POLYGON ((-70.64209 40.86368, -70.817871 37.840157, -65.236816 38.013476, -65.500488 41.162114, -70.64209 40.86368))"
-    emptyModel = model.filter_by_wkt(squareInOcean)
+    emptyModel = model.drop_outside_of_wkt(squareInOcean)
     assert emptyModel.data == []
     entireUS = "POLYGON ((-144.492188 57.891497, -146.25 11.695273, -26.894531 12.382928, -29.179688 59.977005, -144.492188 57.891497))"
-    fullModel = model.filter_by_wkt(entireUS)
+    fullModel = model.drop_outside_of_wkt(entireUS)
     assert len(fullModel.data) == len(model.data)
 
 
 def test_drop_locationid(oneItemLocationRespFixture: dict):
     model = LocationResponseWithIncluded.model_validate(oneItemLocationRespFixture)
     # since the fixture is for location 1, make sure that if we drop location 1 everything is gone
-    droppedModel = model.drop_location(location_id=1)
+    droppedModel = model.drop_specific_location(location_id=1)
     assert len(droppedModel.data) == 0
 
-    sameModel = model.drop_location(location_id=2)
+    sameModel = model.drop_specific_location(location_id=2)
     assert len(sameModel.data) == len(model.data)
 
 

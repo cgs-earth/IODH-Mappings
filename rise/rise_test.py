@@ -31,6 +31,7 @@ def oaf_config(request: type[FixtureRequest]):
 
 
 def test_item(oaf_config: dict):
+    """Test what happens if we request one item; make sure the geojson is valid"""
     p = RiseProvider(oaf_config)
     out = p.items(itemId="1")
     out = out

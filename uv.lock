@@ -320,6 +320,18 @@ wheels = [
 ]
 
 [[package]]
+name = "geojson-pydantic"
+version = "1.2.0"
+source = { registry = "https://pypi.org/simple" }
+dependencies = [
+    { name = "pydantic" },
+]
+sdist = { url = "https://files.pythonhosted.org/packages/8e/45/2aefc48622a54a050e0ba9a312e96e65ca77a277e2da1484460714afa0e5/geojson_pydantic-1.2.0.tar.gz", hash = "sha256:eb5c61d3106a28bc71c936ef4cb44f36025db314059217063fee87d82e50cc81", size = 9231 }
+wheels = [
+    { url = "https://files.pythonhosted.org/packages/46/1d/302eada860ab11524af66c90943de586846f112581ababf104c69ceb6747/geojson_pydantic-1.2.0-py3-none-any.whl", hash = "sha256:30f469d05f7f73dcac5f995579209d1ae74a148c0724018fa9492675e05eebf6", size = 8743 },
+]
+
+[[package]]
 name = "greenlet"
 version = "3.1.1"
 source = { registry = "https://pypi.org/simple" }
@@ -971,6 +983,7 @@ source = { virtual = "." }
 dependencies = [
     { name = "aiohttp" },
     { name = "covjson-pydantic" },
+    { name = "geojson-pydantic" },
     { name = "jsonpatch" },
     { name = "pygeoapi" },
     { name = "pytest" },
@@ -989,6 +1002,7 @@ dev = [
 requires-dist = [
     { name = "aiohttp", specifier = ">=3.11.13" },
     { name = "covjson-pydantic", specifier = ">=0.5.0" },
+    { name = "geojson-pydantic", specifier = ">=1.2.0" },
     { name = "jsonpatch", specifier = ">=1.33" },
     { name = "pygeoapi", git = "https://github.com/webb-ben/pygeoapi.git?rev=pydantic" },
     { name = "pytest", specifier = ">=8.3.4" },

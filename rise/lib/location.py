@@ -5,6 +5,7 @@ from copy import deepcopy
 from datetime import datetime
 import logging
 from typing import Literal, Optional, assert_never
+import geojson_pydantic
 from pydantic import BaseModel, field_validator
 import shapely
 import shapely.wkt
@@ -17,7 +18,7 @@ from rise.lib.helpers import (
 from rise.lib.types.helpers import ZType
 from rise.lib.types.includes import LocationIncluded
 from rise.lib.types.location import LocationData, PageLinks
-
+from geojson_pydantic import Feature, FeatureCollection
 
 LOGGER = logging.getLogger()
 
@@ -41,6 +42,7 @@ class LocationResponse(BaseModel):
 
     @classmethod
     def from_api_pages(cls, pages: dict[str, dict]):
+        """Create a location response from multiple paged API responses by first merging them together"""
         return cls(**merge_pages(pages))
 
     @field_validator("data", check_fields=True, mode="before")
@@ -54,7 +56,8 @@ class LocationResponse(BaseModel):
             return [data]
         return data
 
-    def filter_by_date(self, datetime_: str):
+
+    def drop_outside_of_date_range(self, datetime_: str):
         """
         Filter a list of locations by date
         """
@@ -96,6 +99,9 @@ class LocationResponse(BaseModel):
         # Vertical level
         z: Optional[str] = None,
     ):
+        """
+        Filter a list of locations by any arbitrary geometry; if they are not inside of it, drop their data
+        """
         # need to deep copy so we don't change the dict object
         copy_to_return = deepcopy(self)
         indices_to_pop = set()
@@ -139,7 +145,7 @@ class LocationResponse(BaseModel):
 
         return copy_to_return
 
-    def filter_by_wkt(
+    def drop_outside_of_wkt(
         self,
         wkt: Optional[str] = None,
         z: Optional[str] = None,
@@ -148,7 +154,7 @@ class LocationResponse(BaseModel):
         parsed_geo = shapely.wkt.loads(str(wkt)) if wkt else None
         return self._filter_by_geometry(parsed_geo, z)
 
-    def drop_location(self, location_id: int):
+    def drop_specific_location(self, location_id: int):
         """Given a location id, drop all all data that is associated with that location"""
         new = self.model_copy()
 
@@ -160,11 +166,17 @@ class LocationResponse(BaseModel):
 
         return new
 
-    def filter_by_bbox(
+    def drop_outside_of_bbox(
         self,
         bbox: Optional[list] = None,
         z: Optional[str] = None,
     ):
+        """
+        Given a bounding box filter out location data for locations that are not in the box. 
+        If the bbox is 4 items long it will just filter by x,y coords; if it is
+        6 items long it will filter by x,y,z; If they supply a z value it will filter by z
+        even if the bbox does not contain z
+        """
         if bbox:
             parse_result = parse_bbox(bbox)
             shapely_box = parse_result[0] if parse_result else None
@@ -176,18 +188,27 @@ class LocationResponse(BaseModel):
 
         return self._filter_by_geometry(shapely_box, z)
 
-    def filter_by_limit(self, limit: int):
+    def drop_after_limit(self, limit: int):
+        """
+        Return only the location data for the locations in the list up to the limit
+        """
         self.data = self.data[:limit]
         return self
 
-    def remove_before_offset(self, offset: int):
+    def drop_before_offset(self, offset: int):
+        """
+        Return only the location data for the locations in the list after the offset
+        """
         self.data = self.data[offset:]
         return self
 
-    def filter_by_id(
+    def drop_all_but_id(
         self,
         identifier: Optional[str] = None,
     ):
+        """
+        Return only the location data for the location with the given identifier
+        """
         self.data = [
             location
             for location in self.data
@@ -195,42 +216,42 @@ class LocationResponse(BaseModel):
         ]
         return self
 
-    def to_geojson(self, single_feature: bool = False) -> dict:
-        features = []
+    def to_geojson(self) -> dict:
+        """
+        Convert a list of locations to geojson
+        """
+        geojson_features: list[geojson_pydantic.Feature] = []
+
+        single_feature = len(self.data) == 1
 
         for location_feature in self.data:
-            # z = location_feature["attributes"]["elevation"]
-            # if z is not None:
-            #     location_feature["attributes"]["locationCoordinates"][
-            #         "coordinates"
-            #     ].append(float(z))
-            #     LOGGER.error(
-            #         location_feature["attributes"]["locationCoordinates"]["coordinates"]
-            #     )
-
+                
             feature_as_geojson = {
                 "type": "Feature",
                 "id": location_feature.attributes.id,
-                "properties": {
-                    "Locations@iot.count": 1,
-                    "name": location_feature.attributes.locationName,
-                    "id": location_feature.attributes.id,
-                    "Locations": [
-                        {
-                            "location": location_feature.attributes.locationCoordinates.model_dump()
-                        }
-                    ],
-                },
+                # dump with alias to preserve any aliased properties
+                "properties": location_feature.attributes.model_dump(by_alias=True, exclude={"locationCoordinates"}),
                 "geometry": location_feature.attributes.locationCoordinates.model_dump(),
             }
-            features.append(feature_as_geojson)
+            z = location_feature.attributes.elevation
+            if z is not None:
+                feature_as_geojson["properties"]["elevation"] = z
+
+            geojson_features.append(Feature(**feature_as_geojson))
             if single_feature:
                 return feature_as_geojson
 
-        return {"type": "FeatureCollection", "features": features}
+        validated_geojson =  FeatureCollection(type="FeatureCollection", features=geojson_features)
+        return validated_geojson.model_dump(by_alias=True)
 
 
 class LocationResponseWithIncluded(LocationResponse):
+    """
+    This class represents the model of the data returned by location/ in RISE, specifically called
+    with the query param, "include" This will make it so we have access to an extra "included:" key
+    with links to catalogitems/catalogrecords
+    """
+
     # included represents the additional data that is explicitly requested in the fetch request
     included: list[LocationIncluded]
 
@@ -238,11 +259,19 @@ class LocationResponseWithIncluded(LocationResponse):
         """Get all catalog items associated with a particular location"""
         locationIdToCatalogRecord: dict[str, str] = {}
 
+        # it is possible for the `included` section of the response to have both a catalogitem, as well as 
+        # a catalogrecord which has the same associated catalogitem. However, it is also possible to only
+        # have the catalog item. In this case, we need to keep a set so we don't add the catalogItem twice
+        # for the same location
         foundCatalogItems = set()
 
         catalogRecordToCatalogItems: dict[str, list[str]] = {}
 
+        # iterate through the `included` section and associate the catalogrecords with the catalogitem
         for included_item in self.included:
+
+            # if the included item is a catalog record
+            # iterate through all its associated catalogitems
             if included_item.type == "CatalogRecord":
                 catalogRecord = included_item.id
                 locationId = included_item.relationships.location
@@ -263,13 +292,14 @@ class LocationResponseWithIncluded(LocationResponse):
                     catalogRecordToCatalogItems[catalogRecord].append(catalogItem.id)
                     foundCatalogItems.add(catalogItem.id)
 
+            # if it is a catalogitem, just get the catalogitem url directly 
             elif included_item.type == "CatalogItem":
                 catalogItem = included_item.id
                 if catalogItem in foundCatalogItems:
                     continue
 
                 catalogRecord = included_item.relationships.catalogRecord
-                assert catalogRecord is not None
+                assert catalogRecord is not None, "A catalogitem should be associated with a catalogrecord in the include section"
                 # we use the first index since there should only be one catalog record for each catalog item
                 catalogRecord = catalogRecord.data[0].id
                 if catalogRecord not in catalogRecordToCatalogItems:
@@ -277,80 +307,36 @@ class LocationResponseWithIncluded(LocationResponse):
                 catalogRecordToCatalogItems[catalogRecord].append(catalogItem)
                 foundCatalogItems.add(catalogItem)
 
-        join: dict[str, list[str]] = {}
+
+        # once we have the mapping of catalogrecords to catalogitems, we then need
+        # to iterate over locations and join the locationId -> catalogrecord and catalogrecord -> catalogitems
+        # we have to do this second iteration since locations and catalogitems are in different sections of the json
+        # and we do not have guarantees that they will follow a particular order
+        locationIDToCatalogItemsUrls: dict[str, list[str]] = {}
         for locationId, catalogRecord in locationIdToCatalogRecord.items():
             if catalogRecord in catalogRecordToCatalogItems:
                 for catalogItem in catalogRecordToCatalogItems[catalogRecord]:
                     catalogItemURL = f"https://data.usbr.gov{catalogItem}"
-                    if locationId not in join:
-                        join[str(locationId)] = [catalogItemURL]
+                    if locationId not in locationIDToCatalogItemsUrls:
+                        locationIDToCatalogItemsUrls[str(locationId)] = [catalogItemURL]
                     else:
-                        join[locationId].append(catalogItemURL)
+                        locationIDToCatalogItemsUrls[locationId].append(catalogItemURL)
 
-        return join
+        return locationIDToCatalogItemsUrls
+    
 
-    # def get_parameters(
-    #     self,
-    #     cache: RISECache,
-    # ) -> dict[str, list[str | None]]:
-    #     locationsToCatalogItemURLs = self.get_catalogItemURLs()
 
-    #     locationToParams: dict[str, list[str | None]] = {}
+    def drop_locations_without_catalogitems(self):
+        """
+        Filter out any locations which do not have catalogitems and thus do not have data
+        """
+        locationIdToCatalogItems = self.get_catalogItemURLs()
+        data = []
+        for location in self.data:
+            if location.id not in locationIdToCatalogItems:
+                continue 
+            data.append(location)
 
-    #     async def get_all_params_for_location(location, catalogItems):
-    #         # Map a location to a list of catalog item responses
-    #         urlItemMapper: dict[str, dict] = await cache.get_or_fetch_group(
-    #             catalogItems
-    #         )
+        self.data = data
 
-    #         try:
-    #             allParams = []
-
-    #             for item in urlItemMapper.values():
-    #                 if item is not None:
-    #                     res = CatalogItem.get_parameter(item)
-    #                     if res is not None:
-    #                         allParams.append(res["id"])
-
-    #         except KeyError:
-    #             with open("rise/tests/data/debug.json", "w") as f:
-    #                 json.dump(urlItemMapper, f)
-    #             raise ProviderQueryError("Could not get parameters")
-
-    #         # drop all empty params
-    #         allParams = list(filter(lambda x: x is not None, allParams))
-    #         return location, allParams
-
-    #     async def gather_parameters():
-    #         """Asynchronously fetch all parameters for all locations"""
-    #         tasks = [
-    #             get_all_params_for_location(location, catalogItemURLs)
-    #             for location, catalogItemURLs in locationsToCatalogItemURLs.items()
-    #         ]
-    #         results = await asyncio.gather(*tasks)
-    #         return {location: params for location, params in results}
-
-    #     locationToParams = safe_run_async(gather_parameters())
-
-    #     # should have the same number of locations in each
-    #     assert len(locationToParams) == len(locationsToCatalogItemURLs)
-    #     return locationToParams
-
-    # def filter_by_properties(
-    #     self, select_properties: list[str] | str, cache: RISECache
-    # ):
-    #     """Filter a location by a list of properties. NOTE you can also do this directly in RISE. Make sure you actually need this and can't fetch up front."""
-    #     list_of_properties: list[str] = (
-    #         [select_properties]
-    #         if isinstance(select_properties, str)
-    #         else select_properties
-    #     )
-
-    #     response = self
-    #     locationsToParams = self.get_parameters(cache)
-    #     for param in list_of_properties:
-    #         for location, paramList in locationsToParams.items():
-    #             if param not in paramList:
-    #                 response = self.drop_location(int(location))
-
-    #     return response
+        return self

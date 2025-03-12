@@ -45,6 +45,7 @@ def merge_pages(pages: dict[Url, JsonPayload]) -> dict:
 
 
 def flatten_values(input: dict[str, list]) -> list:
+    """Given a dict of lists, flatten them into a single list"""
     output = []
     for _, v in input.items():
         for i in v:
@@ -54,7 +55,7 @@ def flatten_values(input: dict[str, list]) -> list:
 
 
 def parse_z(z: str) -> Optional[Tuple[ZType, list[int]]]:
-    """Parse a z value in the format required by the OGC API spec"""
+    """Parse a z value in the format required by the OGC EDR spec"""
     if not z:
         return None
     if z.startswith("R") and len(z.split("/")) == 3:

@@ -56,19 +56,19 @@ class RiseProvider(BaseProvider):
             response = LocationResponse(**merged_response)
 
         if datetime_:
-            response = response.filter_by_date(datetime_)
+            response = response.drop_outside_of_date_range(datetime_)
 
         if offset:
-            response = response.remove_before_offset(offset)
+            response = response.drop_before_offset(offset)
 
         if limit:
-            response = response.filter_by_limit(limit)
+            response = response.drop_after_limit(limit)
 
         # Even though bbox is required, it can be an empty list. If it is empty just skip filtering
         if bbox:
-            response = response.filter_by_bbox(bbox)
+            response = response.drop_outside_of_bbox(bbox)
 
-        return response.to_geojson(single_feature=itemId is not None)
+        return response.to_geojson()
 
     def query(self, **kwargs):
         return self.items(**kwargs)
