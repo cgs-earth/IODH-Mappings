@@ -1,7 +1,6 @@
 # Copyright 2025 Lincoln Institute of Land Policy
 # SPDX-License-Identifier: MIT
 
-from copy import deepcopy
 from datetime import datetime
 import logging
 from typing import Literal, Optional, assert_never
@@ -63,7 +62,6 @@ class LocationResponse(BaseModel):
         if not self.data[0].attributes:
             raise RuntimeError("Can't filter by date")
 
-
         location_indices_to_remove = set()
 
         parsed_date: list[datetime] = parse_date(datetime_)
@@ -92,7 +90,7 @@ class LocationResponse(BaseModel):
                     datetime_
                 )
             )
-        
+
         # delete them backwards so we don't have to make a copy of the list or mess up indices while iterating
         for index in sorted(location_indices_to_remove, reverse=True):
             del self.data[index]
@@ -347,6 +345,6 @@ class LocationResponseWithIncluded(LocationResponse):
                 location_indices_to_remove.add(i)
 
         for i in sorted(location_indices_to_remove, reverse=True):
-            self.data.pop(i) 
+            self.data.pop(i)
 
         return self
