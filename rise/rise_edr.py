@@ -89,14 +89,14 @@ class RiseEDRProvider(BaseEDRProvider):
         else:
             raw_resp = self.get_or_fetch_all_param_filtered_pages(select_properties)
             response = LocationResponseWithIncluded.from_api_pages(raw_resp)
-        
+
         # If a location exists but has no CatalogItems, it should not appear in locations
         response = response.drop_locations_without_catalogitems()
 
         # FROM SPEC: If a location id is not defined the API SHALL return a GeoJSON features array of valid location identifiers,
         if not any([crs, datetime_, location_id]) or format_ == "geojson":
             return response.to_geojson()
-        
+
         # if we are returning covjson we need to fetch the results and fill in the json
         builder = LocationResultBuilder(cache=self.cache, base_response=response)
         response_with_results = builder.load_results(time_filter=datetime_)

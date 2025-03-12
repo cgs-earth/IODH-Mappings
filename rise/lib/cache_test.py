@@ -77,6 +77,7 @@ class TestFnsWithCaching:
         assert disk_res
         assert remote_res == disk_res
 
+
 def test_safe_async():
     # Create an event loop without running anything on it
     loop = asyncio.new_event_loop()

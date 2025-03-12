@@ -56,7 +56,6 @@ class LocationResponse(BaseModel):
             return [data]
         return data
 
-
     def drop_outside_of_date_range(self, datetime_: str):
         """
         Filter a list of locations by date
@@ -172,7 +171,7 @@ class LocationResponse(BaseModel):
         z: Optional[str] = None,
     ):
         """
-        Given a bounding box filter out location data for locations that are not in the box. 
+        Given a bounding box filter out location data for locations that are not in the box.
         If the bbox is 4 items long it will just filter by x,y coords; if it is
         6 items long it will filter by x,y,z; If they supply a z value it will filter by z
         even if the bbox does not contain z
@@ -225,12 +224,13 @@ class LocationResponse(BaseModel):
         single_feature = len(self.data) == 1
 
         for location_feature in self.data:
-                
             feature_as_geojson = {
                 "type": "Feature",
                 "id": location_feature.attributes.id,
                 # dump with alias to preserve any aliased properties
-                "properties": location_feature.attributes.model_dump(by_alias=True, exclude={"locationCoordinates"}),
+                "properties": location_feature.attributes.model_dump(
+                    by_alias=True, exclude={"locationCoordinates"}
+                ),
                 "geometry": location_feature.attributes.locationCoordinates.model_dump(),
             }
             z = location_feature.attributes.elevation
@@ -241,7 +241,9 @@ class LocationResponse(BaseModel):
             if single_feature:
                 return feature_as_geojson
 
-        validated_geojson =  FeatureCollection(type="FeatureCollection", features=geojson_features)
+        validated_geojson = FeatureCollection(
+            type="FeatureCollection", features=geojson_features
+        )
         return validated_geojson.model_dump(by_alias=True)
 
 
@@ -259,7 +261,7 @@ class LocationResponseWithIncluded(LocationResponse):
         """Get all catalog items associated with a particular location"""
         locationIdToCatalogRecord: dict[str, str] = {}
 
-        # it is possible for the `included` section of the response to have both a catalogitem, as well as 
+        # it is possible for the `included` section of the response to have both a catalogitem, as well as
         # a catalogrecord which has the same associated catalogitem. However, it is also possible to only
         # have the catalog item. In this case, we need to keep a set so we don't add the catalogItem twice
         # for the same location
@@ -269,7 +271,6 @@ class LocationResponseWithIncluded(LocationResponse):
 
         # iterate through the `included` section and associate the catalogrecords with the catalogitem
         for included_item in self.included:
-
             # if the included item is a catalog record
             # iterate through all its associated catalogitems
             if included_item.type == "CatalogRecord":
@@ -292,21 +293,22 @@ class LocationResponseWithIncluded(LocationResponse):
                     catalogRecordToCatalogItems[catalogRecord].append(catalogItem.id)
                     foundCatalogItems.add(catalogItem.id)
 
-            # if it is a catalogitem, just get the catalogitem url directly 
+            # if it is a catalogitem, just get the catalogitem url directly
             elif included_item.type == "CatalogItem":
                 catalogItem = included_item.id
                 if catalogItem in foundCatalogItems:
                     continue
 
                 catalogRecord = included_item.relationships.catalogRecord
-                assert catalogRecord is not None, "A catalogitem should be associated with a catalogrecord in the include section"
+                assert catalogRecord is not None, (
+                    "A catalogitem should be associated with a catalogrecord in the include section"
+                )
                 # we use the first index since there should only be one catalog record for each catalog item
                 catalogRecord = catalogRecord.data[0].id
                 if catalogRecord not in catalogRecordToCatalogItems:
                     catalogRecordToCatalogItems[catalogRecord] = []
                 catalogRecordToCatalogItems[catalogRecord].append(catalogItem)
                 foundCatalogItems.add(catalogItem)
-
 
         # once we have the mapping of catalogrecords to catalogitems, we then need
         # to iterate over locations and join the locationId -> catalogrecord and catalogrecord -> catalogitems
@@ -323,8 +325,6 @@ class LocationResponseWithIncluded(LocationResponse):
                         locationIDToCatalogItemsUrls[locationId].append(catalogItemURL)
 
         return locationIDToCatalogItemsUrls
-    
-
 
     def drop_locations_without_catalogitems(self):
         """
@@ -334,7 +334,7 @@ class LocationResponseWithIncluded(LocationResponse):
         data = []
         for location in self.data:
             if location.id not in locationIdToCatalogItems:
-                continue 
+                continue
             data.append(location)
 
         self.data = data
