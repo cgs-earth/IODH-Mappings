@@ -3,15 +3,15 @@
 
 import pytest
 from rise.lib.cache import RISECache
-from rise.lib.helpers import flatten_values, getResultUrlFromCatalogUrl, safe_run_async
+from rise.lib.helpers import flatten_values, getResultUrlFromCatalogUrl, await_
 from rise.lib.location import LocationResponseWithIncluded
 
 
 @pytest.fixture
 def oneItemLocationRespFixture():
     url = "https://data.usbr.gov/rise/api/location/1?include=catalogRecords.catalogItems&page=1&itemsPerPage=5"
-    cache = RISECache("redis")
-    resp = safe_run_async(cache.get_or_fetch(url))
+    cache = RISECache()
+    resp = await_(cache.get_or_fetch(url))
     return resp
 
 
@@ -28,12 +28,12 @@ def test_get_catalogItemURLs(oneItemLocationRespFixture: dict):
 
 
 def test_associated_results_have_data(oneItemLocationRespFixture: dict):
-    cache = RISECache("redis")
+    cache = RISECache()
     model = LocationResponseWithIncluded.model_validate(oneItemLocationRespFixture)
     urls = model.get_catalogItemURLs()
     for url in urls:
         resultUrl = getResultUrlFromCatalogUrl(url, datetime_=None)
-        resp = safe_run_async(cache.get_or_fetch(resultUrl))
+        resp = await_(cache.get_or_fetch(resultUrl))
         assert resp["data"], resp["data"]
 
 
@@ -60,8 +60,8 @@ def test_drop_locationid(oneItemLocationRespFixture: dict):
 @pytest.fixture
 def allItemsOnePageLocationRespFixture():
     url = "https://data.usbr.gov/rise/api/location?&include=catalogRecords.catalogItems?page=1&itemsPerPage=100"
-    cache = RISECache("redis")
-    resp = safe_run_async(cache.get_or_fetch(url))
+    cache = RISECache()
+    resp = await_(cache.get_or_fetch(url))
     return resp
 
 

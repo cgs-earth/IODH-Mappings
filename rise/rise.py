@@ -10,7 +10,7 @@ from rise.env import TRACER
 from rise.lib.cache import RISECache
 from rise.lib.location import LocationResponse
 from rise.rise_edr import RiseEDRProvider
-from rise.lib.helpers import merge_pages, safe_run_async
+from rise.lib.helpers import merge_pages, await_
 
 LOGGER = logging.getLogger(__name__)
 
@@ -23,13 +23,7 @@ class RiseProvider(BaseProvider):
         Initialize object
         :param provider_def: provider definition
         """
-        try:
-            self.cache = RISECache(provider_def["cache"])
-        except KeyError:
-            raise Exception(
-                "You must specify a cache implementation in the config.yml for RISE"
-            )
-
+        self.cache = RISECache()
         super().__init__(provider_def)
 
     @TRACER.start_as_current_span("items")
@@ -47,11 +41,11 @@ class RiseProvider(BaseProvider):
             # Instead of merging all location pages, just
             # fetch the location associated with the ID
             url: str = f"https://data.usbr.gov/rise/api/location/{itemId}"
-            raw_resp = safe_run_async(self.cache.get_or_fetch(url))
+            raw_resp = await_(self.cache.get_or_fetch(url))
             response = LocationResponse(**raw_resp)
         else:
-            all_location_responses = self.cache.get_or_fetch_all_pages(
-                RiseEDRProvider.LOCATION_API
+            all_location_responses = await_(
+                self.cache.get_or_fetch_all_pages(RiseEDRProvider.LOCATION_API)
             )
             merged_response = merge_pages(all_location_responses)
             response = LocationResponse(**merged_response)
@@ -82,6 +76,7 @@ class RiseProvider(BaseProvider):
 
         :returns: dict of single GeoJSON feature
         """
+
         return self.items(itemId=identifier, bbox=[], **kwargs)
 
     def get_fields(self, **kwargs):

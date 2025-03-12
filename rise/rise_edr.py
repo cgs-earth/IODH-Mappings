@@ -12,7 +12,7 @@ from rise.env import TRACER
 from rise.lib.covjson.covjson import CovJSONBuilder
 from rise.lib.location import LocationResponseWithIncluded
 from rise.lib.cache import RISECache
-from rise.lib.helpers import safe_run_async
+from rise.lib.helpers import await_
 from rise.lib.add_results import LocationResultBuilder
 
 LOGGER = logging.getLogger(__name__)
@@ -65,7 +65,7 @@ class RiseEDRProvider(BaseEDRProvider):
         else:
             base_url = "https://data.usbr.gov/rise/api/location?"
         base_url += "&include=catalogRecords.catalogItems"
-        return self.cache.get_or_fetch_all_pages(base_url)
+        return await_(self.cache.get_or_fetch_all_pages(base_url))
 
     @TRACER.start_as_current_span("locations")
     @BaseEDRProvider.register()
@@ -86,7 +86,7 @@ class RiseEDRProvider(BaseEDRProvider):
 
         if location_id:
             url: str = f"https://data.usbr.gov/rise/api/location/{location_id}?include=catalogRecords.catalogItems"
-            raw_resp = safe_run_async(self.cache.get_or_fetch(url))
+            raw_resp = await_(self.cache.get_or_fetch(url))
             response = LocationResponseWithIncluded(**raw_resp)
         else:
             raw_resp = self.get_or_fetch_all_param_filtered_pages(select_properties)
@@ -109,7 +109,7 @@ class RiseEDRProvider(BaseEDRProvider):
         if self._fields:
             return self._fields
 
-        self._fields = self.cache.get_or_fetch_parameters()
+        self._fields = await_(self.cache.get_or_fetch_parameters())
 
         return self._fields
 
@@ -133,7 +133,7 @@ class RiseEDRProvider(BaseEDRProvider):
         :param format_: data format of output
         """
 
-        raw_resp = self.get_or_fetch_all_param_filtered_pages(select_properties)
+        raw_resp = await_(self.get_or_fetch_all_param_filtered_pages(select_properties))
         response = LocationResponseWithIncluded.from_api_pages(raw_resp)
 
         if datetime_:
