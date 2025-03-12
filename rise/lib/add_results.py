@@ -101,9 +101,9 @@ class LocationResultBuilder:
                 )
                 timseriesResults = self.timeseriesResults[catalogUrlAsResultUrl]
                 if timseriesResults.get("detail") == "Internal Server Error":
-                    await_(self.cache.clear(
-                        catalogUrlAsResultUrl
-                    ))  # clear the cache url so it can be refetched
+                    await_(
+                        self.cache.clear(catalogUrlAsResultUrl)
+                    )  # clear the cache url so it can be refetched
                     raise RuntimeError(
                         f"Got an error when fetching {catalogUrlAsResultUrl}:{timseriesResults}"
                     )

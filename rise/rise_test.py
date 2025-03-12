@@ -12,7 +12,9 @@ from rise.rise_edr import RiseEDRProvider
 
 def test_get_all_pages_for_items():
     cache = RISECache()
-    all_location_responses = await_(cache.get_or_fetch_all_pages(RiseEDRProvider.LOCATION_API))
+    all_location_responses = await_(
+        cache.get_or_fetch_all_pages(RiseEDRProvider.LOCATION_API)
+    )
     merged_response = merge_pages(all_location_responses)
     response = LocationResponse(**merged_response)
     assert response

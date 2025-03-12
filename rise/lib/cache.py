@@ -45,7 +45,7 @@ class RISECache:
         self.db.expire(url, time=ttl)
 
     async def reset(self):
-        """ Delete all keys in the current Redis database"""
+        """Delete all keys in the current Redis database"""
         await self.db.flushdb()
 
     async def clear(self, url: str):
@@ -65,8 +65,7 @@ class RISECache:
             data = await self.db.get(url)
             if data is None:
                 raise KeyError(f"{url} not found in cache")
-            return json.loads(data) 
-
+            return json.loads(data)
 
     async def get_or_fetch(self, url, force_fetch=False) -> dict:
         """Send a get request or grab it locally if it already exists in the cache"""
@@ -79,7 +78,6 @@ class RISECache:
         else:
             LOGGER.debug(f"Got {url} from cache")
             return await self.get(url)
-
 
     async def get_or_fetch_all_pages(
         self, url: str, force_fetch=False
@@ -134,21 +132,29 @@ class RISECache:
 
         return fields
 
-    async def get_or_fetch_group(self, urls: list[str], force_fetch=False) -> dict[str, dict]:
+    async def get_or_fetch_group(
+        self, urls: list[str], force_fetch=False
+    ) -> dict[str, dict]:
         """Send a get request to all urls or grab it locally if it already exists in the cache"""
 
         urls_not_in_cache = [
             url for url in urls if not await self.contains(url) or force_fetch
         ]
-        urls_in_cache = [url for url in urls if await self.contains(url) and not force_fetch]
+        urls_in_cache = [
+            url for url in urls if await self.contains(url) and not force_fetch
+        ]
 
         remote_fetch = self.fetch_and_set_url_group(urls_not_in_cache)
 
         local_fetch: dict[Url, Coroutine] = {
             url: self.get(url) for url in urls_in_cache
         }
-        fetch_results = await asyncio.gather(*local_fetch.values(), return_exceptions=False)
-        url_to_result = dict(zip(local_fetch.keys(), fetch_results))  # Map results back to URLs
+        fetch_results = await asyncio.gather(
+            *local_fetch.values(), return_exceptions=False
+        )
+        url_to_result = dict(
+            zip(local_fetch.keys(), fetch_results)
+        )  # Map results back to URLs
 
         url_to_result.update(await remote_fetch)
 
@@ -168,4 +174,3 @@ class RISECache:
             await self.set(url, result)
 
         return results
-

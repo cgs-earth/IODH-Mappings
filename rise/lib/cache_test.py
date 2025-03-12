@@ -58,7 +58,7 @@ class TestFnsWithCaching:
             # so we should get 100 items per page
             assert resp["meta"]["itemsPerPage"] == 100
 
-    @pytest.mark.asyncio    
+    @pytest.mark.asyncio
     async def test_fields_are_unique(self):
         cache = RISECache()
         field_ids = (await cache.get_or_fetch_parameters()).keys()

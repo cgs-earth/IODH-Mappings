@@ -11,11 +11,13 @@ from rise.custom_types import JsonPayload, Url
 from rise.lib.types.helpers import ZType
 from rise.env import rise_event_loop
 
+
 def await_(coro: Coroutine):
     """
     await an asyncio coroutine, ensuring it works even if an event loop is already running.
     """
     return asyncio.run_coroutine_threadsafe(coro, loop=rise_event_loop).result()
+
 
 def merge_pages(pages: dict[Url, JsonPayload]) -> dict:
     """Given multiple different pages of data, merge them together"""

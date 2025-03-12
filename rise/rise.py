@@ -44,9 +44,9 @@ class RiseProvider(BaseProvider):
             raw_resp = await_(self.cache.get_or_fetch(url))
             response = LocationResponse(**raw_resp)
         else:
-            all_location_responses = await_(self.cache.get_or_fetch_all_pages(
-                RiseEDRProvider.LOCATION_API
-            ))
+            all_location_responses = await_(
+                self.cache.get_or_fetch_all_pages(RiseEDRProvider.LOCATION_API)
+            )
             merged_response = merge_pages(all_location_responses)
             response = LocationResponse(**merged_response)
 

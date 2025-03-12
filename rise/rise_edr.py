@@ -14,6 +14,7 @@ from rise.lib.location import LocationResponseWithIncluded
 from rise.lib.cache import RISECache
 from rise.lib.helpers import await_
 from rise.lib.add_results import LocationResultBuilder
+
 LOGGER = logging.getLogger(__name__)
 
 
