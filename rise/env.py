@@ -24,10 +24,8 @@ def init_otel():
     """Initialize the open telemetry config"""
     resource = Resource(attributes={"service.name": "rise_edr"})
     provider = TracerProvider(resource=resource)
-    COLLECTOR_ENDPOINT = "127.0.0.1"
-    COLLECTOR_GRPC_PORT = (
-        4317  # jaeger's port to accept OpenTelemetry Protocol (OTLP) over gRPC
-    )
+    COLLECTOR_ENDPOINT = os.environ.get("COLLECTOR_ENDPOINT", "127.0.0.1")
+    COLLECTOR_GRPC_PORT = os.environ.get("COLLECTOR_GRPC_PORT", 4317)
 
     processor = BatchSpanProcessor(
         OTLPSpanExporter(endpoint=f"http://{COLLECTOR_ENDPOINT}:{COLLECTOR_GRPC_PORT}")
@@ -44,7 +42,7 @@ def init_otel():
 init_otel()
 requests.packages.urllib3.util.connection.HAS_IPV6 = False  # type: ignore
 
-TRACER = trace.get_tracer("my.tracer.name")
+TRACER = trace.get_tracer("rise_edr_tracer")
 
 REDIS_HOST = os.getenv("REDIS_HOST", "localhost")
 REDIS_PORT = int(os.getenv("REDIS_PORT", "6379"))
