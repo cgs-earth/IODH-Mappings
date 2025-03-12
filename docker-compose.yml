@@ -37,23 +37,11 @@ services:
   jaeger:
     image: jaegertracing/all-in-one
     ports:
-      - "14269"
-      - "14268:14268"
-      - "14267"
-      - "14250"
-      - "9411:9411"
-      - "16686:16686"
-      - "16687"
-      - "5775:5775/udp"
-      - "6831:6831/udp"
-      - "6832:6832/udp"
-      - "5778:5778"
-      - "4317:4317"
-      - "4318:4318" # Enable OTLP HTTP port
+      # Ports defined here https://www.jaegertracing.io/docs/next-release/getting-started/#all-in-one
+      - "16686:16686" # expose the UI
+      - "4317:4317" # Enable OTLP HTTP port
     environment:
-      - COLLECTOR_ZIPKIN_HTTP_PORT=9411
       - LOG_LEVEL=debug
-      - COLLECTOR_OTLP_ENABLED=true # Enable OTLP in Jaeger
     restart: on-failure
 
 volumes:

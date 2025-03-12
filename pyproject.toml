@@ -22,6 +22,7 @@ dependencies = [
     "opentelemetry-sdk>=1.30.0",
     "opentelemetry-exporter-otlp-proto-http>=1.30.0",
     "opentelemetry-exporter-otlp>=1.30.0",
+    "pygeoapi@git+https://github.com/webb-ben/pygeoapi.git@pydantic",
 ]
 
 classifiers = [
@@ -48,7 +49,6 @@ dev = [
 ]
 
 [tool.uv.sources]
-pygeoapi = { git = "https://github.com/webb-ben/pygeoapi.git", rev = "pydantic" }
 rise-edr = { workspace = true }
 
 [tool.pyright]
