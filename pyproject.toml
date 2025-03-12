@@ -15,8 +15,13 @@ dependencies = [
     "redis>=5.2.1",
     "starlette>=0.46.0",
     "uvicorn>=0.34.0",
-    "pygeoapi@git+https://github.com/webb-ben/pygeoapi.git@pydantic",
+    "pygeoapi",
     "geojson-pydantic>=1.2.0",
+    "opentelemetry-instrumentation-aiohttp-client>=0.51b0",
+    "opentelemetry-api>=1.30.0",
+    "opentelemetry-sdk>=1.30.0",
+    "opentelemetry-exporter-otlp-proto-http>=1.30.0",
+    "opentelemetry-exporter-otlp>=1.30.0",
 ]
 
 classifiers = [
@@ -42,6 +47,7 @@ dev = [
 ]
 
 [tool.uv.sources]
+pygeoapi = { git = "https://github.com/webb-ben/pygeoapi.git", rev = "pydantic" }
 rise-edr = { workspace = true }
 
 [tool.pyright]

@@ -8,6 +8,7 @@ from pygeoapi.provider.base import (
     ProviderQueryError,
 )
 from pygeoapi.provider.base_edr import BaseEDRProvider
+from rise.env import TRACER
 from rise.lib.covjson.covjson import CovJSONBuilder
 from rise.lib.location import LocationResponseWithIncluded
 from rise.lib.cache import RISECache
@@ -15,7 +16,6 @@ from rise.lib.helpers import safe_run_async
 from rise.lib.add_results import LocationResultBuilder
 
 LOGGER = logging.getLogger(__name__)
-
 
 class RiseEDRProvider(BaseEDRProvider):
     """The EDR Provider for the USBR Rise API"""
@@ -66,6 +66,7 @@ class RiseEDRProvider(BaseEDRProvider):
         base_url += "&include=catalogRecords.catalogItems"
         return self.cache.get_or_fetch_all_pages(base_url)
 
+    @TRACER.start_as_current_span("locations")
     @BaseEDRProvider.register()
     def locations(
         self,
@@ -111,6 +112,8 @@ class RiseEDRProvider(BaseEDRProvider):
 
         return self._fields
 
+
+    @TRACER.start_as_current_span("cube")
     @BaseEDRProvider.register()
     def cube(
         self,
@@ -142,6 +145,8 @@ class RiseEDRProvider(BaseEDRProvider):
         response_with_results = builder.load_results(time_filter=datetime_)
         return CovJSONBuilder(self.cache).fill_template(response_with_results)
 
+
+    @TRACER.start_as_current_span("area")
     @BaseEDRProvider.register()
     def area(
         self,

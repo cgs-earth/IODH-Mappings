@@ -13,13 +13,13 @@ import aiohttp
 import redis
 from aiohttp import client_exceptions
 from datetime import timedelta
-from rise.env import REDIS_HOST, REDIS_PORT
+from rise.env import REDIS_HOST, REDIS_PORT, TRACER
 from rise.lib.helpers import merge_pages, safe_run_async
+from opentelemetry import trace
 
 HEADERS = {"accept": "application/vnd.api+json"}
 
 LOGGER = logging.getLogger(__name__)
-
 
 async def fetch_url(url: str) -> dict:
     async with aiohttp.ClientSession(headers=HEADERS) as session:
@@ -57,11 +57,14 @@ class RedisCache:
         return self.db.exists(url) == 1
 
     def get(self, url: str):
-        # Deserialize the data after retrieving it from Redis
-        data = self.db.get(url)
-        if data is None:
-            raise KeyError(f"{url} not found in cache")
-        return json.loads(data)  # type: ignore
+        with TRACER.start_span("cache_retrieval") as s:
+            s.set_attribute("cache_retrieval.url", url)
+            
+            # Deserialize the data after retrieving it from Redis
+            data = self.db.get(url)
+            if data is None:
+                raise KeyError(f"{url} not found in cache")
+            return json.loads(data)  # type: ignore
 
 
 class RISECache:
