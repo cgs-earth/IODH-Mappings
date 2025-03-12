@@ -7,7 +7,7 @@ from typing import Any, Literal, Optional, Tuple
 from pydantic import BaseModel
 
 from rise.lib.cache import RISECache
-from rise.lib.helpers import flatten_values, getResultUrlFromCatalogUrl, safe_run_async
+from rise.lib.helpers import flatten_values, getResultUrlFromCatalogUrl, await_
 from rise.lib.location import LocationResponseWithIncluded
 from rise.lib.types.results import ResultResponse
 
@@ -71,7 +71,7 @@ class LocationResultBuilder:
             )
 
         LOGGER.debug(f"Fetching {resultUrls}; {len(resultUrls)} in total")
-        return safe_run_async(self.cache.get_or_fetch_group(resultUrls))
+        return await_(self.cache.get_or_fetch_group(resultUrls))
 
     def _get_timeseries_for_catalogitem(self, catalogItem):
         if catalogItem not in self.timeseriesResults:
@@ -101,9 +101,9 @@ class LocationResultBuilder:
                 )
                 timseriesResults = self.timeseriesResults[catalogUrlAsResultUrl]
                 if timseriesResults.get("detail") == "Internal Server Error":
-                    self.cache.clear(
+                    await_(self.cache.clear(
                         catalogUrlAsResultUrl
-                    )  # clear the cache url so it can be refetched
+                    ))  # clear the cache url so it can be refetched
                     raise RuntimeError(
                         f"Got an error when fetching {catalogUrlAsResultUrl}:{timseriesResults}"
                     )

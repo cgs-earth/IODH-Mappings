@@ -14,6 +14,7 @@ from rise.lib.covjson.types import (
 from covjson_pydantic.coverage import CoverageCollection as PydanticCoverageCollection
 from rise.lib.cache import RISECache
 from rise.lib.add_results import DataNeededForCovjson
+from rise.lib.helpers import await_
 
 LOGGER = logging.getLogger(__name__)
 
@@ -154,7 +155,7 @@ class CovJSONBuilder:
         self, location_response: list[DataNeededForCovjson]
     ) -> CoverageCollection:
         templated_covjson: CoverageCollection = COVJSON_TEMPLATE
-        paramIdToMetadata = self._cache.get_or_fetch_parameters()
+        paramIdToMetadata = await_(self._cache.get_or_fetch_parameters())
         templated_covjson["coverages"] = self._get_coverages(
             location_response, paramIdToMetadata
         )
