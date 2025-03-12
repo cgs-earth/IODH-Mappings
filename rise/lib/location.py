@@ -229,10 +229,12 @@ class LocationResponse(BaseModel):
                 "id": location_feature.attributes.id,
                 # dump with alias to preserve any aliased properties
                 "properties": location_feature.attributes.model_dump(
-                    by_alias=True, exclude={"locationCoordinates"}
+                    by_alias=True, exclude={"locationCoordinates", "locationGeometry"}
                 ),
                 "geometry": location_feature.attributes.locationCoordinates.model_dump(),
             }
+            feature_as_geojson["properties"]["name"] = location_feature.attributes.locationName
+
             z = location_feature.attributes.elevation
             if z is not None:
                 feature_as_geojson["properties"]["elevation"] = z
