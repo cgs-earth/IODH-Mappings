@@ -6,6 +6,7 @@ from typing import Optional
 
 
 from pygeoapi.provider.base import BaseProvider
+from rise.env import TRACER
 from rise.lib.cache import RISECache
 from rise.lib.location import LocationResponse
 from rise.rise_edr import RiseEDRProvider
@@ -22,7 +23,6 @@ class RiseProvider(BaseProvider):
         Initialize object
         :param provider_def: provider definition
         """
-
         try:
             self.cache = RISECache(provider_def["cache"])
         except KeyError:
@@ -32,6 +32,7 @@ class RiseProvider(BaseProvider):
 
         super().__init__(provider_def)
 
+    @TRACER.start_as_current_span("items")
     def items(
         self,
         bbox: list = [],
