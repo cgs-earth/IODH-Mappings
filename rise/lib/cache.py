@@ -103,6 +103,7 @@ class RISECache:
             return res
 
         else:
+            LOGGER.debug(f"Got {url} from cache")
             return self.get(url)
 
     def contains(self, url: str) -> bool:
