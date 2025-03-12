@@ -27,6 +27,7 @@ services:
       - PYGEOAPI_CONFIG=/pygeoapi/local.config.yml
       - PYGEOAPI_OPENAPI=/pygeoapi/local.openapi.yml
       - REDIS_HOST=redis
+      - OTEL_SDK_DISABLED=${OTEL_SDK_DISABLED:-false}
     depends_on:
       - redis
 

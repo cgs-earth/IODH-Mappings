@@ -2,6 +2,7 @@
 # SPDX-License-Identifier: MIT
 
 import asyncio
+import logging
 import os
 from opentelemetry import trace
 from opentelemetry.sdk.trace import TracerProvider
@@ -19,6 +20,7 @@ This file contains initialization code and global vars that are
 used throughout the entire integration
 """
 
+print(f"Starting server with env var OTEL_SDK_DISABLED set to '{os.environ.get('OTEL_SDK_DISABLED')}'")
 
 def init_otel():
     """Initialize the open telemetry config"""
