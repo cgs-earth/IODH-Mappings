@@ -233,7 +233,9 @@ class LocationResponse(BaseModel):
                 ),
                 "geometry": location_feature.attributes.locationCoordinates.model_dump(),
             }
-            feature_as_geojson["properties"]["name"] = location_feature.attributes.locationName
+            feature_as_geojson["properties"]["name"] = (
+                location_feature.attributes.locationName
+            )
 
             z = location_feature.attributes.elevation
             if z is not None:
