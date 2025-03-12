@@ -63,25 +63,28 @@ class LocationResponse(BaseModel):
         if not self.data[0].attributes:
             raise RuntimeError("Can't filter by date")
 
-        filteredResp = self.copy(deep=True)
+
+        location_indices_to_remove = set()
 
         parsed_date: list[datetime] = parse_date(datetime_)
-
         if len(parsed_date) == 2:
             start, end = parsed_date
 
-            for i, location in enumerate(filteredResp.data):
+            for i, location in enumerate(self.data):
                 updateDate = datetime.fromisoformat(location.attributes.updateDate)
                 if updateDate < start or updateDate > end:
-                    filteredResp.data.pop(i)
+                    location_indices_to_remove.add(i)
 
         elif len(parsed_date) == 1:
             parsed_date_str = str(parsed_date[0])
-            filteredResp.data = [
+            self.data = [
                 location
-                for location in filteredResp.data
+                for location in self.data
                 if location.attributes.updateDate.startswith(parsed_date_str)
             ]
+            for i, location in enumerate(self.data):
+                if not location.attributes.updateDate.startswith(parsed_date_str):
+                    location_indices_to_remove.add(i)
 
         else:
             raise RuntimeError(
@@ -89,8 +92,12 @@ class LocationResponse(BaseModel):
                     datetime_
                 )
             )
+        
+        # delete them backwards so we don't have to make a copy of the list or mess up indices while iterating
+        for index in sorted(location_indices_to_remove, reverse=True):
+            del self.data[index]
 
-        return filteredResp
+        return self
 
     def _filter_by_geometry(
         self,
@@ -102,7 +109,6 @@ class LocationResponse(BaseModel):
         Filter a list of locations by any arbitrary geometry; if they are not inside of it, drop their data
         """
         # need to deep copy so we don't change the dict object
-        copy_to_return = deepcopy(self)
         indices_to_pop = set()
         parsed_z = parse_z(str(z)) if z else None
 
@@ -140,9 +146,9 @@ class LocationResponse(BaseModel):
         # by reversing the list we pop from the end so the
         # indices will be in the correct even after removing items
         for i in sorted(indices_to_pop, reverse=True):
-            copy_to_return.data.pop(i)
+            self.data.pop(i)
 
-        return copy_to_return
+        return self
 
     def drop_outside_of_wkt(
         self,
@@ -333,12 +339,12 @@ class LocationResponseWithIncluded(LocationResponse):
         Filter out any locations which do not have catalogitems and thus do not have data
         """
         locationIdToCatalogItems = self.get_catalogItemURLs()
-        data = []
-        for location in self.data:
+        location_indices_to_remove = set()
+        for i, location in enumerate(self.data):
             if location.id not in locationIdToCatalogItems:
-                continue
-            data.append(location)
+                location_indices_to_remove.add(i)
 
-        self.data = data
+        for i in sorted(location_indices_to_remove, reverse=True):
+            self.data.pop(i) 
 
         return self
