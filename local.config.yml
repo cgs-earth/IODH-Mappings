@@ -45,7 +45,7 @@ metadata:
     stateorprovince: Massachusetts
     country: USA
     email: cloftus@lincolninst.edu
-    url:  https://github.com/cgs-earth/RISE-EDR-Mappings/
+    url: https://github.com/cgs-earth/RISE-EDR-Mappings/
 
 resources:
   rise-edr:

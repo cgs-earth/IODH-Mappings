@@ -1,3 +1,6 @@
+# Copyright 2025 Lincoln Institute of Land Policy
+# SPDX-License-Identifier: MIT
+
 import os
 from opentelemetry import trace
 from opentelemetry.sdk.trace import TracerProvider
@@ -7,23 +10,26 @@ from opentelemetry.sdk.trace.export import (
 from opentelemetry.exporter.otlp.proto.grpc.trace_exporter import OTLPSpanExporter
 import requests
 from opentelemetry.sdk.resources import Resource
-from opentelemetry.instrumentation.aiohttp_client import (
-    AioHttpClientInstrumentor
-)
+from opentelemetry.instrumentation.aiohttp_client import AioHttpClientInstrumentor
 
 """
 This file contains initialization code and global vars that are
 used throughout the entire integration
 """
 
+
 def init_otel():
     """Initialize the open telemetry config"""
     resource = Resource(attributes={"service.name": "rise_edr"})
     provider = TracerProvider(resource=resource)
     COLLECTOR_ENDPOINT = "127.0.0.1"
-    COLLECTOR_GRPC_PORT = 4317 # jaeger's port to accept OpenTelemetry Protocol (OTLP) over gRPC
+    COLLECTOR_GRPC_PORT = (
+        4317  # jaeger's port to accept OpenTelemetry Protocol (OTLP) over gRPC
+    )
 
-    processor = BatchSpanProcessor(OTLPSpanExporter(endpoint=f"http://{COLLECTOR_ENDPOINT}:{COLLECTOR_GRPC_PORT}"))
+    processor = BatchSpanProcessor(
+        OTLPSpanExporter(endpoint=f"http://{COLLECTOR_ENDPOINT}:{COLLECTOR_GRPC_PORT}")
+    )
     provider.add_span_processor(processor)
 
     # Sets the global default tracer provider
@@ -31,6 +37,7 @@ def init_otel():
 
     AioHttpClientInstrumentor().instrument()
     print("Initialized open telemetry")
+
 
 init_otel()
 requests.packages.urllib3.util.connection.HAS_IPV6 = False  # type: ignore

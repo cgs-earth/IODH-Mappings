@@ -17,6 +17,7 @@ from rise.lib.add_results import LocationResultBuilder
 
 LOGGER = logging.getLogger(__name__)
 
+
 class RiseEDRProvider(BaseEDRProvider):
     """The EDR Provider for the USBR Rise API"""
 
@@ -112,7 +113,6 @@ class RiseEDRProvider(BaseEDRProvider):
 
         return self._fields
 
-
     @TRACER.start_as_current_span("cube")
     @BaseEDRProvider.register()
     def cube(
@@ -144,7 +144,6 @@ class RiseEDRProvider(BaseEDRProvider):
         builder = LocationResultBuilder(cache=self.cache, base_response=response)
         response_with_results = builder.load_results(time_filter=datetime_)
         return CovJSONBuilder(self.cache).fill_template(response_with_results)
-
 
     @TRACER.start_as_current_span("area")
     @BaseEDRProvider.register()
