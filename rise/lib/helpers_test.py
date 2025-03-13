@@ -1,6 +1,7 @@
 # Copyright 2025 Lincoln Institute of Land Policy
 # SPDX-License-Identifier: MIT
 
+from urllib.parse import urlparse
 import pytest
 import shapely.wkt
 from rise.lib.cache import RISECache
@@ -80,3 +81,16 @@ def test_parse_bbox():
         assert parse_result[0].contains(single_point)
     else:
         assert False
+
+
+def test_parse_query_params():
+    url = "https://example.com?param1=value1&param2=value2"
+    parsed_url = urlparse(url)
+    assert bool(parsed_url.query)
+    url2 = "https://example.com"
+    parsed_url2 = urlparse(url2)
+    assert not bool(parsed_url2.query)
+
+    url3 = "https://example.com?"
+    parsed_url3 = urlparse(url3)
+    assert not bool(parsed_url3.query)

@@ -2,7 +2,7 @@
 # SPDX-License-Identifier: MIT
 
 import logging
-from typing import Any, ClassVar, Optional
+from typing import ClassVar, Optional
 
 from pygeoapi.provider.base import (
     ProviderQueryError,
@@ -25,7 +25,7 @@ class RiseEDRProvider(BaseEDRProvider):
     BASE_API: ClassVar[str] = "https://data.usbr.gov"
     cache: RISECache
 
-    def __init__(self, provider_def: dict[str, Any]):
+    def __init__(self, provider_def=None):
         """
         Initialize object
 
@@ -34,7 +34,7 @@ class RiseEDRProvider(BaseEDRProvider):
         :returns: rise.base_edr.RiseEDRProvider
         """
         try:
-            self.cache = RISECache(provider_def["cache"])
+            self.cache = RISECache()
         except KeyError:
             LOGGER.error(
                 "You must specify a cache implementation in the config.yml for RISE"
@@ -45,7 +45,7 @@ class RiseEDRProvider(BaseEDRProvider):
             "name": "Rise EDR",
             "type": "feature",
             "data": "remote",
-        }
+        } or provider_def
 
         super().__init__(provider_def)
 
@@ -56,15 +56,13 @@ class RiseEDRProvider(BaseEDRProvider):
     ):
         """Return all locations which contain"""
         # RISE has an API for fetching locations by property/param ids. Thus, we want to fetch only relevant properties if we have them
+        base_url = "https://data.usbr.gov/rise/api/location?include=catalogRecords.catalogItems"
         if properties_to_filter_by:
-            base_url = "https://data.usbr.gov/rise/api/location?&"
+            base_url += "&"
             for prop in properties_to_filter_by:
                 assert isinstance(prop, str)
                 base_url += f"parameterId%5B%5D={prop}&"
             base_url = base_url.removesuffix("&")
-        else:
-            base_url = "https://data.usbr.gov/rise/api/location?"
-        base_url += "&include=catalogRecords.catalogItems"
         return await_(self.cache.get_or_fetch_all_pages(base_url))
 
     @TRACER.start_as_current_span("locations")
@@ -163,13 +161,26 @@ class RiseEDRProvider(BaseEDRProvider):
         """
 
         raw_resp = self.get_or_fetch_all_param_filtered_pages(select_properties)
+        assert len(raw_resp) >= 7
+        found = set()
+        for url in raw_resp:
+            for data in raw_resp[url]["data"]:
+                id = data["attributes"]["_id"]
+                assert id not in found, (
+                    f"{id} is a duplicate with name {data['attributes']['locationName']} in {url}"
+                )
+                found.add(id)
         response = LocationResponseWithIncluded.from_api_pages(raw_resp)
+
+        assert not response.has_duplicate_locations()
 
         if datetime_:
             response = response.drop_outside_of_date_range(datetime_)
 
         if wkt != "":
             response = response.drop_outside_of_wkt(wkt, z)
+
+        assert not response.has_duplicate_locations()
 
         builder = LocationResultBuilder(cache=self.cache, base_response=response)
         response_with_results = builder.load_results(time_filter=datetime_)
