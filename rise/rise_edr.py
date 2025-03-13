@@ -25,7 +25,7 @@ class RiseEDRProvider(BaseEDRProvider):
     BASE_API: ClassVar[str] = "https://data.usbr.gov"
     cache: RISECache
 
-    def __init__(self):
+    def __init__(self, provider_def = None):
         """
         Initialize object
 
@@ -45,7 +45,7 @@ class RiseEDRProvider(BaseEDRProvider):
             "name": "Rise EDR",
             "type": "feature",
             "data": "remote",
-        }
+        } or provider_def
 
         super().__init__(provider_def)
 

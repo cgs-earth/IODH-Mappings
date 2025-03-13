@@ -6,6 +6,7 @@ import json
 import logging
 import math
 from typing import Coroutine
+from urllib.parse import urlparse
 import redis.asyncio as redis
 from pygeoapi.provider.base import ProviderConnectionError
 from rise.custom_types import JsonPayload, Url
@@ -34,7 +35,7 @@ class RISECache:
     """A cache implementation using Redis with ttl support"""
 
 
-    def __init__(self, ttl: timedelta = timedelta(hours=24)):
+    def __init__(self, ttl: timedelta = timedelta(hours=72)):
         self.db = redis.Redis(host=REDIS_HOST, port=REDIS_PORT, decode_responses=False)
         self.ttl = ttl
 
@@ -80,42 +81,50 @@ class RISECache:
             return await self.get(url)
 
     async def get_or_fetch_all_pages(
-        self, url: str, force_fetch=False
+        self, base_url: str, force_fetch=False
     ) -> dict[Url, JsonPayload]:
         # max number of items you can query in RISE
         MAX_ITEMS_PER_PAGE = 100
 
         # Get the first response that contains the list of pages
-        response = await self.get_or_fetch(url)
+        response = await self.get_or_fetch(base_url)
 
         NOT_PAGINATED = "meta" not in response
         if NOT_PAGINATED:
-            return {url: response}
+            return {base_url: response}
 
         total_items = response["meta"]["totalItems"]
 
         pages_to_complete = math.ceil(total_items / MAX_ITEMS_PER_PAGE)
 
+        urls = []
+
+        assert not base_url.endswith("&"), "The base url should not end with an ampersand since it makes it ambiguous to paginate" 
+        assert not base_url.endswith("?")
         # Construct all the urls for the pages
         #  that we will then fetch in parallel
         # to get all the data for the endpoint
-        urls = [
-            f"{url}&page={page}&itemsPerPage={MAX_ITEMS_PER_PAGE}"
-            for page in range(1, int(pages_to_complete) + 1)
-        ]
+        for page in range(1, int(pages_to_complete) + 1):
+
+            hasQueryParams = bool(urlparse(base_url).query)
+            if hasQueryParams:
+                urls.append(f"{base_url}&page={page}&itemsPerPage={MAX_ITEMS_PER_PAGE}")
+            elif not hasQueryParams:
+                urls.append(f"{base_url}?page={page}&itemsPerPage={MAX_ITEMS_PER_PAGE}")
+
 
         pages = await self.get_or_fetch_group(urls, force_fetch=force_fetch)
         found= {}
-        for url in pages:
-            for location in pages[url]["data"]:
+        for base_url in pages:
+            for location in pages[base_url]["data"]:
                 id = location["attributes"]["_id"]
 
                 if id in found:
                     data = found[id]
-                    raise RuntimeError(f"{id} previously had {data} but now has {url}")
+                    raise RuntimeError(f"{id} previously had {data} but now has {base_url}")
 
                 found[id] = {
-                    "url": url,
+                    "url": base_url,
                     "data": location["attributes"]["_id"],
                 }
 
