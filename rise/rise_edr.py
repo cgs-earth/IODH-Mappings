@@ -83,7 +83,7 @@ class RiseEDRProvider(BaseEDRProvider):
             raise ProviderQueryError("Can't filter by date on every location")
 
         if location_id:
-            url: str = f"https://data.usbr.gov/rise/api/location/{location_id}?include=catalogRecords.catalogItems"
+            url: str = f"https://data.usbr.gov/rise/api/location/{location_id}?include=catalogRecords.catalogItems&itemStructureId=1"
             raw_resp = await_(self.cache.get_or_fetch(url))
             response = LocationResponseWithIncluded(**raw_resp)
         else:

@@ -134,21 +134,21 @@ def test_area(edr_config: dict):
         assert coverage["domain"]["axes"]["y"]["values"][0] == 28.4667
     assert coverages[0]["ranges"]["Lake/Reservoir Storage"]
 
-    victoriaTexas = "GEOMETRYCOLLECTION (POLYGON ((-97.789307 29.248063, -97.789307 29.25046, -97.789307 29.25046, -97.789307 29.248063)), POLYGON ((-97.588806 29.307956, -97.58606 29.307956, -97.58606 29.310351, -97.588806 29.310351, -97.588806 29.307956)), POLYGON ((-97.410278 28.347899, -95.314636 28.347899, -95.314636 29.319931, -97.410278 29.319931, -97.410278 28.347899)))"
+    georgeWestTexasID291 = "POLYGON ((-98.66272 28.062286, -97.756348 28.062286, -97.756348 28.688178, -98.66272 28.688178, -98.66272 28.062286))"
+    response = p.area(
+        wkt=georgeWestTexasID291,
+    )
+    assert len(response["coverages"]) == 2
+    assert response["coverages"][0]["ranges"]["Lake/Reservoir Storage"]
+    assert response["coverages"][1]["ranges"]["Lake/Reservoir Elevation"]
+
+    areaInMontanaWithDataID424 = "POLYGON ((-109.204102 47.010226, -104.655762 47.010226, -104.655762 49.267805, -109.204102 49.267805, -109.204102 47.010226))"
 
     response = p.area(
-        wkt=victoriaTexas,
+        wkt=areaInMontanaWithDataID424,
     )
-    assert len(response["coverages"]) == 1
-    assert response["coverages"][0]["ranges"]["Unit Installed Capacity"]
-
-    areaInMontanaWithData = "POLYGON ((-109.204102 47.010226, -104.655762 47.010226, -104.655762 49.267805, -109.204102 49.267805, -109.204102 47.010226))"
-
-    response = p.area(
-        wkt=areaInMontanaWithData,
-    )
-    assert len(response["coverages"]) == 2, (
-        "Expected to return 1 location with 2 datastreams and thus 2 coverages"
+    assert len(response["coverages"]) == 4, (
+        "Expected to return 1 location with 4 datastreams and thus 4 coverages"
     )
 
     dummyAreaInTheOcean = "POLYGON ((-44.296875 27.059126, -23.203125 27.059126, -23.203125 40.84706, -44.296875 40.84706, -44.296875 27.059126))"

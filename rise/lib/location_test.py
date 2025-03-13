@@ -27,6 +27,12 @@ def test_get_catalogItemURLs(oneItemLocationRespFixture: dict):
     ]:
         assert url in urls["/rise/api/location/1"]
 
+def test_get_catalogItemUrlsForLocationWithNestedRelationships():
+    url = 'https://data.usbr.gov/rise/api/location/424?include=catalogRecords.catalogItems&itemStructureId=1&page=1&itemsPerPage=100'
+    resp = await_(RISECache().get_or_fetch(url))
+    model = LocationResponseWithIncluded.model_validate(resp)
+    urls = model.get_catalogItemURLs()
+    assert len(flatten_values(urls)) >= 6
 
 def test_associated_results_have_data(oneItemLocationRespFixture: dict):
     cache = RISECache()
@@ -63,10 +69,10 @@ def test_filter_by_wkt(oneItemLocationRespFixture: dict):
 
 def test_filter_everything_by_wkt():
     p = RiseEDRProvider()
-    victoriaTexas = "GEOMETRYCOLLECTION (POLYGON ((-97.789307 29.248063, -97.789307 29.25046, -97.789307 29.25046, -97.789307 29.248063)), POLYGON ((-97.588806 29.307956, -97.58606 29.307956, -97.58606 29.310351, -97.588806 29.310351, -97.588806 29.307956)), POLYGON ((-97.410278 28.347899, -95.314636 28.347899, -95.314636 29.319931, -97.410278 29.319931, -97.410278 28.347899)))"
+    georgeWestTexasID291 = "POLYGON ((-98.66272 28.062286, -97.756348 28.062286, -97.756348 28.688178, -98.66272 28.688178, -98.66272 28.062286))"
     raw_resp = p.get_or_fetch_all_param_filtered_pages()
     response = LocationResponseWithIncluded.from_api_pages(raw_resp)
-    response = response.drop_outside_of_wkt(wkt=victoriaTexas)
+    response = response.drop_outside_of_wkt(wkt=georgeWestTexasID291)
     length = len(response.data)
     names = [location.attributes.locationName for location in response.data]
     assert length == 1, names

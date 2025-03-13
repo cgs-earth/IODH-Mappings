@@ -38,6 +38,15 @@ def merge_pages(pages: Dict[str, dict]) -> dict:
 
     return combined_data
 
+def no_duplicates_in_pages(pages: dict):
+    found = {}
+    for url in pages:
+        for data in pages[url]["data"]:
+            id = data["attributes"]["_id"]
+            assert id not in found, (
+                f"{id} witn name {data['attributes']['locationName']} was found in both {url} and {found[id]}. You may need to clear the cache for {found[id]}"
+            )
+            found[id] = url
 
 def flatten_values(input: dict[str, list]) -> list:
     """Given a dict of lists, flatten them into a single list"""
