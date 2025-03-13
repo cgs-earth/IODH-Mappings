@@ -2,7 +2,7 @@
 # SPDX-License-Identifier: MIT
 
 import logging
-from typing import Any, ClassVar, Optional
+from typing import ClassVar, Optional
 
 from pygeoapi.provider.base import (
     ProviderQueryError,
@@ -166,7 +166,9 @@ class RiseEDRProvider(BaseEDRProvider):
         for url in raw_resp:
             for data in raw_resp[url]["data"]:
                 id = data["attributes"]["_id"]
-                assert id not in found, f"{id} is a duplicate with name {data['attributes']['locationName']} in {url}"
+                assert id not in found, (
+                    f"{id} is a duplicate with name {data['attributes']['locationName']} in {url}"
+                )
                 found.add(id)
         response = LocationResponseWithIncluded.from_api_pages(raw_resp)
 

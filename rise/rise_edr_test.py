@@ -73,7 +73,9 @@ def test_get_or_fetch_all_param_filtered_pages(edr_config: dict):
     model = LocationResponseWithIncluded.from_api_pages(allparams)
     seenData = set()
     for loc in model.data:
-        assert loc.attributes.id not in seenData, f"Got a duplicate location with id {loc.attributes.id} and name {loc.attributes.locationName} after scanning {len(seenData)} out of {len(model.data)} locations in total"
+        assert loc.attributes.id not in seenData, (
+            f"Got a duplicate location with id {loc.attributes.id} and name {loc.attributes.locationName} after scanning {len(seenData)} out of {len(model.data)} locations in total"
+        )
         seenData.add(loc.attributes.id)
 
 
