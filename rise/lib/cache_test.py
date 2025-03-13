@@ -78,7 +78,7 @@ class TestFnsWithCaching:
 
     @pytest.mark.asyncio
     async def test_cache(self):
-        url = "https://data.usbr.gov/rise/api/catalog-item/128562"
+        url = "https://data.usbr.gov/rise/api/model-run-member?page=1&itemsPerPage=1"
 
         cache = RISECache()
         await cache.clear(url)

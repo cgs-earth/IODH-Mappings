@@ -154,11 +154,12 @@ def test_redis():
 
 def test_separate_pages_have_distinct_data():
     cache = RISECache()
-    url1 = "https://data.usbr.gov/rise/api/location?&include=catalogRecords.catalogItems?page=1&itemsPerPage=100"
-    url2 = "https://data.usbr.gov/rise/api/location?&include=catalogRecords.catalogItems&page=2&itemsPerPage=100"
-    resp1 = cache.get_or_fetch(url1)
-    resp2 = await_(cache.get_or_fetch(url2))
+    url1 = "https://data.usbr.gov/rise/api/location?include=catalogRecords.catalogItems?page=1&itemsPerPage=100"
+    url2 = "https://data.usbr.gov/rise/api/location?include=catalogRecords.catalogItems&page=2&itemsPerPage=100"
+    resp1 = cache.get_or_fetch(url1)    
+    resp2 = cache.get_or_fetch(url2)
     resp1 = await_(resp1)
+    resp2 = await_(resp2)
 
     model1 = LocationResponseWithIncluded.model_validate(resp1)
     model2 = LocationResponseWithIncluded.model_validate(resp2)

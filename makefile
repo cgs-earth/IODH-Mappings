@@ -11,4 +11,4 @@ dev:
 	PYGEOAPI_CONFIG=local.config.yml PYGEOAPI_OPENAPI=local.openapi.yml pygeoapi serve --starlette
 
 test:
-	 pytest -n auto -x --maxfail=1
+	 pytest -n auto -x --maxfail=1 -vv
