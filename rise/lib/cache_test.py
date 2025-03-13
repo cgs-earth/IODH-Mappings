@@ -31,6 +31,13 @@ async def test_redis_wrapper():
     with pytest.raises(KeyError):
         await cache.get("DUMMY_KEY")
 
+@pytest.mark.asyncio
+async def test_get_or_fetch_group():
+    cache = RISECache()
+    urls = ["https://data.usbr.gov/rise/api/catalog-item/128562", "https://data.usbr.gov/rise/api/catalog-item/128563"]
+    group = await cache.get_or_fetch_group(urls)
+    assert len(group) == 2
+    assert group[urls[0]] != group[urls[1]] != {}
 
 class TestFnsWithCaching:
     def test_fetch_group(self):
@@ -40,7 +47,7 @@ class TestFnsWithCaching:
             "https://data.usbr.gov/rise/api/catalog-item/128564",
         ]
         cache = RISECache()
-        resp = await_(cache.fetch_and_set_url_group(urls))
+        resp = await_(cache._fetch_and_set_url_group(urls))
         assert len(resp) == 3
         assert None not in resp
 

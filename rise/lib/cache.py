@@ -100,11 +100,24 @@ class RISECache:
         #  that we will then fetch in parallel
         # to get all the data for the endpoint
         urls = [
-            f"{url}?page={page}&itemsPerPage={MAX_ITEMS_PER_PAGE}"
+            f"{url}&page={page}&itemsPerPage={MAX_ITEMS_PER_PAGE}"
             for page in range(1, int(pages_to_complete) + 1)
         ]
 
         pages = await self.get_or_fetch_group(urls, force_fetch=force_fetch)
+        found= {}
+        for url in pages:
+            for location in pages[url]["data"]:
+                id = location["attributes"]["_id"]
+
+                if id in found:
+                    data = found[id]
+                    raise RuntimeError(f"{id} previously had {data} but now has {url}")
+
+                found[id] = {
+                    "url": url,
+                    "data": location["attributes"]["_id"],
+                }
 
         return pages
 
@@ -144,7 +157,11 @@ class RISECache:
             url for url in urls if await self.contains(url) and not force_fetch
         ]
 
-        remote_fetch = self.fetch_and_set_url_group(urls_not_in_cache)
+        assert set(urls_in_cache).isdisjoint(
+            set(urls_not_in_cache)
+        )
+
+        remote_fetch = self._fetch_and_set_url_group(urls_not_in_cache)
 
         local_fetch: dict[Url, Coroutine] = {
             url: self.get(url) for url in urls_in_cache
@@ -160,7 +177,7 @@ class RISECache:
 
         return url_to_result
 
-    async def fetch_and_set_url_group(
+    async def _fetch_and_set_url_group(
         self,
         urls: list[str],
     ):

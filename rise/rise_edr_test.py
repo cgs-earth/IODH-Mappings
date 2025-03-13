@@ -70,8 +70,7 @@ def test_get_or_fetch_all_param_filtered_pages(edr_config: dict):
     )
 
     allparams = p.get_or_fetch_all_param_filtered_pages()
-    all_resp = merge_pages(allparams)
-    model = LocationResponseWithIncluded.model_validate(all_resp)
+    model = LocationResponseWithIncluded.from_api_pages(allparams)
     seenData = set()
     for loc in model.data:
         assert loc.attributes.id not in seenData, f"Got a duplicate location with id {loc.attributes.id} and name {loc.attributes.locationName} after scanning {len(seenData)} out of {len(model.data)} locations in total"
@@ -131,7 +130,7 @@ def test_area(edr_config: dict):
     response = p.area(
         wkt=victoriaTexas,
     )
-    assert len(response["coverages"]) == 1, response["coverages"]
+    assert len(response["coverages"]) == 1
 
     areaInMontanaWithData = "POLYGON ((-109.204102 47.010226, -104.655762 47.010226, -104.655762 49.267805, -109.204102 49.267805, -109.204102 47.010226))"
 
