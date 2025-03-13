@@ -11,7 +11,6 @@ from rise.lib.covjson.types import (
     CoverageRange,
     Parameter,
 )
-from covjson_pydantic.coverage import CoverageCollection as PydanticCoverageCollection
 from rise.lib.cache import RISECache
 from rise.lib.add_results import DataNeededForCovjson
 from rise.lib.helpers import await_
@@ -123,9 +122,7 @@ class CovJSONBuilder:
             longestParam = 0
 
             for param in location_feature.parameters:
-                assert len(param.timeseriesResults) == len(
-                    param.timeseriesDates
-                )
+                assert len(param.timeseriesResults) == len(param.timeseriesDates)
                 if len(param.timeseriesResults) > longestParam:
                     longestParam = len(param.timeseriesResults)
 
@@ -145,14 +142,16 @@ class CovJSONBuilder:
                     "axisNames": ["t"],
                     "dataType": "float",
                     "shape": [longestParam],
-                    "values": param.timeseriesResults + ([None] * (longestParam - len(param.timeseriesResults))),
+                    "values": param.timeseriesResults
+                    + ([None] * (longestParam - len(param.timeseriesResults))),
                     "type": "NdArray",
                 }
 
                 coverage_item = _generate_coverage_item(
                     location_feature.locationType,
                     location_feature.geometry,
-                    param.timeseriesDates + ([None] * (longestParam - len(param.timeseriesDates))),
+                    param.timeseriesDates
+                    + ([None] * (longestParam - len(param.timeseriesDates))),
                     paramToCoverage,
                 )
 
