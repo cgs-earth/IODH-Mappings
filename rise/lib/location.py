@@ -331,8 +331,16 @@ class LocationResponseWithIncluded(LocationResponse):
         # to iterate over locations and join the locationId -> catalogrecord and catalogrecord -> catalogitems
         # we have to do this second iteration since locations and catalogitems are in different sections of the json
         # and we do not have guarantees that they will follow a particular order
+
+        relevantLocations = set()
+        for location in self.data:
+            relevantLocations.add(location.id)
+
         locationIDToCatalogItemsUrls: dict[str, list[str]] = {}
         for locationId, catalogRecord in locationIdToCatalogRecord.items():
+            if locationId not in relevantLocations:
+                continue
+
             if catalogRecord in catalogRecordToCatalogItems:
                 for catalogItem in catalogRecordToCatalogItems[catalogRecord]:
                     catalogItemURL = f"https://data.usbr.gov{catalogItem}"

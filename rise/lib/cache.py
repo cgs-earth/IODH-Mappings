@@ -168,7 +168,7 @@ class RISECache:
 
         assert set(urls_in_cache).isdisjoint(set(urls_not_in_cache))
 
-        remote_fetch = self._fetch_and_set_url_group(urls_not_in_cache)
+        remote_fetch = await self._fetch_and_set_url_group(urls_not_in_cache)
 
         local_fetch: dict[Url, Coroutine] = {
             url: self.get(url) for url in urls_in_cache
@@ -180,7 +180,7 @@ class RISECache:
             zip(local_fetch.keys(), fetch_results)
         )  # Map results back to URLs
 
-        url_to_result.update(await remote_fetch)
+        url_to_result.update(remote_fetch)
 
         return url_to_result
 
