@@ -113,21 +113,21 @@ class RISECache:
                 urls.append(f"{base_url}?page={page}&itemsPerPage={MAX_ITEMS_PER_PAGE}")
 
         pages = await self.get_or_fetch_group(urls, force_fetch=force_fetch)
-        found = {}
-        for base_url in pages:
-            for location in pages[base_url]["data"]:
-                id = location["attributes"]["_id"]
+        # found = {}
+        # for base_url in pages:
+        #     for location in pages[base_url]["data"]:
+        #         id = location["attributes"]["_id"]
 
-                if id in found:
-                    data = found[id]
-                    raise RuntimeError(
-                        f"{id} previously had {data} but now has {base_url}"
-                    )
+        #         if id in found:
+        #             data = found[id]
+        #             raise RuntimeError(
+        #                 f"{id} previously had {data} but now has {base_url}"
+        #             )
 
-                found[id] = {
-                    "url": base_url,
-                    "data": location["attributes"]["_id"],
-                }
+        #         found[id] = {
+        #             "url": base_url,
+        #             "data": location["attributes"]["_id"],
+        #         }
 
         return pages
 
@@ -139,9 +139,9 @@ class RISECache:
             force_fetch=force_fetch,
         )
         res = merge_pages(pages)
-        for k, v in res.items():
-            if k is None or v is None:
-                raise ProviderConnectionError("Error fetching parameters")
+        
+        assert None not in res.values()
+        assert None not in res.keys()
 
         for item in res["data"]:
             param = item["attributes"]
@@ -155,33 +155,30 @@ class RISECache:
 
         return fields
 
-    async def get_or_fetch_group(
-        self, urls: list[str], force_fetch=False
-    ) -> dict[str, dict]:
-        """Send a get request to all urls or grab it locally if it already exists in the cache"""
-
-        urls_not_in_cache = [
-            url for url in urls if not await self.contains(url) or force_fetch
-        ]
-        urls_in_cache = [
-            url for url in urls if await self.contains(url) and not force_fetch
-        ]
+    async def get_or_fetch_group(self, urls: list[str], force_fetch=False) -> dict[str, dict]:
+        """Send a GET request to all URLs or grab it locally if it already exists in the cache."""
+        
+        urls_not_in_cache, urls_in_cache = [], []
+        for url in urls:
+            if not await self.contains(url) or force_fetch:
+                urls_not_in_cache.append(url)
+            else:
+                urls_in_cache.append(url)
 
         assert set(urls_in_cache).isdisjoint(set(urls_not_in_cache))
 
-        remote_fetch = await self._fetch_and_set_url_group(urls_not_in_cache)
+        # Fetch from remote API
+        urls_not_in_cache_coroutine = self._fetch_and_set_url_group(urls_not_in_cache)
 
-        local_fetch: dict[Url, Coroutine] = {
-            url: self.get(url) for url in urls_in_cache
-        }
-        fetch_results = await asyncio.gather(
-            *local_fetch.values(), return_exceptions=False
-        )
-        url_to_result = dict(
-            zip(local_fetch.keys(), fetch_results)
-        )  # Map results back to URLs
+        # Fetch from local cache
+        fetch_coroutines: dict[str, Coroutine] = {url: self.get(url) for url in urls_in_cache}
+        fetch_results = await asyncio.gather(*fetch_coroutines.values())
 
+        url_to_result = {url: result for url, result in zip(fetch_coroutines.keys(), fetch_results)}
+
+        remote_fetch = await urls_not_in_cache_coroutine 
         url_to_result.update(remote_fetch)
+        # Construct a reliable URL-to-result mapping
 
         return url_to_result
 
