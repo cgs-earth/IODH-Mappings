@@ -27,12 +27,14 @@ def test_get_catalogItemURLs(oneItemLocationRespFixture: dict):
     ]:
         assert url in urls["/rise/api/location/1"]
 
+
 def test_get_catalogItemUrlsForLocationWithNestedRelationships():
-    url = 'https://data.usbr.gov/rise/api/location/424?include=catalogRecords.catalogItems&itemStructureId=1&page=1&itemsPerPage=100'
+    url = "https://data.usbr.gov/rise/api/location/424?include=catalogRecords.catalogItems&itemStructureId=1&page=1&itemsPerPage=100"
     resp = await_(RISECache().get_or_fetch(url))
     model = LocationResponseWithIncluded.model_validate(resp)
     urls = model.get_catalogItemURLs()
     assert len(flatten_values(urls)) >= 6
+
 
 def test_associated_results_have_data(oneItemLocationRespFixture: dict):
     cache = RISECache()

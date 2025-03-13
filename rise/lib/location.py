@@ -336,15 +336,19 @@ class LocationResponseWithIncluded(LocationResponse):
         for locationId in locationIdToCatalogRecords.keys():
             if locationId not in relevantLocations:
                 continue
-            
+
             for catalogRecord in locationIdToCatalogRecords[locationId]:
                 if catalogRecord in catalogRecordToCatalogItems:
                     for catalogItem in catalogRecordToCatalogItems[catalogRecord]:
                         catalogItemURL = f"https://data.usbr.gov{catalogItem}"
                         if locationId not in locationIDToCatalogItemsUrls:
-                            locationIDToCatalogItemsUrls[str(locationId)] = [catalogItemURL]
+                            locationIDToCatalogItemsUrls[str(locationId)] = [
+                                catalogItemURL
+                            ]
                         else:
-                            locationIDToCatalogItemsUrls[locationId].append(catalogItemURL)
+                            locationIDToCatalogItemsUrls[locationId].append(
+                                catalogItemURL
+                            )
 
         return locationIDToCatalogItemsUrls
 
