@@ -19,6 +19,10 @@ This file contains initialization code and global vars that are
 used throughout the entire integration
 """
 
+print(
+    f"Starting server with env var OTEL_SDK_DISABLED set to '{os.environ['OTEL_SDK_DISABLED']}'"
+)
+
 
 def init_otel():
     """Initialize the open telemetry config"""
