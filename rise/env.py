@@ -20,7 +20,7 @@ used throughout the entire integration
 """
 
 print(
-    f"Starting server with env var OTEL_SDK_DISABLED set to '{os.environ['OTEL_SDK_DISABLED']}'"
+    f"Starting server with env var OTEL_SDK_DISABLED set to '{os.environ.get('OTEL_SDK_DISABLED')}'"
 )
 
 

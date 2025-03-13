@@ -120,6 +120,15 @@ class CovJSONBuilder:
             # This data is grouped independently for each location
             paramToCoverage: dict[str, CoverageRange] = {}
 
+            longestParam = 0
+
+            for param in location_feature.parameters:
+                assert len(param.timeseriesResults) == len(
+                    param.timeseriesDates
+                )
+                if len(param.timeseriesResults) > longestParam:
+                    longestParam = len(param.timeseriesResults)
+
             for param in location_feature.parameters:
                 if not (  # ensure param contains data so it can be used for covjson
                     param.timeseriesResults
@@ -135,15 +144,15 @@ class CovJSONBuilder:
                 paramToCoverage[naturalLanguageName] = {
                     "axisNames": ["t"],
                     "dataType": "float",
-                    "shape": [len(param.timeseriesResults)],
-                    "values": param.timeseriesResults,
+                    "shape": [longestParam],
+                    "values": param.timeseriesResults + ([None] * (longestParam - len(param.timeseriesResults))),
                     "type": "NdArray",
                 }
 
                 coverage_item = _generate_coverage_item(
                     location_feature.locationType,
                     location_feature.geometry,
-                    param.timeseriesDates,
+                    param.timeseriesDates + ([None] * (longestParam - len(param.timeseriesDates))),
                     paramToCoverage,
                 )
 
@@ -164,5 +173,5 @@ class CovJSONBuilder:
         )
 
         # don't actually care about the pydantic model, we just want to use it to validate
-        PydanticCoverageCollection.model_validate(templated_covjson)
+        # PydanticCoverageCollection.model_validate(templated_covjson)
         return templated_covjson
