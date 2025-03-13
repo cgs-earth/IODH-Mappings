@@ -34,7 +34,6 @@ async def fetch_url(url: str) -> dict:
 class RISECache:
     """A cache implementation using Redis with ttl support"""
 
-
     def __init__(self, ttl: timedelta = timedelta(hours=72)):
         self.db = redis.Redis(host=REDIS_HOST, port=REDIS_PORT, decode_responses=False)
         self.ttl = ttl
@@ -99,29 +98,31 @@ class RISECache:
 
         urls = []
 
-        assert not base_url.endswith("&"), "The base url should not end with an ampersand since it makes it ambiguous to paginate" 
+        assert not base_url.endswith("&"), (
+            "The base url should not end with an ampersand since it makes it ambiguous to paginate"
+        )
         assert not base_url.endswith("?")
         # Construct all the urls for the pages
         #  that we will then fetch in parallel
         # to get all the data for the endpoint
         for page in range(1, int(pages_to_complete) + 1):
-
             hasQueryParams = bool(urlparse(base_url).query)
             if hasQueryParams:
                 urls.append(f"{base_url}&page={page}&itemsPerPage={MAX_ITEMS_PER_PAGE}")
             elif not hasQueryParams:
                 urls.append(f"{base_url}?page={page}&itemsPerPage={MAX_ITEMS_PER_PAGE}")
 
-
         pages = await self.get_or_fetch_group(urls, force_fetch=force_fetch)
-        found= {}
+        found = {}
         for base_url in pages:
             for location in pages[base_url]["data"]:
                 id = location["attributes"]["_id"]
 
                 if id in found:
                     data = found[id]
-                    raise RuntimeError(f"{id} previously had {data} but now has {base_url}")
+                    raise RuntimeError(
+                        f"{id} previously had {data} but now has {base_url}"
+                    )
 
                 found[id] = {
                     "url": base_url,
