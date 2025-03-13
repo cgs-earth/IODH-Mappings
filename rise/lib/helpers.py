@@ -10,7 +10,6 @@ from pygeoapi.provider.base import ProviderQueryError
 from rise.lib.types.helpers import ZType
 from rise.env import rise_event_loop
 
-import copy
 from typing import Dict
 
 
@@ -19,7 +18,6 @@ def await_(coro: Coroutine):
     await an asyncio coroutine, ensuring it works even if an event loop is already running.
     """
     return asyncio.run_coroutine_threadsafe(coro, loop=rise_event_loop).result()
-
 
 
 def merge_pages(pages: Dict[str, dict]) -> dict:

@@ -154,6 +154,7 @@ class LocationResponse(BaseModel):
             self.data.pop(i)
 
         return self
+
     def drop_outside_of_wkt(
         self,
         wkt: Optional[str] = None,
