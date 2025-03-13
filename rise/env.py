@@ -23,6 +23,7 @@ print(
     f"Starting server with env var OTEL_SDK_DISABLED set to '{os.environ['OTEL_SDK_DISABLED']}'"
 )
 
+
 def init_otel():
     """Initialize the open telemetry config"""
     resource = Resource(attributes={"service.name": "rise_edr"})
@@ -40,6 +41,7 @@ def init_otel():
 
     AioHttpClientInstrumentor().instrument()
     print("Initialized open telemetry")
+
 
 init_otel()
 requests.packages.urllib3.util.connection.HAS_IPV6 = False  # type: ignore
