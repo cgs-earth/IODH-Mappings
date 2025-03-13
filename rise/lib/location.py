@@ -42,7 +42,16 @@ class LocationResponse(BaseModel):
     @classmethod
     def from_api_pages(cls, pages: dict[str, dict]):
         """Create a location response from multiple paged API responses by first merging them together"""
-        return cls(**merge_pages(pages))
+        merged = merge_pages(pages)
+        found = set()
+        for url in pages:
+            for data in pages[url]["data"]:
+                id = data["attributes"]["_id"]
+                assert id not in found, (
+                    f"{id} is a duplicate with name {data['attributes']['locationName']} in {url}"
+                )
+                found.add(id)
+        return cls(**merged)
 
     @field_validator("data", check_fields=True, mode="before")
     @classmethod
@@ -322,8 +331,16 @@ class LocationResponseWithIncluded(LocationResponse):
         # to iterate over locations and join the locationId -> catalogrecord and catalogrecord -> catalogitems
         # we have to do this second iteration since locations and catalogitems are in different sections of the json
         # and we do not have guarantees that they will follow a particular order
+
+        relevantLocations = set()
+        for location in self.data:
+            relevantLocations.add(location.id)
+
         locationIDToCatalogItemsUrls: dict[str, list[str]] = {}
         for locationId, catalogRecord in locationIdToCatalogRecord.items():
+            if locationId not in relevantLocations:
+                continue
+
             if catalogRecord in catalogRecordToCatalogItems:
                 for catalogItem in catalogRecordToCatalogItems[catalogRecord]:
                     catalogItemURL = f"https://data.usbr.gov{catalogItem}"
@@ -348,3 +365,12 @@ class LocationResponseWithIncluded(LocationResponse):
             self.data.pop(i)
 
         return self
+
+    def has_duplicate_locations(self) -> bool:
+        seenLocations = set()
+        for location in self.data:
+            if location.attributes.locationName in seenLocations:
+                return True
+            seenLocations.add(location.attributes.locationName)
+
+        return False

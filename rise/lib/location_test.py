@@ -5,6 +5,7 @@ import pytest
 from rise.lib.cache import RISECache
 from rise.lib.helpers import flatten_values, getResultUrlFromCatalogUrl, await_
 from rise.lib.location import LocationResponseWithIncluded
+from rise.rise_edr import RiseEDRProvider
 
 
 @pytest.fixture
@@ -38,13 +39,37 @@ def test_associated_results_have_data(oneItemLocationRespFixture: dict):
 
 
 def test_filter_by_wkt(oneItemLocationRespFixture: dict):
-    model = LocationResponseWithIncluded.model_validate(oneItemLocationRespFixture)
     squareInOcean = "POLYGON ((-70.64209 40.86368, -70.817871 37.840157, -65.236816 38.013476, -65.500488 41.162114, -70.64209 40.86368))"
-    emptyModel = model.drop_outside_of_wkt(squareInOcean)
+    emptyModel = LocationResponseWithIncluded.model_validate(
+        oneItemLocationRespFixture
+    ).drop_outside_of_wkt(squareInOcean)
     assert emptyModel.data == []
     entireUS = "POLYGON ((-144.492188 57.891497, -146.25 11.695273, -26.894531 12.382928, -29.179688 59.977005, -144.492188 57.891497))"
-    fullModel = model.drop_outside_of_wkt(entireUS)
-    assert len(fullModel.data) == len(model.data)
+    fullModel = LocationResponseWithIncluded.model_validate(
+        oneItemLocationRespFixture
+    ).drop_outside_of_wkt(entireUS)
+    assert len(fullModel.data) == 1
+    areaWhereLocation1IsLocatedInDenver = "GEOMETRYCOLLECTION (POLYGON ((-109.204102 47.010226, -104.655762 47.010226, -104.655762 49.267805, -109.204102 49.267805, -109.204102 47.010226)), POLYGON ((-106.578369 38.513788, -102.722168 38.513788, -102.722168 41.228249, -106.578369 41.228249, -106.578369 38.513788)))"
+    denverModel = LocationResponseWithIncluded.model_validate(
+        oneItemLocationRespFixture
+    ).drop_outside_of_wkt(areaWhereLocation1IsLocatedInDenver)
+    assert len(denverModel.data) == 1
+    victoriaTexas = "GEOMETRYCOLLECTION (POLYGON ((-97.789307 29.248063, -97.789307 29.25046, -97.789307 29.25046, -97.789307 29.248063)), POLYGON ((-97.588806 29.307956, -97.58606 29.307956, -97.58606 29.310351, -97.588806 29.310351, -97.588806 29.307956)), POLYGON ((-97.410278 28.347899, -95.314636 28.347899, -95.314636 29.319931, -97.410278 29.319931, -97.410278 28.347899)))"
+    victoriaModel = LocationResponseWithIncluded.model_validate(
+        oneItemLocationRespFixture
+    ).drop_outside_of_wkt(victoriaTexas)
+    assert len(victoriaModel.data) == 0
+
+
+def test_filter_everything_by_wkt():
+    p = RiseEDRProvider()
+    victoriaTexas = "GEOMETRYCOLLECTION (POLYGON ((-97.789307 29.248063, -97.789307 29.25046, -97.789307 29.25046, -97.789307 29.248063)), POLYGON ((-97.588806 29.307956, -97.58606 29.307956, -97.58606 29.310351, -97.588806 29.310351, -97.588806 29.307956)), POLYGON ((-97.410278 28.347899, -95.314636 28.347899, -95.314636 29.319931, -97.410278 29.319931, -97.410278 28.347899)))"
+    raw_resp = p.get_or_fetch_all_param_filtered_pages()
+    response = LocationResponseWithIncluded.from_api_pages(raw_resp)
+    response = response.drop_outside_of_wkt(wkt=victoriaTexas)
+    length = len(response.data)
+    names = [location.attributes.locationName for location in response.data]
+    assert length == 1, names
 
 
 def test_drop_locationid(oneItemLocationRespFixture: dict):

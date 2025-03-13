@@ -7,9 +7,11 @@ from typing import Coroutine, Optional, Tuple
 
 import shapely
 from pygeoapi.provider.base import ProviderQueryError
-from rise.custom_types import JsonPayload, Url
 from rise.lib.types.helpers import ZType
 from rise.env import rise_event_loop
+
+import copy
+from typing import Dict
 
 
 def await_(coro: Coroutine):
@@ -19,23 +21,20 @@ def await_(coro: Coroutine):
     return asyncio.run_coroutine_threadsafe(coro, loop=rise_event_loop).result()
 
 
-def merge_pages(pages: dict[Url, JsonPayload]) -> dict:
+def merge_pages(pages: Dict[str, dict]) -> dict:
     """Given multiple different pages of data, merge them together"""
     assert pages
 
-    combined_data = {}
-    for _, content in pages.items():
-        if not combined_data:
-            combined_data = content
-        else:
-            data = content.get("data", [])
-            if data:
-                combined_data["data"].extend(data)
+    combined_data = copy.deepcopy(
+        next(iter(pages.values()))
+    )  # Create a deep copy of the first element
 
-            if "included" in content:
-                if "included" not in combined_data:
-                    combined_data["included"] = []
-                combined_data["included"].extend(content["included"])
+    for content in list(pages.values())[1:]:  # Iterate over remaining items
+        if "data" in content:
+            combined_data.setdefault("data", []).extend(content["data"])
+
+        if "included" in content:
+            combined_data.setdefault("included", []).extend(content["included"])
 
     return combined_data
 
