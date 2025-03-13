@@ -8,7 +8,6 @@ import math
 from typing import Coroutine
 from urllib.parse import urlparse
 import redis.asyncio as redis
-from pygeoapi.provider.base import ProviderConnectionError
 from rise.custom_types import JsonPayload, Url
 import aiohttp
 from aiohttp import client_exceptions
@@ -139,7 +138,7 @@ class RISECache:
             force_fetch=force_fetch,
         )
         res = merge_pages(pages)
-        
+
         assert None not in res.values()
         assert None not in res.keys()
 
@@ -155,9 +154,11 @@ class RISECache:
 
         return fields
 
-    async def get_or_fetch_group(self, urls: list[str], force_fetch=False) -> dict[str, dict]:
+    async def get_or_fetch_group(
+        self, urls: list[str], force_fetch=False
+    ) -> dict[str, dict]:
         """Send a GET request to all URLs or grab it locally if it already exists in the cache."""
-        
+
         urls_not_in_cache, urls_in_cache = [], []
         for url in urls:
             if not await self.contains(url) or force_fetch:
@@ -171,12 +172,16 @@ class RISECache:
         urls_not_in_cache_coroutine = self._fetch_and_set_url_group(urls_not_in_cache)
 
         # Fetch from local cache
-        fetch_coroutines: dict[str, Coroutine] = {url: self.get(url) for url in urls_in_cache}
+        fetch_coroutines: dict[str, Coroutine] = {
+            url: self.get(url) for url in urls_in_cache
+        }
         fetch_results = await asyncio.gather(*fetch_coroutines.values())
 
-        url_to_result = {url: result for url, result in zip(fetch_coroutines.keys(), fetch_results)}
+        url_to_result = {
+            url: result for url, result in zip(fetch_coroutines.keys(), fetch_results)
+        }
 
-        remote_fetch = await urls_not_in_cache_coroutine 
+        remote_fetch = await urls_not_in_cache_coroutine
         url_to_result.update(remote_fetch)
         # Construct a reliable URL-to-result mapping
 
