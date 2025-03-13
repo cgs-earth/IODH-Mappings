@@ -23,6 +23,7 @@ dependencies = [
     "opentelemetry-exporter-otlp-proto-http>=1.30.0",
     "opentelemetry-exporter-otlp>=1.30.0",
     "pygeoapi@git+https://github.com/webb-ben/pygeoapi.git@pydantic",
+    "orjson>=3.10.15",
 ]
 
 classifiers = [
