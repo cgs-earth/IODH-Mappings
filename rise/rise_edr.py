@@ -54,9 +54,9 @@ class RiseEDRProvider(BaseEDRProvider):
     def get_or_fetch_all_param_filtered_pages(
         self, properties_to_filter_by: Optional[list[str]] = None
     ):
-        """Return all locations which contain"""
-        # RISE has an API for fetching locations by property/param ids. Thus, we want to fetch only relevant properties if we have them
-        base_url = "https://data.usbr.gov/rise/api/location?include=catalogRecords.catalogItems"
+        """Return all locations which contain timeseries data and optionally, also a given list of properties. Will return the associated catalogitems / catalogrecords for joins"""
+        hasTimeseriesData = "itemStructureId=1"
+        base_url = f"https://data.usbr.gov/rise/api/location?include=catalogRecords.catalogItems&{hasTimeseriesData}"
         if properties_to_filter_by:
             base_url += "&"
             for prop in properties_to_filter_by:
@@ -83,7 +83,7 @@ class RiseEDRProvider(BaseEDRProvider):
             raise ProviderQueryError("Can't filter by date on every location")
 
         if location_id:
-            url: str = f"https://data.usbr.gov/rise/api/location/{location_id}?include=catalogRecords.catalogItems"
+            url: str = f"https://data.usbr.gov/rise/api/location/{location_id}?include=catalogRecords.catalogItems&itemStructureId=1"
             raw_resp = await_(self.cache.get_or_fetch(url))
             response = LocationResponseWithIncluded(**raw_resp)
         else:
@@ -161,7 +161,7 @@ class RiseEDRProvider(BaseEDRProvider):
         """
 
         raw_resp = self.get_or_fetch_all_param_filtered_pages(select_properties)
-        assert len(raw_resp) >= 7
+        assert len(raw_resp) > 1
         found = set()
         for url in raw_resp:
             for data in raw_resp[url]["data"]:

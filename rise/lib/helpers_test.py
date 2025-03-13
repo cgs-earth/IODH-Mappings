@@ -35,10 +35,10 @@ def test_merge_pages():
 
 
 def test_integration_merge_pages():
-    url = "https://data.usbr.gov/rise/api/location"
+    url = "https://data.usbr.gov/rise/api/location?itemStructureId=1"
     cache = RISECache()
     totalitems = await_(cache.get_or_fetch(url))["meta"]["totalItems"]
-    pages = await_(cache.get_or_fetch_all_pages(url, force_fetch=False))
+    pages = await_(cache.get_or_fetch_all_pages(url))
     merged = merge_pages(pages)
     assert merged is not None
     assert "data" in merged

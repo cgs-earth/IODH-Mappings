@@ -10,6 +10,7 @@ import shapely
 import shapely.wkt
 from rise.lib.helpers import (
     merge_pages,
+    no_duplicates_in_pages,
     parse_bbox,
     parse_date,
     parse_z,
@@ -42,15 +43,8 @@ class LocationResponse(BaseModel):
     @classmethod
     def from_api_pages(cls, pages: dict[str, dict]):
         """Create a location response from multiple paged API responses by first merging them together"""
+        no_duplicates_in_pages(pages)
         merged = merge_pages(pages)
-        found = set()
-        for url in pages:
-            for data in pages[url]["data"]:
-                id = data["attributes"]["_id"]
-                assert id not in found, (
-                    f"{id} is a duplicate with name {data['attributes']['locationName']} in {url}"
-                )
-                found.add(id)
         return cls(**merged)
 
     @field_validator("data", check_fields=True, mode="before")
@@ -276,7 +270,7 @@ class LocationResponseWithIncluded(LocationResponse):
 
     def get_catalogItemURLs(self) -> dict[str, list[str]]:
         """Get all catalog items associated with a particular location"""
-        locationIdToCatalogRecord: dict[str, str] = {}
+        locationIdToCatalogRecords: dict[str, list[str]] = {}
 
         # it is possible for the `included` section of the response to have both a catalogitem, as well as
         # a catalogrecord which has the same associated catalogitem. However, it is also possible to only
@@ -292,10 +286,12 @@ class LocationResponseWithIncluded(LocationResponse):
             # iterate through all its associated catalogitems
             if included_item.type == "CatalogRecord":
                 catalogRecord = included_item.id
-                locationId = included_item.relationships.location
-                assert locationId is not None
-                locationId = locationId.data[0].id
-                locationIdToCatalogRecord[locationId] = catalogRecord
+                locationRelationship = included_item.relationships.location
+                assert locationRelationship is not None
+                locationId = locationRelationship.data[0].id
+                if not locationIdToCatalogRecords.get(locationId):
+                    locationIdToCatalogRecords[locationId] = []
+                locationIdToCatalogRecords[locationId].append(catalogRecord)
 
                 # if the catalogrecord doesn't have associated catalogitems, skip it
                 if not included_item.relationships.catalogItems:
@@ -337,17 +333,22 @@ class LocationResponseWithIncluded(LocationResponse):
             relevantLocations.add(location.id)
 
         locationIDToCatalogItemsUrls: dict[str, list[str]] = {}
-        for locationId, catalogRecord in locationIdToCatalogRecord.items():
+        for locationId in locationIdToCatalogRecords.keys():
             if locationId not in relevantLocations:
                 continue
 
-            if catalogRecord in catalogRecordToCatalogItems:
-                for catalogItem in catalogRecordToCatalogItems[catalogRecord]:
-                    catalogItemURL = f"https://data.usbr.gov{catalogItem}"
-                    if locationId not in locationIDToCatalogItemsUrls:
-                        locationIDToCatalogItemsUrls[str(locationId)] = [catalogItemURL]
-                    else:
-                        locationIDToCatalogItemsUrls[locationId].append(catalogItemURL)
+            for catalogRecord in locationIdToCatalogRecords[locationId]:
+                if catalogRecord in catalogRecordToCatalogItems:
+                    for catalogItem in catalogRecordToCatalogItems[catalogRecord]:
+                        catalogItemURL = f"https://data.usbr.gov{catalogItem}"
+                        if locationId not in locationIDToCatalogItemsUrls:
+                            locationIDToCatalogItemsUrls[str(locationId)] = [
+                                catalogItemURL
+                            ]
+                        else:
+                            locationIDToCatalogItemsUrls[locationId].append(
+                                catalogItemURL
+                            )
 
         return locationIDToCatalogItemsUrls
 
