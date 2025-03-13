@@ -151,10 +151,11 @@ def test_redis():
     val = r.get("test")
     assert val == b"test"
 
+
 def test_separate_pages_have_distinct_data():
     cache = RISECache()
-    url1 = 'https://data.usbr.gov/rise/api/location?&include=catalogRecords.catalogItems?page=1&itemsPerPage=100'
-    url2 = 'https://data.usbr.gov/rise/api/location?&include=catalogRecords.catalogItems&page=2&itemsPerPage=100'
+    url1 = "https://data.usbr.gov/rise/api/location?&include=catalogRecords.catalogItems?page=1&itemsPerPage=100"
+    url2 = "https://data.usbr.gov/rise/api/location?&include=catalogRecords.catalogItems&page=2&itemsPerPage=100"
     resp1 = cache.get_or_fetch(url1)
     resp2 = await_(cache.get_or_fetch(url2))
     resp1 = await_(resp1)
@@ -162,22 +163,20 @@ def test_separate_pages_have_distinct_data():
     model1 = LocationResponseWithIncluded.model_validate(resp1)
     model2 = LocationResponseWithIncluded.model_validate(resp2)
 
-    model2Ids = { location.attributes.id for location in model2.data }
+    model2Ids = {location.attributes.id for location in model2.data}
 
     for location in model1.data:
         assert location.attributes.id not in model2Ids
 
-
-    all_resp = merge_pages({
-        url1: resp1,
-        url2: resp2
-    })
+    all_resp = merge_pages({url1: resp1, url2: resp2})
 
     model = LocationResponseWithIncluded.model_validate(all_resp)
     seenData = set()
     for loc in model.data:
         if loc.attributes.id in seenData:
-            assert False, f"Got a duplicate location with id {loc.attributes.id} and name {loc.attributes.locationName} after scanning {len(seenData)} out of {len(model.data)} locations in total"
+            assert False, (
+                f"Got a duplicate location with id {loc.attributes.id} and name {loc.attributes.locationName} after scanning {len(seenData)} out of {len(model.data)} locations in total"
+            )
         seenData.add(loc.attributes.id)
 
     # this is used just to test that a particular location is in the data that was giving s issues; in the future it might not be here anymore

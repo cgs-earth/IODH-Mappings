@@ -34,15 +34,19 @@ async def fetch_url(url: str) -> dict:
 class RISECache:
     """A cache implementation using Redis with ttl support"""
 
+<<<<<<< HEAD
 
     def __init__(self, ttl: timedelta = timedelta(hours=72)):
+=======
+    def __init__(self, ttl: timedelta = timedelta(hours=24)):
+>>>>>>> 3fb1d2903bd11fa8eaba8b4cb1a82af08d1d937c
         self.db = redis.Redis(host=REDIS_HOST, port=REDIS_PORT, decode_responses=False)
         self.ttl = ttl
 
-    async def set(self, url: str, json_data: dict ):
+    async def set(self, url: str, json_data: dict):
         """Associate a url key with json data in the cache"""
         # Serialize the data before storing it in Redis
-        await self.db.set(name = url,  value = json.dumps(json_data))
+        await self.db.set(name=url, value=json.dumps(json_data))
         await self.db.expire(name=url, time=self.ttl)
 
     async def reset(self):
@@ -166,9 +170,7 @@ class RISECache:
             url for url in urls if await self.contains(url) and not force_fetch
         ]
 
-        assert set(urls_in_cache).isdisjoint(
-            set(urls_not_in_cache)
-        )
+        assert set(urls_in_cache).isdisjoint(set(urls_not_in_cache))
 
         remote_fetch = self._fetch_and_set_url_group(urls_not_in_cache)
 

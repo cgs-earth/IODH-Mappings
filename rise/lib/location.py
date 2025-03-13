@@ -47,7 +47,9 @@ class LocationResponse(BaseModel):
         for url in pages:
             for data in pages[url]["data"]:
                 id = data["attributes"]["_id"]
-                assert id not in found, f"{id} is a duplicate with name {data['attributes']['locationName']} in {url}"
+                assert id not in found, (
+                    f"{id} is a duplicate with name {data['attributes']['locationName']} in {url}"
+                )
                 found.add(id)
         return cls(**merged)
 
@@ -362,5 +364,5 @@ class LocationResponseWithIncluded(LocationResponse):
             if location.attributes.locationName in seenLocations:
                 return True
             seenLocations.add(location.attributes.locationName)
-        
+
         return False

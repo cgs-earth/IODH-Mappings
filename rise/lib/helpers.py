@@ -13,6 +13,7 @@ from rise.env import rise_event_loop
 import copy
 from typing import Dict
 
+
 def await_(coro: Coroutine):
     """
     await an asyncio coroutine, ensuring it works even if an event loop is already running.
@@ -20,13 +21,14 @@ def await_(coro: Coroutine):
     return asyncio.run_coroutine_threadsafe(coro, loop=rise_event_loop).result()
 
 
-
 def merge_pages(pages: Dict[str, dict]) -> dict:
     """Given multiple different pages of data, merge them together"""
     assert pages
 
-    combined_data = copy.deepcopy(next(iter(pages.values())))  # Create a deep copy of the first element
-    
+    combined_data = copy.deepcopy(
+        next(iter(pages.values()))
+    )  # Create a deep copy of the first element
+
     for content in list(pages.values())[1:]:  # Iterate over remaining items
         if "data" in content:
             combined_data.setdefault("data", []).extend(content["data"])
@@ -35,7 +37,6 @@ def merge_pages(pages: Dict[str, dict]) -> dict:
             combined_data.setdefault("included", []).extend(content["included"])
 
     return combined_data
-
 
 
 def flatten_values(input: dict[str, list]) -> list:
