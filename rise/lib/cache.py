@@ -34,12 +34,8 @@ async def fetch_url(url: str) -> dict:
 class RISECache:
     """A cache implementation using Redis with ttl support"""
 
-<<<<<<< HEAD
 
     def __init__(self, ttl: timedelta = timedelta(hours=72)):
-=======
-    def __init__(self, ttl: timedelta = timedelta(hours=24)):
->>>>>>> 3fb1d2903bd11fa8eaba8b4cb1a82af08d1d937c
         self.db = redis.Redis(host=REDIS_HOST, port=REDIS_PORT, decode_responses=False)
         self.ttl = ttl
 
