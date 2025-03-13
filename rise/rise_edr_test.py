@@ -128,8 +128,10 @@ def test_area(edr_config: dict):
     coverages = response["coverages"]
     assert len(coverages) == 2
     for coverage in coverages:
-        assert coverage["domain"]["axes"]["x"]["values"][0] == -98.1667, "Both coverages should have the same x value since they are on the same location"
-        assert coverage["domain"]["axes"]["y"]["values"][0] ==  28.4667
+        assert coverage["domain"]["axes"]["x"]["values"][0] == -98.1667, (
+            "Both coverages should have the same x value since they are on the same location"
+        )
+        assert coverage["domain"]["axes"]["y"]["values"][0] == 28.4667
     assert coverages[0]["ranges"]["Lake/Reservoir Storage"]
 
     victoriaTexas = "GEOMETRYCOLLECTION (POLYGON ((-97.789307 29.248063, -97.789307 29.25046, -97.789307 29.25046, -97.789307 29.248063)), POLYGON ((-97.588806 29.307956, -97.58606 29.307956, -97.58606 29.310351, -97.588806 29.310351, -97.588806 29.307956)), POLYGON ((-97.410278 28.347899, -95.314636 28.347899, -95.314636 29.319931, -97.410278 29.319931, -97.410278 28.347899)))"
@@ -145,14 +147,18 @@ def test_area(edr_config: dict):
     response = p.area(
         wkt=areaInMontanaWithData,
     )
-    assert len(response["coverages"]) == 2, "Expected to return 1 location with 2 datastreams and thus 2 coverages"
+    assert len(response["coverages"]) == 2, (
+        "Expected to return 1 location with 2 datastreams and thus 2 coverages"
+    )
 
     dummyAreaInTheOcean = "POLYGON ((-44.296875 27.059126, -23.203125 27.059126, -23.203125 40.84706, -44.296875 40.84706, -44.296875 27.059126))"
 
     response = p.area(
         wkt=dummyAreaInTheOcean,
     )
-    assert len(response["coverages"]) == 0, "Since the area is in the ocean, no data should be returned"
+    assert len(response["coverages"]) == 0, (
+        "Since the area is in the ocean, no data should be returned"
+    )
 
 
 def test_cube(edr_config: dict):
