@@ -2,10 +2,8 @@
 # SPDX-License-Identifier: MIT
 
 import asyncio
-import json
 import logging
 import math
-from typing import Coroutine
 from urllib.parse import urlparse
 import redis.asyncio as redis
 from rise.custom_types import JsonPayload, Url
@@ -175,7 +173,7 @@ class RISECache:
         # Fetch from local cache
         with TRACER.start_span("mget"):
             cache_fetch = self.db.mget(urls_in_cache)
-            cache_results = await cache_fetch 
+            cache_results = await cache_fetch
             urlToResult = {}
             for url, data in zip(urls_in_cache, cache_results):
                 urlToResult[url] = orjson.loads(data)
