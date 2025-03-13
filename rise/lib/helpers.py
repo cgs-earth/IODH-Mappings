@@ -21,20 +21,17 @@ def await_(coro: Coroutine):
     return asyncio.run_coroutine_threadsafe(coro, loop=rise_event_loop).result()
 
 
+
 def merge_pages(pages: Dict[str, dict]) -> dict:
-    """Given multiple different pages of data, merge them together"""
+    """Given multiple different pages of data, merge them together."""
     assert pages
 
-    combined_data = copy.deepcopy(
-        next(iter(pages.values()))
-    )  # Create a deep copy of the first element
+    combined_data = {}
 
-    for content in list(pages.values())[1:]:  # Iterate over remaining items
-        if "data" in content:
-            combined_data.setdefault("data", []).extend(content["data"])
-
-        if "included" in content:
-            combined_data.setdefault("included", []).extend(content["included"])
+    for content in pages.values():
+        for key in ("data", "included"):
+            if key in content:
+                combined_data.setdefault(key, []).extend(content[key])
 
     return combined_data
 
