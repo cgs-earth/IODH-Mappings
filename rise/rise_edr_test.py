@@ -132,7 +132,9 @@ def test_area(edr_config: dict):
             "Both coverages should have the same x value since they are on the same location"
         )
         assert coverage["domain"]["axes"]["y"]["values"][0] == 28.4667
-    assert len(response["coverages"]) == 2, "There should be 2 coverages unless an additional location was added"
+    assert len(response["coverages"]) == 2, (
+        "There should be 2 coverages unless an additional location was added"
+    )
     assert response["coverages"][0]["ranges"]["Lake/Reservoir Storage"]
     assert response["coverages"][1]["ranges"]["Lake/Reservoir Elevation"]
 
