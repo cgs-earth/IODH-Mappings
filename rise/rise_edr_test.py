@@ -121,9 +121,9 @@ def test_location_datetime(edr_config: dict):
 def test_area(edr_config: dict):
     p = RiseEDRProvider()
 
-    secondWayOfQueryinggeorgeWestTexasID291 = "POLYGON ((-99.717407 28.637568, -97.124634 28.608637, -97.020264 27.210671, -100.184326 26.980829, -101.392822 28.139816, -99.717407 28.637568)))"
+    secondQueryForQeorgeWestTexasID291 = "POLYGON ((-99.717407 28.637568, -97.124634 28.608637, -97.020264 27.210671, -100.184326 26.980829, -101.392822 28.139816, -99.717407 28.637568)))"
     response = p.area(
-        wkt=secondWayOfQueryinggeorgeWestTexasID291,
+        wkt=secondQueryForQeorgeWestTexasID291,
     )
     coverages = response["coverages"]
     assert len(coverages) == 2
@@ -139,9 +139,9 @@ def test_area(edr_config: dict):
     assert response["coverages"][1]["ranges"]["Lake/Reservoir Elevation"]
 
     # make sure that we can get the same data with a different geospatial query as long as the same data is in the bbox
-    secondWayOfQueryinggeorgeWestTexasID291 = "POLYGON ((-98.66272 28.062286, -97.756348 28.062286, -97.756348 28.688178, -98.66272 28.688178, -98.66272 28.062286))"
+    secondQueryForQeorgeWestTexasID291 = "POLYGON ((-98.66272 28.062286, -97.756348 28.062286, -97.756348 28.688178, -98.66272 28.688178, -98.66272 28.062286))"
     response2 = p.area(
-        wkt=secondWayOfQueryinggeorgeWestTexasID291,
+        wkt=secondQueryForQeorgeWestTexasID291,
     )
 
     assert response2 == response
