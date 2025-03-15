@@ -31,7 +31,7 @@ class RiseProvider(BaseProvider):
         self,
         bbox: list = [],
         datetime_: Optional[str] = None,
-        resulttype: Optional[Literal["hits", "results"]] = 'results',
+        resulttype: Optional[Literal["hits", "results"]] = "results",
         limit: Optional[int] = None,
         itemId: Optional[str] = None,
         offset: Optional[int] = 0,
@@ -64,7 +64,7 @@ class RiseProvider(BaseProvider):
         if bbox:
             response = response.drop_outside_of_bbox(bbox)
 
-        if resulttype == 'hits':
+        if resulttype == "hits":
             return {
                 "type": "FeatureCollection",
                 "features": [],
