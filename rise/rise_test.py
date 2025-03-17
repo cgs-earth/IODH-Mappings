@@ -55,7 +55,8 @@ def test_resulttype_hits(oaf_config: dict):
     # make sure numberMatched is greater than 0
     # we can't compare against a constant because it could
     # change but it should always be greater than 0
-    assert out["numberMatched"] > 0 
+    assert out["numberMatched"] > 0
+
 
 def test_skip_geometry(oaf_config: dict):
     p = RiseProvider(oaf_config)
