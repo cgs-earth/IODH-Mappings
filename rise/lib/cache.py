@@ -84,8 +84,10 @@ class RISECache:
         MAX_ITEMS_PER_PAGE: int 
 
         if "data.usbr.gov/rise/api/result" in base_url:
-            MAX_VALUES_IN_RISE_RESULT_PAGE = 10000 
-            MAX_ITEMS_PER_PAGE = MAX_VALUES_IN_RISE_RESULT_PAGE 
+            # there is a special case in RISE where the max number of items per result page is 10000
+            # this appears to be different from the other endpoints
+            MAX_ITEMS_PER_RESULT_PAGE = 10000 
+            MAX_ITEMS_PER_PAGE = MAX_ITEMS_PER_RESULT_PAGE
         else:
             MAX_ITEMS_PER_PAGE = 100
 
