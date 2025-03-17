@@ -242,7 +242,9 @@ class LocationResponse(BaseModel):
                 "properties": location_feature.attributes.model_dump(
                     by_alias=True, exclude={"locationCoordinates", "locationGeometry"}
                 ),
-                "geometry": location_feature.attributes.locationCoordinates.model_dump() if not skip_geometry else None,
+                "geometry": location_feature.attributes.locationCoordinates.model_dump()
+                if not skip_geometry
+                else None,
             }
             feature_as_geojson["properties"]["name"] = (
                 location_feature.attributes.locationName
