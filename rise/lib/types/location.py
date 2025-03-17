@@ -33,7 +33,7 @@ class LineStringCoordinates(BaseModel):
 
 
 class LocationDataAttributes(BaseModel):
-    model_config = ConfigDict(extra='forbid')
+    model_config = ConfigDict(extra="forbid")
     """
     The `attributes:` key within each `data:` key for location/
     Thus, located at the following nesting:
@@ -60,13 +60,13 @@ class LocationDataAttributes(BaseModel):
     horizontalDatum: dict
     locationGeometry: dict
     timezone: Optional[str] = None
-    verticalDatum: Optional[dict] 
+    verticalDatum: Optional[dict]
     locationTags: list[dict]
     relatedLocationIds: Optional[list[int]]
     projectNames: list[str]
     locationTypeName: str
-    timezoneName: Optional[str] = None 
-    timezoneOffset: Optional[float] = None 
+    timezoneName: Optional[str] = None
+    timezoneOffset: Optional[float] = None
     locationRegionNames: list[str]
     locationUnifiedRegionNames: list[str]
 
