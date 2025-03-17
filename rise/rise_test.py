@@ -57,7 +57,6 @@ def test_resulttype_hits(oaf_config: dict):
     # change but it should always be greater than 0
     assert out["numberMatched"] > 0
 
-
 def test_skip_geometry(oaf_config: dict):
     p = RiseProvider(oaf_config)
     out = p.items(itemId="1", skip_geometry=True)
@@ -66,3 +65,4 @@ def test_skip_geometry(oaf_config: dict):
     outWithoutSkip = p.items(itemId="1")
     assert outWithoutSkip["type"] == "Feature"
     assert outWithoutSkip["geometry"]
+
