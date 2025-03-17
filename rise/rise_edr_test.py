@@ -104,13 +104,14 @@ def test_location_select_properties(edr_config: dict):
         out_6["features"]  # type: ignore
     )
 
+
 def test_location_select_properties_with_id_filter(edr_config: dict):
     p = RiseEDRProvider()
     out_prop_2_with_location_id_filter = p.locations(
         location_id=1, select_properties=["2"], format_="geojson"
     )
     assert out_prop_2_with_location_id_filter["type"] == "Feature"
-    assert out_prop_2_with_location_id_filter["id"] == 1 # type: ignore
+    assert out_prop_2_with_location_id_filter["id"] == 1  # type: ignore
 
 
 def test_location_datetime(edr_config: dict):

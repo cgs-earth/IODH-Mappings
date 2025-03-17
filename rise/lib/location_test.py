@@ -15,6 +15,7 @@ def oneItemLocationRespFixture():
     resp = await_(cache.get_or_fetch(url))
     return resp
 
+
 def test_get_catalogItemURLs(oneItemLocationRespFixture: dict):
     """Test getting the associated catalog items from the location response"""
     model = LocationResponseWithIncluded.model_validate(oneItemLocationRespFixture)
@@ -103,6 +104,7 @@ def test_get_all_catalogItemURLs(allItemsOnePageLocationRespFixture: dict):
     )
     urls = flatten_values(model.get_catalogItemURLs())
     assert len(urls) > 400
+
 
 def test_drop_by_location_id(allItemsOnePageLocationRespFixture: dict):
     model = LocationResponseWithIncluded.model_validate(

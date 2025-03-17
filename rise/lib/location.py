@@ -167,18 +167,14 @@ class LocationResponse(BaseModel):
     def drop_specific_location(self, location_id: int):
         """Given a location id, drop all all data that is associated with that location"""
 
-        self.data =  [
-            loc for loc in self.data if loc.attributes.id != location_id
-        ]
+        self.data = [loc for loc in self.data if loc.attributes.id != location_id]
 
         return self
-    
+
     def drop_everything_but_one_location(self, location_id: int):
         """Given a location id, drop all all data that is not associated with that location"""
 
-        self.data =  [
-            loc for loc in self.data if loc.attributes.id == location_id
-        ]
+        self.data = [loc for loc in self.data if loc.attributes.id == location_id]
 
         return self
 
