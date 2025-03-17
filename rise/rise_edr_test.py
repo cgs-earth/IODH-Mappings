@@ -169,7 +169,9 @@ def test_cube(edr_config: dict):
     p = RiseEDRProvider()
     bboxCoveringTexasID291 = [-98.5, 26.5, -95.5, 29.5]
     result = p.cube(bbox=bboxCoveringTexasID291)
-    assert len(result["coverages"]) == 2 # there are 2 coverages since location/291 has 2 datastreams
+    assert (
+        len(result["coverages"]) == 2
+    )  # there are 2 coverages since location/291 has 2 datastreams
 
     result = p.cube(bbox=[0, 0, 0, 0])
     assert len(result["coverages"]) == 0
