@@ -56,12 +56,12 @@ def test_get_fields(edr_config: dict):
 def test_get_or_fetch_all_param_filtered_pages(edr_config: dict):
     p = RiseEDRProvider()
     params = ["812", "6"]
-    bothparams = p.get_or_fetch_all_param_filtered_pages(params)
+    bothparams = p.cache.get_or_fetch_all_param_filtered_pages(params)
     merge_resp = merge_pages(bothparams)
     assert len(merge_resp["data"]) == 10 + 13
 
     params = ["6"]
-    oneparam = p.get_or_fetch_all_param_filtered_pages(params)
+    oneparam = p.cache.get_or_fetch_all_param_filtered_pages(params)
     one_resp = merge_pages(oneparam)
     assert len(one_resp["data"]) == 13
 
@@ -69,7 +69,7 @@ def test_get_or_fetch_all_param_filtered_pages(edr_config: dict):
         "both params should have more data than one param"
     )
 
-    allparams = p.get_or_fetch_all_param_filtered_pages()
+    allparams = p.cache.get_or_fetch_all_param_filtered_pages()
     model = LocationResponseWithIncluded.from_api_pages(allparams)
     seenData = set()
     for loc in model.data:

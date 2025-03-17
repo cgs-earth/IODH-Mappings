@@ -9,9 +9,7 @@ from pygeoapi.provider.base import BaseProvider
 from pygeoapi.util import crs_transform
 from rise.env import TRACER
 from rise.lib.cache import RISECache
-from rise.lib.location import LocationResponse
-from rise.rise_edr import RiseEDRProvider
-from rise.lib.helpers import merge_pages, await_
+from rise.lib.location import LocationResponseWithIncluded
 
 LOGGER = logging.getLogger(__name__)
 
@@ -33,25 +31,20 @@ class RiseProvider(BaseProvider):
         bbox: list = [],
         datetime_: Optional[str] = None,
         resulttype: Optional[Literal["hits", "results"]] = "results",
+        select_properties: Optional[list[str]] = None,
         limit: Optional[int] = None,
-        itemId: Optional[str] = None,
+        itemId: Optional[str] = None, # unlike edr, this is a string; we need to case to an int before filtering
         offset: Optional[int] = 0,
         skip_geometry: Optional[bool] = False,
         **kwargs,
     ):
-        response: LocationResponse
-        if itemId:
-            # Instead of merging all location pages, just
-            # fetch the location associated with the ID
-            url: str = f"https://data.usbr.gov/rise/api/location/{itemId}"
-            raw_resp = await_(self.cache.get_or_fetch(url))
-            response = LocationResponse(**raw_resp)
-        else:
-            all_location_responses = await_(
-                self.cache.get_or_fetch_all_pages(RiseEDRProvider.LOCATION_API)
-            )
-            merged_response = merge_pages(all_location_responses)
-            response = LocationResponse(**merged_response)
+        raw_resp = self.cache.get_or_fetch_all_param_filtered_pages(
+            properties_to_filter_by=select_properties
+        )
+        response = LocationResponseWithIncluded.from_api_pages(raw_resp)
+
+        if itemId: 
+            response = response.drop_everything_but_one_location(int(itemId))
 
         if datetime_:
             response = response.drop_outside_of_date_range(datetime_)
