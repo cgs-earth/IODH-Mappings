@@ -80,13 +80,12 @@ class RISECache:
     async def get_or_fetch_all_pages(
         self, base_url: str, force_fetch=False
     ) -> dict[Url, JsonPayload]:
-
-        MAX_ITEMS_PER_PAGE: int 
+        MAX_ITEMS_PER_PAGE: int
 
         if "data.usbr.gov/rise/api/result" in base_url:
             # there is a special case in RISE where the max number of items per result page is 10000
             # this appears to be different from the other endpoints
-            MAX_ITEMS_PER_RESULT_PAGE = 10000 
+            MAX_ITEMS_PER_RESULT_PAGE = 10000
             MAX_ITEMS_PER_PAGE = MAX_ITEMS_PER_RESULT_PAGE
         else:
             MAX_ITEMS_PER_PAGE = 100
