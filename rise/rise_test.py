@@ -46,6 +46,7 @@ def test_item(oaf_config: dict):
     out = p.items(limit=10)
     assert len(out["features"]) == 10
 
+
 def test_resulttype_hits(oaf_config: dict):
     p = RiseProvider(oaf_config)
     out = p.items(resulttype="hits")
