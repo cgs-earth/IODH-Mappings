@@ -33,7 +33,9 @@ class RiseProvider(BaseProvider):
         resulttype: Optional[Literal["hits", "results"]] = "results",
         select_properties: Optional[list[str]] = None,
         limit: Optional[int] = None,
-        itemId: Optional[str] = None, # unlike edr, this is a string; we need to case to an int before filtering
+        itemId: Optional[
+            str
+        ] = None,  # unlike edr, this is a string; we need to case to an int before filtering
         offset: Optional[int] = 0,
         skip_geometry: Optional[bool] = False,
         **kwargs,
@@ -43,7 +45,7 @@ class RiseProvider(BaseProvider):
         )
         response = LocationResponseWithIncluded.from_api_pages(raw_resp)
 
-        if itemId: 
+        if itemId:
             response = response.drop_everything_but_one_location(int(itemId))
 
         if datetime_:

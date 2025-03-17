@@ -41,7 +41,7 @@ def test_item(oaf_config: dict):
     assert out["type"] == "Feature"
 
     with pytest.raises(Exception):
-        out = p.items(itemId="__INVALID") 
+        out = p.items(itemId="__INVALID")
 
     out = p.items(limit=10)
     assert len(out["features"]) == 10
