@@ -80,8 +80,14 @@ class RISECache:
     async def get_or_fetch_all_pages(
         self, base_url: str, force_fetch=False
     ) -> dict[Url, JsonPayload]:
-        # max number of items you can query in RISE
-        MAX_ITEMS_PER_PAGE = 100
+
+        MAX_ITEMS_PER_PAGE: int 
+
+        if "data.usbr.gov/rise/api/result" in base_url:
+            MAX_VALUES_IN_RISE_RESULT_PAGE = 10000 
+            MAX_ITEMS_PER_PAGE = MAX_VALUES_IN_RISE_RESULT_PAGE 
+        else:
+            MAX_ITEMS_PER_PAGE = 100
 
         # Get the first response that contains the list of pages
         response = await self.get_or_fetch(base_url)
