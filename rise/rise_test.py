@@ -46,11 +46,13 @@ def test_item(oaf_config: dict):
     out = p.items(limit=10)
     assert len(out["features"]) == 10
 
+
 def test_select_properties(oaf_config: dict):
     p = RiseProvider(oaf_config)
     out = p.items(itemId="1", select_properties=["DUMMY_PROPERTY"])
     assert out["type"] == "FeatureCollection"
     assert out["features"] == []
+
 
 def test_resulttype_hits(oaf_config: dict):
     p = RiseProvider(oaf_config)

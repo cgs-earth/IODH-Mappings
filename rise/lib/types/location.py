@@ -39,6 +39,7 @@ class LocationDataAttributes(BaseModel):
         data:
             attributes:
     """
+
     model_config = ConfigDict(extra="forbid")
 
     # We use an alias here to map the _id field to the id field since the _ in the name causes issues
