@@ -90,9 +90,10 @@ class RiseEDRProvider(BaseEDRProvider):
             try:
                 location_id_as_int = int(location_id)
             except ValueError:
-                raise ProviderQueryError(f"Invalid location id: '{location_id}'; RISE location IDs must be integers")
+                raise ProviderQueryError(
+                    f"Invalid location id: '{location_id}'; RISE location IDs must be integers"
+                )
             response = response.drop_everything_but_one_location(location_id_as_int)
-            
 
         # If a location exists but has no CatalogItems, it should not appear in locations
         response = response.drop_locations_without_catalogitems()
