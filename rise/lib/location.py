@@ -342,7 +342,7 @@ class LocationResponse(BaseModel):
         validated_geojson = FeatureCollection(
             type="FeatureCollection", features=geojson_features
         )
-        return validated_geojson.model_dump(by_alias=True)
+        return validated_geojson.model_dump(by_alias=True, exclude_none=True)
 
 
 class LocationResponseWithIncluded(LocationResponse):
