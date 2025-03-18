@@ -2,7 +2,7 @@
 # SPDX-License-Identifier: MIT
 
 import logging
-from typing import Literal, Optional
+from typing import Literal, Optional, TypedDict
 
 
 from pygeoapi.provider.base import BaseProvider
@@ -14,6 +14,11 @@ from rise.lib.types.location import LocationDataAttributes
 
 LOGGER = logging.getLogger(__name__)
 
+class SortDict(TypedDict):
+    property: str
+    order: Literal['+', '-']
+
+fieldsMapping = dict[str, dict[Literal["type"], Literal["number", "string", "integer"]]]
 
 class RiseProvider(BaseProvider):
     """Rise Provider for OGC API Features"""
@@ -33,7 +38,11 @@ class RiseProvider(BaseProvider):
         bbox: list = [],
         datetime_: Optional[str] = None,
         resulttype: Optional[Literal["hits", "results"]] = "results",
-        select_properties: Optional[list[str]] = None,
+        # select only features that contains all the `select_properties` values
+        select_properties: Optional[list[str]] = None, # query this with ?properties in the actual url
+        # select only features that contains all the `properties` with their corresponding values
+        properties: list[tuple[str, str]] = [],
+        sortby: Optional[str] = None,
         limit: Optional[int] = None,
         itemId: Optional[
             str
@@ -70,7 +79,7 @@ class RiseProvider(BaseProvider):
                 "numberMatched": len(response.data),
             }
 
-        return response.to_geojson(skip_geometry, select_properties=select_properties)
+        return response.to_geojson(skip_geometry, select_properties=select_properties, properties=properties, fields_mapping=self._fields)
 
     @crs_transform
     def query(self, **kwargs):
@@ -87,7 +96,7 @@ class RiseProvider(BaseProvider):
 
         return self.items(itemId=identifier, bbox=[], **kwargs)
 
-    def get_fields(self, **kwargs) -> dict[str, Literal["number", "string", "integer"]]:
+    def get_fields(self, **kwargs) -> fieldsMapping:
         """
         Get provider field information (names, types)
 
