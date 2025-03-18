@@ -2,8 +2,8 @@
 # SPDX-License-Identifier: MIT
 
 import logging
-from typing import Literal, Optional, TypedDict
-
+from re import A
+from typing import Literal, Optional
 
 from pygeoapi.provider.base import BaseProvider
 from pygeoapi.util import crs_transform
@@ -11,13 +11,10 @@ from rise.env import TRACER
 from rise.lib.cache import RISECache
 from rise.lib.location import LocationResponseWithIncluded
 from rise.lib.types.location import LocationDataAttributes
+from rise.lib.types.sorting import SortDict
 
 LOGGER = logging.getLogger(__name__)
 
-
-class SortDict(TypedDict):
-    property: str
-    order: Literal["+", "-"]
 
 
 fieldsMapping = dict[str, dict[Literal["type"], Literal["number", "string", "integer"]]]
@@ -47,7 +44,7 @@ class RiseProvider(BaseProvider):
         ] = None,  # query this with ?properties in the actual url
         # select only features that contains all the `properties` with their corresponding values
         properties: list[tuple[str, str]] = [],
-        sortby: Optional[str] = None,
+        sortby: Optional[list[SortDict]] = None,
         limit: Optional[int] = None,
         itemId: Optional[
             str
@@ -89,6 +86,7 @@ class RiseProvider(BaseProvider):
             select_properties=select_properties,
             properties=properties,
             fields_mapping=self._fields,
+            sortby=sortby,
         )
 
     @crs_transform

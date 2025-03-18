@@ -86,7 +86,36 @@ def test_properties_key_value_mapping(oaf_config: dict):
     assert out["features"] == [], (
         f"A filter with a property that doesn't exist should return no results but got {out}"
     )
+    allDataOut = p.items(
+        properties=[("_id", "1"), ("locationName", "DUMMY")],
+    )
+    assert allDataOut["features"] == [], (
+        f"A filter with a property that doesn't exist should return no results but got {out}"
+    )
+    assert p.items(
+        properties=[("_id", "1")],
+    ) == p.items(
+        itemId="1",
+    ), "Filtering by a property 'id' should be the same as filtering by the item id"
 
+
+def test_sortby(oaf_config: dict):
+    p = RiseProvider(oaf_config)
+    out = p.items(sortby=[{"property": "locationName", "order": "+"}])
+    assert out["type"] == "FeatureCollection"
+
+    for i, feature in enumerate(out["features"],start=1):
+        prev = out["features"][i-1]
+        curr = feature
+        assert prev["properties"]["locationName"] <= curr["properties"]["locationName"]
+
+    # by selecting locationDescription, we know that the value is never None
+    # and thus we can always compare to verify order
+    out = p.items(select_properties=["locationDescription"], sortby=[{"property": "locationDescription", "order": "-"}])
+    for i, feature in enumerate(out["features"],start=1):
+        prev = out["features"][i-1]
+        curr = feature
+        assert prev["properties"]["locationName"] >= curr["properties"]["locationName"] 
 
 def test_resulttype_hits(oaf_config: dict):
     p = RiseProvider(oaf_config)
