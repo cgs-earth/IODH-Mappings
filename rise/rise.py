@@ -39,10 +39,10 @@ class RiseProvider(BaseProvider):
         offset: Optional[int] = 0,
         skip_geometry: Optional[bool] = False,
         **kwargs,
-    ):
-        raw_resp = self.cache.get_or_fetch_all_param_filtered_pages(
-            properties_to_filter_by=select_properties
-        )
+    ):  
+        # we don't filter by parameters here since OAF filters features by
+        # the attributes of the feature, not the parameters of the associated timeseries data
+        raw_resp = self.cache.get_or_fetch_all_param_filtered_pages()
         response = LocationResponseWithIncluded.from_api_pages(raw_resp)
 
         if itemId:
@@ -68,7 +68,7 @@ class RiseProvider(BaseProvider):
                 "numberMatched": len(response.data),
             }
 
-        return response.to_geojson(skip_geometry)
+        return response.to_geojson(skip_geometry, select_properties=select_properties)
 
     @crs_transform
     def query(self, **kwargs):

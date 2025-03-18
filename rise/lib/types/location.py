@@ -33,13 +33,13 @@ class LineStringCoordinates(BaseModel):
 
 
 class LocationDataAttributes(BaseModel):
-    model_config = ConfigDict(extra="forbid")
     """
     The `attributes:` key within each `data:` key for location/
     Thus, located at the following nesting:
         data:
             attributes:
     """
+    model_config = ConfigDict(extra="forbid")
 
     # We use an alias here to map the _id field to the id field since the _ in the name causes issues
     # https://stackoverflow.com/questions/59562997/how-to-parse-and-read-id-field-from-and-to-a-pydantic-model

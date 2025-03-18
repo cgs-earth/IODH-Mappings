@@ -16,6 +16,7 @@ from rise.lib.helpers import (
     parse_date,
     parse_z,
 )
+from pygeoapi.provider.base import ProviderNoDataError
 from rise.lib.types.helpers import ZType
 from rise.lib.types.includes import LocationIncluded
 from rise.lib.types.location import LocationData, PageLinks
@@ -228,15 +229,20 @@ class LocationResponse(BaseModel):
         ]
         return self
 
-    def to_geojson(self, skip_geometry: Optional[bool] = False) -> dict:
+    def to_geojson(self, skip_geometry: Optional[bool] = False, select_properties: Optional[list[str]] = None) -> dict:
         """
         Convert a list of locations to geojson
         """
         geojson_features: list[geojson_pydantic.Feature] = []
 
-        single_feature = len(self.data) == 1
-
         for location_feature in self.data:
+            
+            if select_properties:
+                # check that all properties exist
+                # otherwise the feature in question is not relevant to the client's query
+                if not all(p in location_feature.attributes.model_fields for p in select_properties):
+                    continue
+
             feature_as_geojson = {
                 "type": "Feature",
                 "id": location_feature.attributes.id,
@@ -257,13 +263,14 @@ class LocationResponse(BaseModel):
                 feature_as_geojson["properties"]["elevation"] = z
 
             geojson_features.append(Feature(**feature_as_geojson))
-            if single_feature:
-                return feature_as_geojson
 
-        validated_geojson = FeatureCollection(
-            type="FeatureCollection", features=geojson_features
-        )
-        return validated_geojson.model_dump(by_alias=True)
+        if len(geojson_features) != 1:
+            validated_geojson = FeatureCollection(
+                type="FeatureCollection", features=geojson_features
+            )
+            return validated_geojson.model_dump(by_alias=True)
+        else:
+            return geojson_features[0].model_dump(by_alias=True)
 
 
 class LocationResponseWithIncluded(LocationResponse):
