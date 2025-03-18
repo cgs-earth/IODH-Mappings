@@ -118,7 +118,7 @@ def test_sortby(oaf_config: dict):
     for i, feature in enumerate(out["features"], start=1):
         prev = out["features"][i - 1]
         curr = feature
-        assert prev["properties"]["locationName"] >= curr["properties"]["locationName"]
+        assert prev["properties"]["locationDescription"] >= curr["properties"]["locationDescription"]
 
 
 def test_resulttype_hits(oaf_config: dict):
