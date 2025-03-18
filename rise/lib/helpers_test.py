@@ -95,10 +95,10 @@ def test_parse_query_params():
     parsed_url3 = urlparse(url3)
     assert not bool(parsed_url3.query)
 
-def test_dump_none():
 
+def test_dump_none():
     class DummyNestedModel(BaseModel):
-        a: Optional[int] = None 
+        a: Optional[int] = None
         b: Optional[str] = None
 
     class DummyModel(BaseModel):

@@ -60,12 +60,17 @@ def test_select_properties(oaf_config: dict):
     """Make sure select properties returns features but filters out which properties are returned in the requested features"""
     p = RiseProvider(oaf_config)
     out = p.items(itemId="1", select_properties=["DUMMY_PROPERTY"])
-    assert out["properties"] == {}, "select_properties filtering with a non-existent property should return no properties"
+    assert out["properties"] == {}, (
+        "select_properties filtering with a non-existent property should return no properties"
+    )
 
     assert "locationName" in p._fields, "fields were not set properly"
     outWithSelection = p.items(itemId="1", select_properties=["locationName"])
     out = p.items(itemId="1")
-    assert outWithSelection["properties"]["locationName"] == out["properties"]["locationName"]
+    assert (
+        outWithSelection["properties"]["locationName"]
+        == out["properties"]["locationName"]
+    )
     assert len(outWithSelection["properties"]) == 1
 
     # make sure that we can select multiple properties where one exists and one doesn't
@@ -73,7 +78,10 @@ def test_select_properties(oaf_config: dict):
     propertyThatExistsInLocation1 = "locationDescription"
     outWithSelection = p.items(
         itemId="1",
-        select_properties=[propertyThatIsNullInLocation1, propertyThatExistsInLocation1],
+        select_properties=[
+            propertyThatIsNullInLocation1,
+            propertyThatExistsInLocation1,
+        ],
     )
     assert propertyThatExistsInLocation1 in outWithSelection["properties"]
 
@@ -131,10 +139,18 @@ def test_sortby(oaf_config: dict):
     for i, feature in enumerate(out["features"], start=1):
         prev = out["features"][i - 1]
         curr = feature
-        currDescription, prevDescription = curr["properties"]["locationDescription"], prev["properties"]["locationDescription"]
-        if not currDescription or not prevDescription: # it could be null which in that case we can't compare them
+        currDescription, prevDescription = (
+            curr["properties"]["locationDescription"],
+            prev["properties"]["locationDescription"],
+        )
+        if (
+            not currDescription or not prevDescription
+        ):  # it could be null which in that case we can't compare them
             continue
-        assert prev["properties"]["locationDescription"] >= curr["properties"]["locationDescription"]
+        assert (
+            prev["properties"]["locationDescription"]
+            >= curr["properties"]["locationDescription"]
+        )
         assert len(curr["properties"]) == 1
 
 

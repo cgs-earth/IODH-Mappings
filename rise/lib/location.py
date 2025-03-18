@@ -246,7 +246,6 @@ class LocationResponse(BaseModel):
         geojson_features: list[geojson_pydantic.Feature] = []
 
         for location_feature in self.data:
-
             if properties:
                 # We rely on fields_mapping to know how to cast each property
                 if not fields_mapping:
@@ -321,7 +320,11 @@ class LocationResponse(BaseModel):
                 # and at the beginning for descending order.
                 def sort_key(f):
                     value = (f.properties or {}).get(sort_prop, None)
-                    return (value is None, value) if not reverse_sort else (value is not None, value)
+                    return (
+                        (value is None, value)
+                        if not reverse_sort
+                        else (value is not None, value)
+                    )
 
                 # Sort in-place using the key function
                 geojson_features.sort(key=sort_key, reverse=reverse_sort)
