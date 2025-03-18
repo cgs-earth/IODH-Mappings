@@ -177,11 +177,17 @@ class RISECache:
             base_url = base_url.removesuffix("&")
         return await_(self.get_or_fetch_all_pages(base_url))
 
-
-    async def get_or_fetch_all_results(self, catalogItemToResultUrl: dict[str, str]) -> dict[str, JsonPayload]:
-        """Given a dictionary mapping catalog items to URLs, fetch all pages for each URL in parallel 
+    async def get_or_fetch_all_results(
+        self, catalogItemToResultUrl: dict[str, str]
+    ) -> dict[str, JsonPayload]:
+        """Given a dictionary mapping catalog items to URLs, fetch all pages for each URL in parallel
         and return a dictionary mapping catalog items to their corresponding merged pages."""
-        tasks = {resultUrl: asyncio.create_task(self.get_or_fetch_all_pages(resultUrl, force_fetch=True)) for _, resultUrl in catalogItemToResultUrl.items()}
+        tasks = {
+            resultUrl: asyncio.create_task(
+                self.get_or_fetch_all_pages(resultUrl, force_fetch=True)
+            )
+            for _, resultUrl in catalogItemToResultUrl.items()
+        }
 
         results = await asyncio.gather(*tasks.values())
 
