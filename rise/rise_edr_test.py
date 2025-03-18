@@ -10,6 +10,7 @@ from rise.rise_edr import RiseEDRProvider
 import datetime
 from pygeoapi.provider.base import ProviderQueryError
 
+
 @pytest.fixture()
 def edr_config():
     config = {
@@ -44,6 +45,7 @@ def test_invalid_location_id(edr_config: dict):
     p = RiseEDRProvider()
     with pytest.raises(ProviderQueryError):
         p.locations(location_id="__INVALID", format_="geojson")
+
 
 def test_get_fields(edr_config: dict):
     p = RiseEDRProvider()
