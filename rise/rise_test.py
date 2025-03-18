@@ -8,7 +8,6 @@ from rise.lib.helpers import await_, merge_pages
 from rise.lib.location import LocationResponse
 from rise.rise import RiseProvider
 from rise.rise_edr import RiseEDRProvider
-from pygeoapi.provider.base import ProviderQueryError
 
 
 def test_get_all_pages_for_items():
@@ -53,17 +52,18 @@ def test_select_properties(oaf_config: dict):
     out = p.items(itemId="1", select_properties=["DUMMY_PROPERTY"])
 
     assert "locationName" in p._fields, "fields were not set properly"
-    outWithSelection= p.items(itemId="1", select_properties=["locationName"])
+    outWithSelection = p.items(itemId="1", select_properties=["locationName"])
     out = p.items(itemId="1")
-    assert out == outWithSelection    
+    assert out == outWithSelection
 
     # make sure that if a location doesn't have a property it doesn't throw an error
     propertyThatIsNullInLocation1 = "locationParentId"
     outWithSelection = p.items(
         itemId="1",
-        select_properties=[propertyThatIsNullInLocation1, "locationDescription"]
+        select_properties=[propertyThatIsNullInLocation1, "locationDescription"],
     )
     assert outWithSelection["features"] == []
+
 
 def test_properties_key_value_mapping(oaf_config: dict):
     p = RiseProvider(oaf_config)
@@ -83,7 +83,10 @@ def test_properties_key_value_mapping(oaf_config: dict):
         itemId="1",
         properties=[("_id", "1"), ("locationName", "DUMMY")],
     )
-    assert out["features"] == [], f"A filter with a property that doesn't exist should return no results but got {out}"
+    assert out["features"] == [], (
+        f"A filter with a property that doesn't exist should return no results but got {out}"
+    )
+
 
 def test_resulttype_hits(oaf_config: dict):
     p = RiseProvider(oaf_config)

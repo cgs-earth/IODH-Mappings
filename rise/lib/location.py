@@ -234,7 +234,9 @@ class LocationResponse(BaseModel):
         skip_geometry: Optional[bool] = False,
         select_properties: Optional[list[str]] = None,
         properties: Optional[list[tuple[str, str]]] = None,
-        fields_mapping: dict[str, dict[Literal["type"], Literal["number", "string", "integer"]]] = {},
+        fields_mapping: dict[
+            str, dict[Literal["type"], Literal["number", "string", "integer"]]
+        ] = {},
     ) -> dict:
         """
         Convert a list of locations to geojson
@@ -242,13 +244,13 @@ class LocationResponse(BaseModel):
         geojson_features: list[geojson_pydantic.Feature] = []
 
         for location_feature in self.data:
-
             if select_properties:
                 # check that all properties exist
                 # otherwise the feature in question is not relevant to the client's query
                 try:
                     allPropertiesFound = all(
-                        location_feature.attributes.model_dump(by_alias=True).get(p) is not None
+                        location_feature.attributes.model_dump(by_alias=True).get(p)
+                        is not None
                         for p in select_properties
                     )
                     if not allPropertiesFound:
@@ -261,7 +263,9 @@ class LocationResponse(BaseModel):
             if properties:
                 # check that all properties exist
                 # otherwise the feature in question is not relevant to the client's query
-                assert fields_mapping, "You must specify a fields mapping if you want to filter by properties so we can know how to decode the datatypes"
+                assert fields_mapping, (
+                    "You must specify a fields mapping if you want to filter by properties so we can know how to decode the datatypes"
+                )
 
                 foundList: list[bool] = []
                 dump = location_feature.attributes.model_dump(by_alias=True)
@@ -289,7 +293,6 @@ class LocationResponse(BaseModel):
 
                 if not all(foundList):
                     continue
-
 
             feature_as_geojson = {
                 "type": "Feature",
