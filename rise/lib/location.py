@@ -245,7 +245,8 @@ class LocationResponse(BaseModel):
                 # otherwise the feature in question is not relevant to the client's query
                 try:
                     allPropertiesFound = all(
-                        location_feature.attributes.model_dump(by_alias=True).get(p) is not None
+                        location_feature.attributes.model_dump(by_alias=True).get(p)
+                        is not None
                         for p in select_properties
                     )
                     if not allPropertiesFound:
@@ -254,7 +255,6 @@ class LocationResponse(BaseModel):
                     raise ProviderQueryError(
                         f"Could not find a property in {location_feature}; got error {e}"
                     )
-
 
             feature_as_geojson = {
                 "type": "Feature",
