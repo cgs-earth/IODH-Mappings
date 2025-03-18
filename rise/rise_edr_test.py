@@ -91,7 +91,6 @@ def test_location_select_properties(edr_config: dict):
     # keyword argument. This is hold over from OAF it seems.
     p = RiseEDRProvider()
     out_prop_2 = p.locations(select_properties=["2"])
-    
 
 
 def test_location_select_properties_with_id_filter(edr_config: dict):
