@@ -104,18 +104,22 @@ def test_sortby(oaf_config: dict):
     out = p.items(sortby=[{"property": "locationName", "order": "+"}])
     assert out["type"] == "FeatureCollection"
 
-    for i, feature in enumerate(out["features"],start=1):
-        prev = out["features"][i-1]
+    for i, feature in enumerate(out["features"], start=1):
+        prev = out["features"][i - 1]
         curr = feature
         assert prev["properties"]["locationName"] <= curr["properties"]["locationName"]
 
     # by selecting locationDescription, we know that the value is never None
     # and thus we can always compare to verify order
-    out = p.items(select_properties=["locationDescription"], sortby=[{"property": "locationDescription", "order": "-"}])
-    for i, feature in enumerate(out["features"],start=1):
-        prev = out["features"][i-1]
+    out = p.items(
+        select_properties=["locationDescription"],
+        sortby=[{"property": "locationDescription", "order": "-"}],
+    )
+    for i, feature in enumerate(out["features"], start=1):
+        prev = out["features"][i - 1]
         curr = feature
-        assert prev["properties"]["locationName"] >= curr["properties"]["locationName"] 
+        assert prev["properties"]["locationName"] >= curr["properties"]["locationName"]
+
 
 def test_resulttype_hits(oaf_config: dict):
     p = RiseProvider(oaf_config)

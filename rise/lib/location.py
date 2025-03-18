@@ -231,12 +231,14 @@ class LocationResponse(BaseModel):
         return self
 
     def to_geojson(
-    self,
-    skip_geometry: Optional[bool] = False,
-    select_properties: Optional[list[str]] = None,
-    properties: Optional[list[tuple[str, str]]] = None,
-    fields_mapping: dict[str, dict[Literal["type"], Literal["number", "string", "integer"]]] = {},
-    sortby: Optional[list[SortDict]] = None,  # now treat as list[SortDict]
+        self,
+        skip_geometry: Optional[bool] = False,
+        select_properties: Optional[list[str]] = None,
+        properties: Optional[list[tuple[str, str]]] = None,
+        fields_mapping: dict[
+            str, dict[Literal["type"], Literal["number", "string", "integer"]]
+        ] = {},
+        sortby: Optional[list[SortDict]] = None,  # now treat as list[SortDict]
     ) -> dict:
         """
         Convert a list of locations to geojson
@@ -247,7 +249,8 @@ class LocationResponse(BaseModel):
             if select_properties:
                 try:
                     all_requested_found = all(
-                        location_feature.attributes.model_dump(by_alias=True).get(p) is not None
+                        location_feature.attributes.model_dump(by_alias=True).get(p)
+                        is not None
                         for p in select_properties
                     )
                     if not all_requested_found:
@@ -266,7 +269,7 @@ class LocationResponse(BaseModel):
 
                 dump = location_feature.attributes.model_dump(by_alias=True)
                 found_list: list[bool] = []
-                for (prop_name, prop_value) in properties:
+                for prop_name, prop_value in properties:
                     datatype = fields_mapping.get(prop_name)
                     if not datatype:
                         raise ProviderQueryError(
@@ -294,8 +297,7 @@ class LocationResponse(BaseModel):
                 "type": "Feature",
                 "id": location_feature.attributes.id,
                 "properties": location_feature.attributes.model_dump(
-                    by_alias=True,
-                    exclude={"locationCoordinates", "locationGeometry"}
+                    by_alias=True, exclude={"locationCoordinates", "locationGeometry"}
                 ),
                 "geometry": (
                     location_feature.attributes.locationCoordinates.model_dump()
@@ -304,7 +306,9 @@ class LocationResponse(BaseModel):
                 ),
             }
 
-            feature_as_geojson["properties"]["name"] = location_feature.attributes.locationName
+            feature_as_geojson["properties"]["name"] = (
+                location_feature.attributes.locationName
+            )
 
             z = location_feature.attributes.elevation
             if z is not None:
@@ -332,12 +336,13 @@ class LocationResponse(BaseModel):
                 # you might want to handle that specially; for simplicity, we fall back to `None`.
                 geojson_features.sort(
                     key=lambda f: (f.properties or {}).get(sort_prop, None),
-                    reverse=reverse_sort
+                    reverse=reverse_sort,
                 )
 
-        validated_geojson = FeatureCollection(type="FeatureCollection", features=geojson_features)
+        validated_geojson = FeatureCollection(
+            type="FeatureCollection", features=geojson_features
+        )
         return validated_geojson.model_dump(by_alias=True)
-
 
 
 class LocationResponseWithIncluded(LocationResponse):

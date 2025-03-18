@@ -2,7 +2,6 @@
 # SPDX-License-Identifier: MIT
 
 import logging
-from re import A
 from typing import Literal, Optional
 
 from pygeoapi.provider.base import BaseProvider
@@ -14,7 +13,6 @@ from rise.lib.types.location import LocationDataAttributes
 from rise.lib.types.sorting import SortDict
 
 LOGGER = logging.getLogger(__name__)
-
 
 
 fieldsMapping = dict[str, dict[Literal["type"], Literal["number", "string", "integer"]]]
