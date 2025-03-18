@@ -64,6 +64,7 @@ def test_select_properties(oaf_config: dict):
     )
     assert outWithSelection["features"] == []
 
+
 def test_properties_key_value_mapping(oaf_config: dict):
     p = RiseProvider(oaf_config)
     out = p.items(
@@ -82,7 +83,10 @@ def test_properties_key_value_mapping(oaf_config: dict):
         itemId="1",
         properties=[("_id", "1"), ("locationName", "DUMMY")],
     )
-    assert out["features"] == [], f"A filter with a property that doesn't exist should return no results but got {out}"
+    assert out["features"] == [], (
+        f"A filter with a property that doesn't exist should return no results but got {out}"
+    )
+
 
 def test_resulttype_hits(oaf_config: dict):
     p = RiseProvider(oaf_config)
