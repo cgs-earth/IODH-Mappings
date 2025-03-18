@@ -2,14 +2,15 @@
 # SPDX-License-Identifier: MIT
 
 import logging
-from typing import Literal, Optional
+from typing import Any, Literal, Optional
 
 
 from pygeoapi.provider.base import BaseProvider
 from pygeoapi.util import crs_transform
 from rise.env import TRACER
 from rise.lib.cache import RISECache
-from rise.lib.location import LocationResponseWithIncluded
+from rise.lib.location import LocationResponse, LocationResponseWithIncluded
+from rise.lib.types.location import LocationData, LocationDataAttributes
 
 LOGGER = logging.getLogger(__name__)
 
@@ -85,5 +86,37 @@ class RiseProvider(BaseProvider):
 
         return self.items(itemId=identifier, bbox=[], **kwargs)
 
-    def get_fields(self, **kwargs):
-        return self.cache.get_or_fetch_parameters()
+    def get_fields(self, **kwargs) -> dict[str, Literal["number", "string", "integer"]]:
+        """
+        Get provider field information (names, types)
+
+        Example response: {'field1': 'string', 'field2': 'number'}
+
+        :returns: dict of field names and their associated JSON Schema types
+        """
+        pydanticFields = LocationDataAttributes.model_fields
+
+        mappingOfProperties: dict[str, Literal["number", "string", "integer"]] = {}
+
+        for fieldName in pydanticFields.keys():
+            dataType: Literal["number", "string", "integer"]
+            
+            aliasName = pydanticFields[fieldName].alias
+            if aliasName:
+                name = aliasName
+            else:
+                name = fieldName
+
+            if "str" in str(pydanticFields[fieldName].annotation):
+                dataType = "string"
+            elif "int" in str(pydanticFields[fieldName].annotation):
+                dataType = "integer"
+            elif "float" in str(pydanticFields[fieldName].annotation):
+                dataType = "number"
+            else:
+                LOGGER.warning(f"Unknown data type for field '{fieldName}' with type annotation {pydanticFields[fieldName].annotation}")
+                continue 
+            
+            mappingOfProperties[name] = dataType
+
+        return mappingOfProperties
