@@ -36,7 +36,6 @@ def test_item(oaf_config: dict):
     """Test what happens if we request one item; make sure the geojson is valid"""
     p = RiseProvider(oaf_config)
     out = p.items(itemId="1")
-    out = out
     assert out["id"] == 1
     assert out["type"] == "Feature"
 
@@ -47,22 +46,44 @@ def test_item(oaf_config: dict):
     assert len(out["features"]) == 10
 
 
+def test_offset(oaf_config: dict):
+    p = RiseProvider(oaf_config)
+    out1 = p.items(offset=1, limit=10)
+    assert len(out1["features"]) == 10
+    out2 = p.items(offset=0, limit=10)
+    assert len(out2["features"]) == 10
+    assert out1["features"] != out2["features"]
+    assert out1["features"][0] == out2["features"][1]
+
+
 def test_select_properties(oaf_config: dict):
+    """Make sure select properties returns features but filters out which properties are returned in the requested features"""
     p = RiseProvider(oaf_config)
     out = p.items(itemId="1", select_properties=["DUMMY_PROPERTY"])
+    assert out["properties"] == {}, (
+        "select_properties filtering with a non-existent property should return no properties"
+    )
 
     assert "locationName" in p._fields, "fields were not set properly"
     outWithSelection = p.items(itemId="1", select_properties=["locationName"])
     out = p.items(itemId="1")
-    assert out == outWithSelection
+    assert (
+        outWithSelection["properties"]["locationName"]
+        == out["properties"]["locationName"]
+    )
+    assert len(outWithSelection["properties"]) == 1
 
-    # make sure that if a location doesn't have a property it doesn't throw an error
+    # make sure that we can select multiple properties where one exists and one doesn't
     propertyThatIsNullInLocation1 = "locationParentId"
+    propertyThatExistsInLocation1 = "locationDescription"
     outWithSelection = p.items(
         itemId="1",
-        select_properties=[propertyThatIsNullInLocation1, "locationDescription"],
+        select_properties=[
+            propertyThatIsNullInLocation1,
+            propertyThatExistsInLocation1,
+        ],
     )
-    assert outWithSelection["features"] == []
+    assert propertyThatExistsInLocation1 in outWithSelection["properties"]
 
 
 def test_properties_key_value_mapping(oaf_config: dict):
@@ -118,7 +139,19 @@ def test_sortby(oaf_config: dict):
     for i, feature in enumerate(out["features"], start=1):
         prev = out["features"][i - 1]
         curr = feature
-        assert prev["properties"]["locationName"] >= curr["properties"]["locationName"]
+        currDescription, prevDescription = (
+            curr["properties"]["locationDescription"],
+            prev["properties"]["locationDescription"],
+        )
+        if (
+            not currDescription or not prevDescription
+        ):  # it could be null which in that case we can't compare them
+            continue
+        assert (
+            prev["properties"]["locationDescription"]
+            >= curr["properties"]["locationDescription"]
+        )
+        assert len(curr["properties"]) == 1
 
 
 def test_resulttype_hits(oaf_config: dict):
