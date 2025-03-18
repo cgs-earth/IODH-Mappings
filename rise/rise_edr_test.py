@@ -94,14 +94,17 @@ def test_location_select_properties(edr_config: dict):
     lakeReservoirStorage = "3"
     texasID291 = "291"
     out = p.locations(location_id=texasID291, select_properties=[lakeReservoirStorage])
-    assert len(out["coverages"]) == 2, "We expect to have both Lake/Reservoir Storage and Elevation unless more have been retroactively added"    
+    assert len(out["coverages"]) == 2, (
+        "We expect to have both Lake/Reservoir Storage and Elevation unless more have been retroactively added"
+    )
 
     outAsGeojson = p.locations(select_properties=[lakeReservoirStorage])
     found = False
-    for feature in outAsGeojson["features"]: # type: ignore
+    for feature in outAsGeojson["features"]:  # type: ignore
         if feature["id"] == int(texasID291):
             found = True
     assert found
+
 
 def test_location_select_properties_with_id_filter(edr_config: dict):
     p = RiseEDRProvider()
