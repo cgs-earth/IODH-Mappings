@@ -20,6 +20,7 @@ from rise.lib.types.helpers import ZType
 from rise.lib.types.includes import LocationIncluded
 from rise.lib.types.location import LocationData, PageLinks
 from geojson_pydantic import Feature, FeatureCollection
+from pygeoapi.provider.base import ProviderQueryError
 
 LOGGER = logging.getLogger()
 
@@ -242,12 +243,18 @@ class LocationResponse(BaseModel):
             if select_properties:
                 # check that all properties exist
                 # otherwise the feature in question is not relevant to the client's query
-                if not all(
-                    p in location_feature.attributes.model_fields
-                    for p in select_properties
-                    if location_feature.attributes.model_fields[p]
-                ):
-                    continue
+                try:
+                    allPropertiesFound = all(
+                        location_feature.attributes.model_dump(by_alias=True).get(p) is not None
+                        for p in select_properties
+                    )
+                    if not allPropertiesFound:
+                        continue
+                except KeyError as e:
+                    raise ProviderQueryError(
+                        f"Could not find a property in {location_feature}; got error {e}"
+                    )
+
 
             feature_as_geojson = {
                 "type": "Feature",

@@ -95,11 +95,9 @@ class RiseProvider(BaseProvider):
 
         :returns: dict of field names and their associated JSON Schema types
         """
-        LOGGER.error(self._fields)
         if not self._fields:
             pydanticFields = LocationDataAttributes.model_fields
             for fieldName in pydanticFields.keys():
-                LOGGER.error(fieldName)
                 dataType: Literal["number", "string", "integer"]
 
                 aliasName = pydanticFields[fieldName].alias
@@ -116,7 +114,7 @@ class RiseProvider(BaseProvider):
                     dataType = "number"
                 else:
                     LOGGER.warning(
-                        f"Unknown data type for field '{fieldName}' with type annotation {pydanticFields[fieldName].annotation}"
+                        f"Skipping field '{name}' with unmappable data type {pydanticFields[fieldName].annotation}"
                     )
                     continue
 
