@@ -87,12 +87,21 @@ def test_get_or_fetch_all_param_filtered_pages(edr_config: dict):
 
 
 def test_location_select_properties(edr_config: dict):
+    """Make sure that we can filter locations based on their associated property IDs"""
     # Currently in pygeoapi we use the word "select_properties" as the
     # keyword argument. This is hold over from OAF it seems.
     p = RiseEDRProvider()
-    out_prop_2 = p.locations(select_properties=["2"])
-    
+    lakeReservoirStorage = "3"
+    texasID291 = "291"
+    out = p.locations(location_id=texasID291, select_properties=[lakeReservoirStorage])
+    assert len(out["coverages"]) == 2, "We expect to have both Lake/Reservoir Storage and Elevation unless more have been retroactively added"    
 
+    outAsGeojson = p.locations(select_properties=[lakeReservoirStorage])
+    found = False
+    for feature in outAsGeojson["features"]: # type: ignore
+        if feature["id"] == int(texasID291):
+            found = True
+    assert found
 
 def test_location_select_properties_with_id_filter(edr_config: dict):
     p = RiseEDRProvider()

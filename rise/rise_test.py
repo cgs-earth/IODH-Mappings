@@ -1,6 +1,7 @@
 # Copyright 2025 Lincoln Institute of Land Policy
 # SPDX-License-Identifier: MIT
 
+from re import I
 from pytest import FixtureRequest
 import pytest
 from rise.lib.cache import RISECache
@@ -44,6 +45,15 @@ def test_item(oaf_config: dict):
 
     out = p.items(limit=10)
     assert len(out["features"]) == 10
+
+def test_offset(oaf_config: dict):
+    p = RiseProvider(oaf_config)
+    out1 = p.items(offset=1, limit=10)
+    assert len(out1["features"]) == 10
+    out2 = p.items(offset=0, limit=10)
+    assert len(out2["features"]) == 10
+    assert out1["features"] != out2["features"]
+    assert out1["features"][0] == out2["features"][1]
 
 
 def test_select_properties(oaf_config: dict):
