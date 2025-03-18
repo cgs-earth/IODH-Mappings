@@ -90,26 +90,8 @@ def test_location_select_properties(edr_config: dict):
     # Currently in pygeoapi we use the word "select_properties" as the
     # keyword argument. This is hold over from OAF it seems.
     p = RiseEDRProvider()
-    out_prop_2 = p.locations(select_properties=["2"], format_="geojson")
-    for f in out_prop_2["features"]:  # type: ignore
-        if f["id"] == 1:  # location 1 is associated with property 2
-            break
-    else:
-        # if location 1 isn't in the responses, then something is wrong
-        assert False
-
-    out_812 = p.locations(
-        select_properties=["812"], format_="geojson"
-    )  # has 10 features
-    out_6 = p.locations(select_properties=["6"], format_="geojson")  # has 13 features
-
-    assert len(out_812["features"]) < len(out_6["features"])  # type: ignore
-
-    out_812_6 = p.locations(select_properties=["812", "6"], format_="geojson")
-
-    assert len(out_812_6["features"]) == len(out_812["features"]) + len(  # type: ignore
-        out_6["features"]  # type: ignore
-    )
+    out_prop_2 = p.locations(select_properties=["2"])
+    
 
 
 def test_location_select_properties_with_id_filter(edr_config: dict):

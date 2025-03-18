@@ -246,19 +246,6 @@ class LocationResponse(BaseModel):
         geojson_features: list[geojson_pydantic.Feature] = []
 
         for location_feature in self.data:
-            if select_properties:
-                try:
-                    all_requested_found = all(
-                        location_feature.attributes.model_dump(by_alias=True).get(p)
-                        is not None
-                        for p in select_properties
-                    )
-                    if not all_requested_found:
-                        continue
-                except KeyError as e:
-                    raise ProviderQueryError(
-                        f"Could not find a property in {location_feature}; got error {e}"
-                    )
 
             if properties:
                 # We rely on fields_mapping to know how to cast each property
@@ -314,30 +301,30 @@ class LocationResponse(BaseModel):
             if z is not None:
                 feature_as_geojson["properties"]["elevation"] = z
 
-            geojson_features.append(Feature(**feature_as_geojson))
+            if select_properties:
+                for p in list(feature_as_geojson["properties"].keys()):
+                    if p not in select_properties:
+                        del feature_as_geojson["properties"][p]
+
+            geojson_features.append(Feature.model_validate(feature_as_geojson))
 
         if len(geojson_features) == 1:
             return geojson_features[0].model_dump(by_alias=True)
 
         if sortby:
-            # The LAST item in sortby is used as the final tiebreaker, so we sort in reversed order.
-
-            # In case the user passes only a single sort criterion, make sure we handle that as well
-            # by always treating sortby as a list.
             for sort_criterion in reversed(sortby):
                 sort_prop = sort_criterion["property"]
                 sort_order = sort_criterion["order"]
+                reverse_sort = sort_order == "-"
 
-                # Decide whether we sort ascending or descending
-                reverse_sort = True if sort_order == "-" else False
+                # Define a key function that places None values at the end for ascending order
+                # and at the beginning for descending order.
+                def sort_key(f):
+                    value = (f.properties or {}).get(sort_prop, None)
+                    return (value is None, value) if not reverse_sort else (value is not None, value)
 
-                # Sort in-place for that criterion, using a stable sort.
-                # We’ll store the property value in a variable.  If the property is missing or None,
-                # you might want to handle that specially; for simplicity, we fall back to `None`.
-                geojson_features.sort(
-                    key=lambda f: (f.properties or {}).get(sort_prop, None),
-                    reverse=reverse_sort,
-                )
+                # Sort in-place using the key function
+                geojson_features.sort(key=sort_key, reverse=reverse_sort)
 
         validated_geojson = FeatureCollection(
             type="FeatureCollection", features=geojson_features
