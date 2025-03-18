@@ -244,7 +244,8 @@ class LocationResponse(BaseModel):
                 # otherwise the feature in question is not relevant to the client's query
                 if not all(
                     p in location_feature.attributes.model_fields
-                    for p in select_properties if location_feature.attributes.model_fields[p]
+                    for p in select_properties
+                    if location_feature.attributes.model_fields[p]
                 ):
                     continue
 
