@@ -62,15 +62,15 @@ class RiseProvider(BaseProvider):
         if datetime_:
             response = response.drop_outside_of_date_range(datetime_)
 
+        # Even though bbox is required, it can be an empty list. If it is empty just skip filtering
+        if bbox:
+            response = response.drop_outside_of_bbox(bbox)
+
         if offset:
             response = response.drop_before_offset(offset)
 
         if limit:
             response = response.drop_after_limit(limit)
-
-        # Even though bbox is required, it can be an empty list. If it is empty just skip filtering
-        if bbox:
-            response = response.drop_outside_of_bbox(bbox)
 
         if resulttype == "hits":
             return {
