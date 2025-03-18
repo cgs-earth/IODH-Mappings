@@ -25,6 +25,7 @@ class RiseProvider(BaseProvider):
         """
         self.cache = RISECache()
         super().__init__(provider_def)
+        self.get_fields()
 
     @TRACER.start_as_current_span("items")
     def items(
@@ -94,31 +95,31 @@ class RiseProvider(BaseProvider):
 
         :returns: dict of field names and their associated JSON Schema types
         """
-        pydanticFields = LocationDataAttributes.model_fields
+        LOGGER.error(self._fields)
+        if not self._fields:
+            pydanticFields = LocationDataAttributes.model_fields
+            for fieldName in pydanticFields.keys():
+                LOGGER.error(fieldName)
+                dataType: Literal["number", "string", "integer"]
 
-        mappingOfProperties: dict[str, Literal["number", "string", "integer"]] = {}
+                aliasName = pydanticFields[fieldName].alias
+                if aliasName:
+                    name = aliasName
+                else:
+                    name = fieldName
 
-        for fieldName in pydanticFields.keys():
-            dataType: Literal["number", "string", "integer"]
+                if "str" in str(pydanticFields[fieldName].annotation):
+                    dataType = "string"
+                elif "int" in str(pydanticFields[fieldName].annotation):
+                    dataType = "integer"
+                elif "float" in str(pydanticFields[fieldName].annotation):
+                    dataType = "number"
+                else:
+                    LOGGER.warning(
+                        f"Unknown data type for field '{fieldName}' with type annotation {pydanticFields[fieldName].annotation}"
+                    )
+                    continue
 
-            aliasName = pydanticFields[fieldName].alias
-            if aliasName:
-                name = aliasName
-            else:
-                name = fieldName
+                self._fields[name] = {"type": dataType}
 
-            if "str" in str(pydanticFields[fieldName].annotation):
-                dataType = "string"
-            elif "int" in str(pydanticFields[fieldName].annotation):
-                dataType = "integer"
-            elif "float" in str(pydanticFields[fieldName].annotation):
-                dataType = "number"
-            else:
-                LOGGER.warning(
-                    f"Unknown data type for field '{fieldName}' with type annotation {pydanticFields[fieldName].annotation}"
-                )
-                continue
-
-            mappingOfProperties[name] = dataType
-
-        return mappingOfProperties
+        return self._fields
