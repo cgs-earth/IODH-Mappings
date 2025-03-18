@@ -8,6 +8,7 @@ from rise.lib.helpers import merge_pages
 from rise.lib.location import LocationResponseWithIncluded
 from rise.rise_edr import RiseEDRProvider
 import datetime
+from pygeoapi.provider.base import ProviderQueryError
 
 
 @pytest.fixture()
@@ -30,7 +31,7 @@ def test_location_locationId(edr_config: dict):
     )
 
     p = RiseEDRProvider()
-    out = p.locations(location_id=1, format_="covjson")
+    out = p.locations(location_id="1", format_="covjson")
     assert len(out["coverages"]) == catalogItems, (
         "There must be the same number of catalogItems as there are coverages"
     )
@@ -38,6 +39,12 @@ def test_location_locationId(edr_config: dict):
     geojson_out: dict = p.locations(location_id=1, format_="geojson")  # type: ignore Have to ignore this since we know it is geojson
     assert geojson_out["type"] == "Feature"
     assert geojson_out["id"] == 1
+
+
+def test_invalid_location_id(edr_config: dict):
+    p = RiseEDRProvider()
+    with pytest.raises(ProviderQueryError):
+        p.locations(location_id="__INVALID", format_="geojson")
 
 
 def test_get_fields(edr_config: dict):
@@ -108,7 +115,7 @@ def test_location_select_properties(edr_config: dict):
 def test_location_select_properties_with_id_filter(edr_config: dict):
     p = RiseEDRProvider()
     out_prop_2_with_location_id_filter = p.locations(
-        location_id=1, select_properties=["2"], format_="geojson"
+        location_id="1", select_properties=["2"], format_="geojson"
     )
     assert out_prop_2_with_location_id_filter["type"] == "Feature"
     assert out_prop_2_with_location_id_filter["id"] == 1  # type: ignore
@@ -117,7 +124,7 @@ def test_location_select_properties_with_id_filter(edr_config: dict):
 def test_location_datetime(edr_config: dict):
     p = RiseEDRProvider()
 
-    out = p.locations(location_id=1536, datetime_="2017-01-01/2018-01-01")
+    out = p.locations(location_id="1536", datetime_="2017-01-01/2018-01-01")
 
     start = datetime.datetime.fromisoformat("2017-01-01T00:00:00+00:00")
     end = datetime.datetime.fromisoformat("2018-01-01T00:00:00+00:00")
@@ -191,6 +198,5 @@ def test_polygon_output(edr_config: dict):
     # location id 3526 is a polygon
     p = RiseEDRProvider()
 
-    out = p.locations(location_id=3526, format_="covjson")
-
+    out = p.locations(location_id="3526", format_="covjson")
     assert out["type"] == "CoverageCollection"
