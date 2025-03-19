@@ -61,6 +61,7 @@ class LocationResultBuilder:
     def _get_all_timeseries_data(self, time_filter: Optional[str] = None):
         # Make a dictionary from an existing response
         catalogItemUrls = flatten_values(self.locationToCatalogItemUrls)
+
         resultUrls = {
             url: getResultUrlFromCatalogUrl(url, time_filter) for url in catalogItemUrls
         }
@@ -101,7 +102,7 @@ class LocationResultBuilder:
                 catalogUrlAsResultUrl = getResultUrlFromCatalogUrl(
                     catalogItemUrl, time_filter
                 )
-                timseriesResults = self.timeseriesResults[catalogUrlAsResultUrl]
+                timseriesResults = self.timeseriesResults.get(catalogUrlAsResultUrl)
                 # if there were no results for this catalog item, continue and don't even bother serializing
                 if not timseriesResults:
                     continue
