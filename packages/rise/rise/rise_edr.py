@@ -17,7 +17,6 @@ from rise.lib.add_results import LocationResultBuilder
 
 LOGGER = logging.getLogger(__name__)
 
-
 class RiseEDRProvider(BaseEDRProvider):
     """The EDR Provider for the USBR Rise API"""
 
