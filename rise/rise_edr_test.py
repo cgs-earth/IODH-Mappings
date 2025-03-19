@@ -33,11 +33,11 @@ def test_location_locationId(edr_config: dict):
     p = RiseEDRProvider()
     out = p.locations(location_id="1", format_="covjson")
     assert "coverages" in out
-    assert len(out["coverages"]) == catalogItems, ( 
+    assert len(out["coverages"]) == catalogItems, (
         "There must be the same number of catalogItems as there are coverages"
     )
 
-    geojson_out = p.locations(location_id="1", format_="geojson") 
+    geojson_out = p.locations(location_id="1", format_="geojson")
     assert "features" in geojson_out
     assert geojson_out["features"][0]["id"] == 1
 
@@ -114,7 +114,7 @@ def test_location_select_properties_with_id_filter(edr_config: dict):
         location_id="1", select_properties=["2"], format_="geojson"
     )
     assert "features" in out_prop_2_with_location_id_filter
-    assert out_prop_2_with_location_id_filter["features"][0]["id"] == 1  
+    assert out_prop_2_with_location_id_filter["features"][0]["id"] == 1
 
 
 def test_location_datetime(edr_config: dict):

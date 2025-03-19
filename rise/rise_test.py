@@ -1,7 +1,6 @@
 # Copyright 2025 Lincoln Institute of Land Policy
 # SPDX-License-Identifier: MIT
 
-from pyexpat import features
 from pytest import FixtureRequest
 import pytest
 from rise.lib.cache import RISECache
@@ -84,7 +83,9 @@ def test_select_properties(oaf_config: dict):
             propertyThatExistsInLocation1,
         ],
     )
-    assert propertyThatExistsInLocation1 in outWithSelection["features"][0]["properties"]
+    assert (
+        propertyThatExistsInLocation1 in outWithSelection["features"][0]["properties"]
+    )
 
 
 def test_properties_key_value_mapping(oaf_config: dict):
