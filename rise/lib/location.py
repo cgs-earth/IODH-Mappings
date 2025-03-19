@@ -9,7 +9,7 @@ from pydantic import BaseModel, field_validator
 import shapely
 import shapely.wkt
 from rise.env import TRACER
-from rise.lib.geojson.types import GeojsonResponseDict
+from rise.lib.geojson.types import GeojsonFeatureCollectionDict
 from rise.lib.helpers import (
     merge_pages,
     no_duplicates_in_pages,
@@ -242,7 +242,7 @@ class LocationResponse(BaseModel):
             str, dict[Literal["type"], Literal["number", "string", "integer"]]
         ] = {},
         sortby: Optional[list[SortDict]] = None,  # now treat as list[SortDict]
-    ) -> GeojsonResponseDict:
+    ) -> GeojsonFeatureCollectionDict:
         """
         Convert a list of locations to geojson
         """
@@ -332,7 +332,7 @@ class LocationResponse(BaseModel):
         validated_geojson = FeatureCollection(
             type="FeatureCollection", features=geojson_features
         )
-        return GeojsonResponseDict(**validated_geojson.model_dump(by_alias=True))
+        return GeojsonFeatureCollectionDict(**validated_geojson.model_dump(by_alias=True))
 
 class LocationResponseWithIncluded(LocationResponse):
     """
