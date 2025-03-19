@@ -3,12 +3,13 @@
 
 from datetime import datetime
 import logging
-from typing import Literal, Optional, assert_never
+from typing import Literal, Optional, TypedDict, assert_never
 import geojson_pydantic
 from pydantic import BaseModel, field_validator
 import shapely
 import shapely.wkt
 from rise.env import TRACER
+from rise.lib.geojson.types import GeojsonResponseDict
 from rise.lib.helpers import (
     merge_pages,
     no_duplicates_in_pages,
@@ -230,6 +231,8 @@ class LocationResponse(BaseModel):
         ]
         return self
 
+
+
     def to_geojson(
         self,
         skip_geometry: Optional[bool] = False,
@@ -239,7 +242,7 @@ class LocationResponse(BaseModel):
             str, dict[Literal["type"], Literal["number", "string", "integer"]]
         ] = {},
         sortby: Optional[list[SortDict]] = None,  # now treat as list[SortDict]
-    ) -> dict:
+    ) -> GeojsonResponseDict:
         """
         Convert a list of locations to geojson
         """
@@ -307,10 +310,7 @@ class LocationResponse(BaseModel):
 
             geojson_features.append(Feature.model_validate(feature_as_geojson))
 
-        if len(geojson_features) == 1:
-            return geojson_features[0].model_dump(by_alias=True)
-
-        if sortby:
+        if sortby and len(geojson_features) > 1:
             for sort_criterion in reversed(sortby):
                 sort_prop = sort_criterion["property"]
                 sort_order = sort_criterion["order"]
@@ -332,8 +332,7 @@ class LocationResponse(BaseModel):
         validated_geojson = FeatureCollection(
             type="FeatureCollection", features=geojson_features
         )
-        return validated_geojson.model_dump(by_alias=True)
-
+        return GeojsonResponseDict(**validated_geojson.model_dump(by_alias=True))
 
 class LocationResponseWithIncluded(LocationResponse):
     """
