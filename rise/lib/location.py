@@ -3,7 +3,7 @@
 
 from datetime import datetime
 import logging
-from typing import Literal, Optional, TypedDict, assert_never
+from typing import Literal, Optional, assert_never
 import geojson_pydantic
 from pydantic import BaseModel, field_validator
 import shapely
@@ -231,8 +231,6 @@ class LocationResponse(BaseModel):
         ]
         return self
 
-
-
     def to_geojson(
         self,
         skip_geometry: Optional[bool] = False,
@@ -333,6 +331,7 @@ class LocationResponse(BaseModel):
             type="FeatureCollection", features=geojson_features
         )
         return GeojsonFeatureCollectionDict(**validated_geojson.model_dump(by_alias=True))
+
 
 class LocationResponseWithIncluded(LocationResponse):
     """
