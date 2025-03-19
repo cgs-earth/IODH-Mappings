@@ -1416,7 +1416,7 @@ wheels = [
 [[package]]
 name = "snotel"
 version = "0.1.0"
-source = { virtual = "packages/snotel" }
+source = { editable = "packages/snotel" }
 
 [[package]]
 name = "sqlalchemy"
