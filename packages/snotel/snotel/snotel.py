@@ -8,6 +8,7 @@ from pygeoapi.provider.base import BaseProvider
 from pygeoapi.util import crs_transform
 from rise.lib.geojson.types import GeojsonFeatureCollectionDict
 from rise.lib.types.sorting import SortDict
+
 LOGGER = logging.getLogger(__name__)
 
 
@@ -41,8 +42,7 @@ class SnotelProvider(BaseProvider):
         offset: Optional[int] = 0,
         skip_geometry: Optional[bool] = False,
         **kwargs,
-    ) -> GeojsonFeatureCollectionDict:
-        ...
+    ) -> GeojsonFeatureCollectionDict: ...
 
     @crs_transform
     def query(self, **kwargs):

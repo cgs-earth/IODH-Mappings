@@ -2,18 +2,15 @@
 # SPDX-License-Identifier: MIT
 
 import logging
-from typing import ClassVar, Optional
+from typing import Optional
 
-from pygeoapi.provider.base import (
-    ProviderQueryError,
-)
 from pygeoapi.provider.base_edr import BaseEDRProvider
+
 LOGGER = logging.getLogger(__name__)
 
 
 class SnotelEDRProvider(BaseEDRProvider):
     """The EDR Provider for the USBR Rise API"""
-
 
     def __init__(self, provider_def=None):
         """
@@ -41,6 +38,7 @@ class SnotelEDRProvider(BaseEDRProvider):
         Extract data from location
         """
         ...
+
     def get_fields(self):
         """Get the list of all parameters (i.e. fields) that the user can filter by"""
 
@@ -86,4 +84,3 @@ class SnotelEDRProvider(BaseEDRProvider):
         # We have to define this since pygeoapi has a limitation and needs both EDR and OAF for items
         # https://github.com/geopython/pygeoapi/issues/1748
         pass
-
