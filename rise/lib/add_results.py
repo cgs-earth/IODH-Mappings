@@ -102,6 +102,10 @@ class LocationResultBuilder:
                     catalogItemUrl, time_filter
                 )
                 timseriesResults = self.timeseriesResults[catalogUrlAsResultUrl]
+                # if there were no results for this catalog item, continue and don't even bother serializing
+                if not timseriesResults:
+                    continue
+
                 if timseriesResults.get("detail") == "Internal Server Error":
                     await_(
                         self.cache.clear(catalogUrlAsResultUrl)
