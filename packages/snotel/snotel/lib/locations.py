@@ -3,7 +3,7 @@
 
 from com.cache import RedisCache
 from com.env import TRACER
-from com.helpers import await_, parse_z
+from com.helpers import await_, parse_bbox, parse_z
 from rise.lib.types.helpers import ZType
 from snotel.lib.types import StationDTO
 import shapely
@@ -28,6 +28,24 @@ class LocationCollection:
         data = [v for v in self.locations if v.stationId == str(location_id)]
         self.locations = data
         return self
+
+    def drop_after_limit(self, limit: int):
+        """
+        Return only the location data for the locations in the list up to the limit
+        """
+        self.data = self.data[:limit]
+        return self
+
+    def drop_before_offset(self, offset: int):
+        """
+        Return only the location data for the locations in the list after the offset
+        """
+        self.data = self.data[offset:]
+        return self
+
+    def drop_all_locations_outside_bounding_box(self, bbox):
+        geometry, z = parse_bbox(bbox)
+        return self._filter_by_geometry(geometry, z)
 
     @TRACER.start_as_current_span("geometry_filter")
     def _filter_by_geometry(

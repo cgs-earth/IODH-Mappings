@@ -4,12 +4,14 @@
 import logging
 from typing import Literal, Optional
 
+from com.helpers import get_oaf_fields_from_pydantic_model
 from pygeoapi.provider.base import BaseProvider
 from pygeoapi.util import crs_transform
 from com.geojson.types import GeojsonFeatureCollectionDict
 from rise.lib.types.sorting import SortDict
 from com.cache import RedisCache
-from snotel.lib.locations import get_locations
+from snotel.lib.locations import LocationCollection
+from snotel.lib.types import StationDTO
 
 LOGGER = logging.getLogger(__name__)
 
@@ -44,15 +46,27 @@ class SnotelProvider(BaseProvider):
         ] = None,  # unlike edr, this is a string; we need to case to an int before filtering
         offset: Optional[int] = 0,
         skip_geometry: Optional[bool] = False,
-        **kwargs,
+        **kwargs,j
     ) -> GeojsonFeatureCollectionDict:
-        locations = get_locations()
+        collection = LocationCollection()
         if itemId:
-            locations = locations.drop_all_locations_but_id(itemId)
+            collection = collection.drop_all_locations_but_id(itemId)
         if bbox:
-            locations = locations.drop_all_locations_outside_bounding_box(bbox)
+            collection = collection.drop_all_locations_outside_bounding_box(bbox)
 
-        return locations
+        if limit:
+            collection = collection.drop_after_limit(limit)
+        if offset:
+            collection = collection.drop_before_offset(offset)
+
+        if resulttype == "hits":
+            return {
+                "type": "FeatureCollection",
+                "features": [],
+                "numberMatched": len(collection.locations),
+            }
+
+        return collection
 
     @crs_transform
     def query(self, **kwargs):
@@ -77,4 +91,6 @@ class SnotelProvider(BaseProvider):
 
         :returns: dict of field names and their associated JSON Schema types
         """
+        if not self._fields:
+            self._fields = get_oaf_fields_from_pydantic_model(StationDTO)
         return self._fields

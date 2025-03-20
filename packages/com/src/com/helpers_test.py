@@ -1,7 +1,8 @@
 # Copyright 2025 Lincoln Institute of Land Policy
 # SPDX-License-Identifier: MIT
 
-from com.helpers import parse_bbox, parse_z
+from com.helpers import get_oaf_fields_from_pydantic_model, parse_bbox, parse_z
+from pydantic import BaseModel
 import pytest
 from rise.lib.types.helpers import ZType
 import shapely.wkt
@@ -40,3 +41,17 @@ def test_z_parse():
 
     with pytest.raises(Exception):
         parse_z("10,20,30,")
+
+
+def test_get_oaf_fields_from_pydnatic():
+    class DummyModel(BaseModel):
+        field1: int
+        field2: str
+        field3: float
+        field4: list  # don't include types that can't be serialized to the 3 types
+
+    mapping = get_oaf_fields_from_pydantic_model(DummyModel)
+    assert mapping["field1"]["type"] == "integer"
+    assert mapping["field2"]["type"] == "string"
+    assert mapping["field3"]["type"] == "number"
+    assert "field4" not in mapping

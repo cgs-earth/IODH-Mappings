@@ -2,13 +2,19 @@
 # SPDX-License-Identifier: MIT
 
 import asyncio
-from typing import Coroutine, Optional, Tuple
+import logging
+from typing import Coroutine, Literal, Optional, Tuple, Type
 from com.env import iodh_event_loop
+from pydantic import BaseModel
 from rise.lib.types.helpers import ZType
 import datetime
 
 import shapely
 from pygeoapi.provider.base import ProviderQueryError
+
+LOGGER = logging.getLogger(__name__)
+
+FieldsMapping = dict[str, dict[Literal["type"], Literal["number", "string", "integer"]]]
 
 
 def await_(coro: Coroutine):
@@ -113,3 +119,32 @@ def parse_bbox(
         raise ProviderQueryError(
             f"Invalid bbox; Expected 4 or 6 points but {len(bbox)} values"
         )
+
+
+def get_oaf_fields_from_pydantic_model(model: Type[BaseModel]) -> FieldsMapping:
+    """Given a pydantic model, return a mapping of the fields to their data types"""
+    pydanticFields = model.model_fields
+    fields: FieldsMapping = {}
+    for fieldName in pydanticFields.keys():
+        dataType: Literal["number", "string", "integer"]
+
+        aliasName = pydanticFields[fieldName].alias
+        if aliasName:
+            name = aliasName
+        else:
+            name = fieldName
+
+        if "str" in str(pydanticFields[fieldName].annotation):
+            dataType = "string"
+        elif "int" in str(pydanticFields[fieldName].annotation):
+            dataType = "integer"
+        elif "float" in str(pydanticFields[fieldName].annotation):
+            dataType = "number"
+        else:
+            LOGGER.warning(
+                f"Skipping field '{name}' with unmappable data type {pydanticFields[fieldName].annotation}"
+            )
+            continue
+
+        fields[name] = {"type": dataType}
+    return fields
