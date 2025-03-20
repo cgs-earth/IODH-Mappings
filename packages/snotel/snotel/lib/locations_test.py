@@ -1,15 +1,19 @@
 # Copyright 2025 Lincoln Institute of Land Policy
 # SPDX-License-Identifier: MIT
 
-from snotel.lib.locations import get_locations
+
+import pytest
+from snotel.lib.locations import LocationCollection
 
 
-def test_parse_locations():
-    assert get_locations()
+@pytest.fixture
+def location_collection():
+    return LocationCollection()
 
 
-def test_filter_by_id():
-    locations = get_locations()
+def test_filter_by_id(location_collection):
     Zunir_R_ab_Black_Rock_Reservoir = "09386950"
-    newCollection = locations.drop_all_locations_but_id(Zunir_R_ab_Black_Rock_Reservoir)
+    newCollection = location_collection.drop_all_locations_but_id(
+        Zunir_R_ab_Black_Rock_Reservoir
+    )
     assert len(newCollection.locations) == 1

@@ -49,6 +49,9 @@ class SnotelProvider(BaseProvider):
         locations = get_locations()
         if itemId:
             locations = locations.drop_all_locations_but_id(itemId)
+        if bbox:
+            locations = locations.drop_all_locations_outside_bounding_box(bbox)
+        
         return locations
 
     @crs_transform
