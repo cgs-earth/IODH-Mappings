@@ -8,7 +8,7 @@ from pygeoapi.provider.base import BaseProvider
 from pygeoapi.util import crs_transform
 from com.env import TRACER
 from rise.lib.cache import RISECache
-from rise.lib.geojson.types import GeojsonFeatureCollectionDict
+from com.geojson.types import GeojsonFeatureCollectionDict
 from rise.lib.location import LocationResponseWithIncluded
 from rise.lib.types.location import LocationDataAttributes
 from rise.lib.types.sorting import SortDict

@@ -6,7 +6,7 @@ from typing import Literal, Optional
 
 from pygeoapi.provider.base import BaseProvider
 from pygeoapi.util import crs_transform
-from rise.lib.geojson.types import GeojsonFeatureCollectionDict
+from com.geojson.types import GeojsonFeatureCollectionDict
 from rise.lib.types.sorting import SortDict
 
 LOGGER = logging.getLogger(__name__)

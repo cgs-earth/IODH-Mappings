@@ -9,7 +9,7 @@ from pydantic import BaseModel, field_validator
 import shapely
 import shapely.wkt
 from com.env import TRACER
-from rise.lib.geojson.types import GeojsonFeatureCollectionDict
+from com.geojson.types import GeojsonFeatureCollectionDict
 from rise.lib.helpers import (
     merge_pages,
     no_duplicates_in_pages,
