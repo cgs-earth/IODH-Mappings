@@ -4,7 +4,9 @@
 import logging
 from typing import Optional
 
+from com.helpers import EDRField
 from pygeoapi.provider.base_edr import BaseEDRProvider
+from snotel.lib.parameters import ParametersCollection
 
 LOGGER = logging.getLogger(__name__)
 
@@ -39,8 +41,11 @@ class SnotelEDRProvider(BaseEDRProvider):
         """
         ...
 
-    def get_fields(self):
+    def get_fields(self) -> dict[str, EDRField]:
         """Get the list of all parameters (i.e. fields) that the user can filter by"""
+        if not self._fields:
+            self._fields = ParametersCollection().get_fields()
+        return self._fields
 
     @BaseEDRProvider.register()
     def cube(

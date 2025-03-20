@@ -3,7 +3,7 @@
 
 import asyncio
 import logging
-from typing import Coroutine, Literal, Optional, Tuple, Type
+from typing import Coroutine, Literal, Optional, Tuple, Type, TypedDict
 from com.env import iodh_event_loop
 from pydantic import BaseModel
 from rise.lib.types.helpers import ZType
@@ -15,6 +15,16 @@ from pygeoapi.provider.base import ProviderQueryError
 LOGGER = logging.getLogger(__name__)
 
 FieldsMapping = dict[str, dict[Literal["type"], Literal["number", "string", "integer"]]]
+
+EDRField = TypedDict(
+    "EDRField",
+    {
+        "type": str,
+        "title": str,
+        "description": str,
+        "x-ogc-unit": str,
+    },
+)
 
 
 def await_(coro: Coroutine):
