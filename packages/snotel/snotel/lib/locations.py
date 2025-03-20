@@ -3,7 +3,7 @@
 
 from dataclasses import dataclass
 from com.cache import RedisCache
-from rise.lib.helpers import await_
+from com.helpers import await_
 from snotel.lib.types import StationDTO
 
 
