@@ -54,7 +54,7 @@ dev = [
 package = false
 
 [tool.uv.workspace]
-members = ["packages/rise", "packages/snotel", "packages/common", "packages/com"]
+members = ["packages/rise", "packages/snotel", "packages/com"]
 
 [tool.uv.sources]
 rise = { workspace = true }

@@ -18,6 +18,3 @@ build-backend = "hatchling.build"
 
 [tool.hatch.build.targets.wheel]
 packages = ["snotel"]
-
-[tool.hatch.metadata]
-allow-direct-references = true
