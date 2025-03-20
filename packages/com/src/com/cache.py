@@ -3,16 +3,11 @@
 
 import asyncio
 import logging
-import math
-from typing import Optional
-from urllib.parse import urlparse
 import redis.asyncio as redis
-from rise.custom_types import JsonPayload, Url
 import aiohttp
 from aiohttp import client_exceptions
 from datetime import timedelta
 from com.env import REDIS_HOST, REDIS_PORT, TRACER
-from rise.lib.helpers import await_, merge_pages
 import orjson
 
 HEADERS = {"accept": "application/vnd.api+json"}
