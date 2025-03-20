@@ -14,3 +14,7 @@ devNoOTEL:
 
 test:
 	uv run pytest -n auto -x --maxfail=1 -vv --durations=5
+
+clean:
+	rm -rf .venv/
+	rm -rf .pytest_cache/
