@@ -11,7 +11,7 @@ from rise.custom_types import JsonPayload, Url
 import aiohttp
 from aiohttp import client_exceptions
 from datetime import timedelta
-from common.env import REDIS_HOST, REDIS_PORT, TRACER
+from com.env import REDIS_HOST, REDIS_PORT, TRACER
 from rise.lib.helpers import await_, merge_pages
 import orjson
 
@@ -30,7 +30,7 @@ async def fetch_url(url: str) -> dict:
                 raise e
 
 
-class RISECache:
+class RedisCache:
     """A cache implementation using Redis with ttl support"""
 
     def __init__(self, ttl: timedelta = timedelta(hours=72)):

@@ -3,7 +3,7 @@ requires-python = ">=3.12"
 
 [manifest]
 members = [
-    "common",
+    "com",
     "iodh-integrations",
     "rise",
     "snotel",
@@ -228,9 +228,9 @@ wheels = [
 ]
 
 [[package]]
-name = "common"
+name = "com"
 version = "0.1.0"
-source = { editable = "packages/common" }
+source = { editable = "packages/com" }
 
 [[package]]
 name = "covjson-pydantic"

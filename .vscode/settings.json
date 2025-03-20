@@ -10,5 +10,8 @@
     // hide build artifacts / dependency installations
     "**/*.egg-info/": true,
     ".venv/": true
-  }
+  },
+  "python.analysis.extraPaths": [
+    "./packages/com/src"
+  ]
 }

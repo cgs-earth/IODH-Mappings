@@ -1,7 +1,7 @@
 [project]
-name = "common"
+name = "com"
 version = "0.1.0"
-description = "Add your description here"
+description = "All common code shared between the various IODH integrations"
 readme = "README.md"
 authors = [
     { name = "Colton Loftus", email = "70598503+C-Loftus@users.noreply.github.com" }
@@ -9,11 +9,6 @@ authors = [
 requires-python = ">=3.12"
 dependencies = []
 
-[tool.uv]
-package = true
-
 [build-system]
 requires = ["hatchling"]
 build-backend = "hatchling.build"
-
-
