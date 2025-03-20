@@ -3,7 +3,7 @@
 The process to generate EDR mappings for snotel is relatively straightforward. Locations, metadata, and timeseries data are separated so they need to be joined. Howevever, there is no pagination.
 
 - `locations/`:
-    _in parallel_: 
+    - _in parallel_: 
         - fetch `stations/` with `stationNames=*` 
         - cache this - will include all geometry data for plotting/filtering
         - fetch `reference-data/` to get all parameter metadata 
