@@ -6,7 +6,7 @@ from typing import Literal, Optional
 
 from pygeoapi.provider.base import BaseProvider
 from pygeoapi.util import crs_transform
-from com.geojson.types  import GeojsonFeatureCollectionDict
+from com.geojson.types import GeojsonFeatureCollectionDict
 from rise.lib.types.sorting import SortDict
 from com.cache import RedisCache
 from snotel.lib.locations import get_locations
@@ -45,8 +45,7 @@ class SnotelProvider(BaseProvider):
         offset: Optional[int] = 0,
         skip_geometry: Optional[bool] = False,
         **kwargs,
-    ) -> GeojsonFeatureCollectionDict: 
-        
+    ) -> GeojsonFeatureCollectionDict:
         locations = get_locations()
         if itemId:
             locations = locations.drop_all_locations_but_id(itemId)
