@@ -1,9 +1,10 @@
-from com.cache import RedisCache
-from rise.lib.helpers import await_
-from snotel.lib.types import StationDTO
+from snotel.lib.locations import get_locations
 
 def test_parse_locations():
-    cache = RedisCache()
-    result = await_(cache.get_or_fetch("https://wcc.sc.egov.usda.gov/awdbRestApi/services/v1/stations?activeOnly=true"))
-    locations = [StationDTO.model_validate(res) for res in result]
-    assert locations 
+    assert get_locations()
+
+def test_filter_by_id():
+    locations = get_locations()
+    Zunir_R_ab_Black_Rock_Reservoir = "09386950"
+    newCollection = locations.drop_all_locations_but_id(Zunir_R_ab_Black_Rock_Reservoir)
+    assert len(newCollection.locations) == 1

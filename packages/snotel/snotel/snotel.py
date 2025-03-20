@@ -9,6 +9,7 @@ from pygeoapi.util import crs_transform
 from com.geojson.types  import GeojsonFeatureCollectionDict
 from rise.lib.types.sorting import SortDict
 from com.cache import RedisCache
+from snotel.lib.locations import get_locations
 
 LOGGER = logging.getLogger(__name__)
 
@@ -46,8 +47,10 @@ class SnotelProvider(BaseProvider):
         **kwargs,
     ) -> GeojsonFeatureCollectionDict: 
         
-        locations = self.cache.get_or_fetch("https://wcc.sc.egov.usda.gov/awdbRestApi/services/v1/stations?activeOnly=true")
-        
+        locations = get_locations()
+        if itemId:
+            locations = locations.drop_all_locations_but_id(itemId)
+        return locations
 
     @crs_transform
     def query(self, **kwargs):
