@@ -12,7 +12,7 @@ LOGGER = logging.getLogger(__name__)
 
 
 class SnotelEDRProvider(BaseEDRProvider):
-    """The EDR Provider for the USBR Rise API"""
+    """The EDR Provider for the Snotel API"""
 
     def __init__(self, provider_def=None):
         """
@@ -80,7 +80,6 @@ class SnotelEDRProvider(BaseEDRProvider):
     ):
         """
         Extract and return coverage data from a specified area.
-        Example: http://localhost:5000/collections/rise-edr/area?coords=POLYGON%20((-109.204102%2047.010226,%20-104.655762%2047.010226,%20-104.655762%2049.267805,%20-109.204102%2049.267805,%20-109.204102%2047.010226))&f=json
         """
         ...
 

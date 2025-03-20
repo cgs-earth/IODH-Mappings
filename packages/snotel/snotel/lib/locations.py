@@ -17,9 +17,11 @@ class LocationCollection:
 
     def __init__(self):
         self.cache = RedisCache()
+        # snotel also proxies usgs so we just want to get SNOTEL stations
+        JUST_SNOTEL_STATIONS = "*:*:SNTL"
         result = await_(
             self.cache.get_or_fetch(
-                "https://wcc.sc.egov.usda.gov/awdbRestApi/services/v1/stations?activeOnly=true"
+                f"https://wcc.sc.egov.usda.gov/awdbRestApi/services/v1/stations?activeOnly=true&stationTriplets={JUST_SNOTEL_STATIONS}"
             )
         )
         self.locations = [StationDTO.model_validate(res) for res in result]

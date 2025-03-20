@@ -12,8 +12,8 @@ def location_collection():
 
 
 def test_filter_by_id(location_collection):
-    Zunir_R_ab_Black_Rock_Reservoir = "09386950"
+    brightonInSaltLakeCounty = "361"
     newCollection = location_collection.drop_all_locations_but_id(
-        Zunir_R_ab_Black_Rock_Reservoir
+        brightonInSaltLakeCounty
     )
     assert len(newCollection.locations) == 1
