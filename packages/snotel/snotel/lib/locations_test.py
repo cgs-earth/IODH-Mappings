@@ -1,7 +1,12 @@
+# Copyright 2025 Lincoln Institute of Land Policy
+# SPDX-License-Identifier: MIT
+
 from snotel.lib.locations import get_locations
+
 
 def test_parse_locations():
     assert get_locations()
+
 
 def test_filter_by_id():
     locations = get_locations()

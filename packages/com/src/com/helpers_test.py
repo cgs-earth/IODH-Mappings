@@ -1,3 +1,6 @@
+# Copyright 2025 Lincoln Institute of Land Policy
+# SPDX-License-Identifier: MIT
+
 from com.helpers import parse_bbox, parse_z
 import pytest
 from rise.lib.types.helpers import ZType

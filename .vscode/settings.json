@@ -11,11 +11,11 @@
     "**/*.egg-info/": true,
     ".venv/": true
   },
-    "[python]": {
-      "editor.formatOnSave": true,
-      "editor.defaultFormatter": "charliermarsh.ruff"
+  "[python]": {
+    "editor.formatOnSave": true,
+    "editor.defaultFormatter": "charliermarsh.ruff"
   },
   "editor.codeActionsOnSave": {
     "source.fixAll.ruff": "always"
-  },
+  }
 }

@@ -1,3 +1,6 @@
+# Copyright 2025 Lincoln Institute of Land Policy
+# SPDX-License-Identifier: MIT
+
 from dataclasses import dataclass
 from com.cache import RedisCache
 from com.helpers import await_

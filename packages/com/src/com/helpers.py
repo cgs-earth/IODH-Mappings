@@ -1,3 +1,6 @@
+# Copyright 2025 Lincoln Institute of Land Policy
+# SPDX-License-Identifier: MIT
+
 import asyncio
 from typing import Coroutine, Optional, Tuple
 from com.env import iodh_event_loop
