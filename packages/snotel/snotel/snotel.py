@@ -6,8 +6,9 @@ from typing import Literal, Optional
 
 from pygeoapi.provider.base import BaseProvider
 from pygeoapi.util import crs_transform
-from com.geojson.types import GeojsonFeatureCollectionDict
+from com.geojson.types  import GeojsonFeatureCollectionDict
 from rise.lib.types.sorting import SortDict
+from com.cache import RedisCache
 
 LOGGER = logging.getLogger(__name__)
 
@@ -21,6 +22,7 @@ class SnotelProvider(BaseProvider):
         :param provider_def: provider definition
         """
         super().__init__(provider_def)
+        self.cache = RedisCache()
         self.get_fields()
 
     def items(
@@ -42,7 +44,10 @@ class SnotelProvider(BaseProvider):
         offset: Optional[int] = 0,
         skip_geometry: Optional[bool] = False,
         **kwargs,
-    ) -> GeojsonFeatureCollectionDict: ...
+    ) -> GeojsonFeatureCollectionDict: 
+        
+        locations = self.cache.get_or_fetch("https://wcc.sc.egov.usda.gov/awdbRestApi/services/v1/stations?activeOnly=true")
+        
 
     @crs_transform
     def query(self, **kwargs):
