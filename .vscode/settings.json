@@ -10,5 +10,5 @@
     // hide build artifacts / dependency installations
     "**/*.egg-info/": true,
     ".venv/": true
-  },
+  }
 }
