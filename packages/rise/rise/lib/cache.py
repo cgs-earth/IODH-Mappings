@@ -6,13 +6,14 @@ import logging
 import math
 from typing import Optional
 from urllib.parse import urlparse
+from com.helpers import await_
 from rise.custom_types import JsonPayload, Url
 import aiohttp
 from aiohttp import client_exceptions
 from datetime import timedelta
 from com.cache import RedisCache
 from com.env import TRACER
-from rise.lib.helpers import await_, merge_pages
+from rise.lib.helpers import merge_pages
 
 HEADERS = {"accept": "application/vnd.api+json"}
 
