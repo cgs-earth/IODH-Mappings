@@ -184,7 +184,7 @@ class RISECache:
         and return a dictionary mapping catalog items to their corresponding merged pages."""
         tasks = {
             resultUrl: asyncio.create_task(
-                self.get_or_fetch_all_pages(resultUrl, force_fetch=True)
+                self.get_or_fetch_all_pages(resultUrl)
             )
             for _, resultUrl in catalogItemToResultUrl.items()
         }
