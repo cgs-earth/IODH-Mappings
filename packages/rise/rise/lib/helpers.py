@@ -8,7 +8,7 @@ from typing import Coroutine, Optional, Tuple
 import shapely
 from pygeoapi.provider.base import ProviderQueryError
 from rise.lib.types.helpers import ZType
-from rise.env import rise_event_loop
+from common.env import iodh_event_loop
 
 from typing import Dict
 

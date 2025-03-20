@@ -8,7 +8,7 @@ from pygeoapi.provider.base import (
     ProviderQueryError,
 )
 from pygeoapi.provider.base_edr import BaseEDRProvider
-from rise.env import TRACER
+from common.env import TRACER
 from rise.lib.covjson.covjson import CovJSONBuilder
 from rise.lib.location import LocationResponseWithIncluded
 from rise.lib.cache import RISECache
