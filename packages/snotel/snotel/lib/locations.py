@@ -52,7 +52,9 @@ class LocationCollection:
         geometry, z = parse_bbox(bbox)
         return self._filter_by_geometry(geometry, z)
 
-    def to_geojson(self) -> GeojsonFeatureCollectionDict:
+    def to_geojson(
+        self, skip_geometry: Optional[bool] = False
+    ) -> GeojsonFeatureCollectionDict:
         features: list[GeojsonFeature] = []
 
         for loc in self.locations:
@@ -62,7 +64,9 @@ class LocationCollection:
                 "geometry": {
                     "type": "Point",
                     "coordinates": [loc.longitude, loc.latitude],
-                },
+                }
+                if not skip_geometry
+                else None,
                 "id": loc.stationId,
             }
             features.append(feature)
