@@ -3,7 +3,10 @@
 
 from com.cache import RedisCache
 from com.env import TRACER
+from com.geojson.types import GeojsonFeature, GeojsonFeatureCollectionDict
 from com.helpers import await_, parse_bbox, parse_z
+import geojson_pydantic
+import geojson_pydantic.types
 from rise.lib.types.helpers import ZType
 from snotel.lib.types import StationDTO
 import shapely
@@ -35,19 +38,39 @@ class LocationCollection:
         """
         Return only the location data for the locations in the list up to the limit
         """
-        self.data = self.data[:limit]
+        self.locations = self.locations[:limit]
         return self
 
     def drop_before_offset(self, offset: int):
         """
         Return only the location data for the locations in the list after the offset
         """
-        self.data = self.data[offset:]
+        self.locations = self.locations[offset:]
         return self
 
     def drop_all_locations_outside_bounding_box(self, bbox):
         geometry, z = parse_bbox(bbox)
         return self._filter_by_geometry(geometry, z)
+
+    def to_geojson(self) -> GeojsonFeatureCollectionDict:
+        features: list[GeojsonFeature] = []
+
+        for loc in self.locations:
+            feature: GeojsonFeature = {
+                "type": "Feature",
+                "properties": loc.model_dump(exclude={"latitude", "longitude"}),
+                "geometry": {
+                    "type": "Point",
+                    "coordinates": [loc.longitude, loc.latitude],
+                },
+                "id": loc.stationId,
+            }
+            features.append(feature)
+
+        return geojson_pydantic.FeatureCollection(
+            type="FeatureCollection",
+            features=[geojson_pydantic.Feature.model_validate(f) for f in features],
+        ).model_dump()  # type: ignore
 
     @TRACER.start_as_current_span("geometry_filter")
     def _filter_by_geometry(

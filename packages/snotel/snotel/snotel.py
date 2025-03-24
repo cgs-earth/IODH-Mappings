@@ -66,7 +66,7 @@ class SnotelProvider(BaseProvider):
                 "numberMatched": len(collection.locations),
             }
 
-        return collection
+        return collection.to_geojson()
 
     @crs_transform
     def query(self, **kwargs):

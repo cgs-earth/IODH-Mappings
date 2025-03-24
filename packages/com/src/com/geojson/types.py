@@ -8,7 +8,7 @@ class GeojsonFeature(TypedDict):
     type: Literal["Feature"]
     geometry: dict
     properties: dict
-    id: int
+    id: int | str
 
 
 class GeojsonFeatureCollectionDict(TypedDict):
