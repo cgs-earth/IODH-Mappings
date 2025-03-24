@@ -11,7 +11,7 @@ class SortDict(TypedDict):
     order: Literal["+", "-"]
 
 
-class GeojsonFeature(TypedDict):
+class GeojsonFeatureDict(TypedDict):
     type: Literal["Feature"]
     geometry: Optional[dict]
     properties: dict
@@ -22,7 +22,7 @@ class GeojsonFeatureCollectionDict(TypedDict):
     """A dict reprsentation of a GeoJSON FeatureCollection that is returned from OAF items/ queries"""
 
     type: Literal["FeatureCollection"]
-    features: list[GeojsonFeature]
+    features: list[GeojsonFeatureDict]
     # numberMatched is not required because it is only returned when resulttype=hits
     numberMatched: NotRequired[int]
 
@@ -33,6 +33,9 @@ def sort_by_properties_in_place(
     """
     Sort a GeojsonFeatureCollectionDict by the given keys
     """
+    if len(geojson_features) <= 1 or not sortby:
+        return
+
     for sort_criterion in reversed(sortby):
         sort_prop = sort_criterion["property"]
         sort_order = sort_criterion["order"]

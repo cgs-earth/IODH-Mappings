@@ -11,6 +11,7 @@ import shapely
 import shapely.wkt
 from com.env import TRACER
 from com.geojson.types import (
+    GeojsonFeatureDict,
     GeojsonFeatureCollectionDict,
     SortDict,
     sort_by_properties_in_place,
@@ -234,6 +235,7 @@ class LocationResponse(BaseModel):
 
     def to_geojson(
         self,
+        itemsIDSingleFeature: bool,
         skip_geometry: Optional[bool] = False,
         select_properties: Optional[list[str]] = None,
         properties: Optional[list[tuple[str, str]]] = None,
@@ -241,7 +243,7 @@ class LocationResponse(BaseModel):
             str, dict[Literal["type"], Literal["number", "string", "integer"]]
         ] = {},
         sortby: Optional[list[SortDict]] = None,  # now treat as list[SortDict]
-    ) -> GeojsonFeatureCollectionDict:
+    ) -> GeojsonFeatureCollectionDict | GeojsonFeatureDict:
         """
         Convert a list of locations to geojson
         """
@@ -309,12 +311,15 @@ class LocationResponse(BaseModel):
 
             geojson_features.append(Feature.model_validate(feature_as_geojson))
 
-        if sortby and len(geojson_features) > 1:
+        if sortby:
             sort_by_properties_in_place(geojson_features, sortby)
 
         validated_geojson = FeatureCollection(
             type="FeatureCollection", features=geojson_features
         )
+        if itemsIDSingleFeature:
+            return GeojsonFeatureDict(**geojson_features[0].model_dump(by_alias=True))
+
         return GeojsonFeatureCollectionDict(
             **validated_geojson.model_dump(by_alias=True)
         )
