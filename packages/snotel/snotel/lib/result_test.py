@@ -1,3 +1,6 @@
+# Copyright 2025 Lincoln Institute of Land Policy
+# SPDX-License-Identifier: MIT
+
 from snotel.lib.parameters import ParametersCollection
 from snotel.lib.result import ResultCollection
 

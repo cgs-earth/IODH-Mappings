@@ -1,3 +1,6 @@
+# Copyright 2025 Lincoln Institute of Land Policy
+# SPDX-License-Identifier: MIT
+
 from com.cache import RedisCache
 from com.helpers import await_
 from snotel.lib.types import StationDataDTO
