@@ -7,8 +7,7 @@ from typing import Literal, Optional
 from com.helpers import get_oaf_fields_from_pydantic_model
 from pygeoapi.provider.base import BaseProvider
 from pygeoapi.util import crs_transform
-from com.geojson.types import GeojsonFeature, GeojsonFeatureCollectionDict
-from rise.lib.types.sorting import SortDict
+from com.geojson.types import GeojsonFeature, GeojsonFeatureCollectionDict, SortDict
 from com.cache import RedisCache
 from snotel.lib.locations import LocationCollection
 from snotel.lib.types import StationDTO

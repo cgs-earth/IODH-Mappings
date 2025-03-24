@@ -10,7 +10,11 @@ from pydantic import BaseModel, field_validator
 import shapely
 import shapely.wkt
 from com.env import TRACER
-from com.geojson.types import GeojsonFeatureCollectionDict
+from com.geojson.types import (
+    GeojsonFeatureCollectionDict,
+    SortDict,
+    sort_by_properties_in_place,
+)
 from rise.lib.helpers import (
     merge_pages,
     no_duplicates_in_pages,
@@ -20,7 +24,6 @@ from rise.lib.types.includes import LocationIncluded
 from rise.lib.types.location import LocationData, PageLinks
 from geojson_pydantic import Feature, FeatureCollection
 from pygeoapi.provider.base import ProviderQueryError
-from rise.lib.types.sorting import SortDict
 
 LOGGER = logging.getLogger()
 
@@ -307,23 +310,7 @@ class LocationResponse(BaseModel):
             geojson_features.append(Feature.model_validate(feature_as_geojson))
 
         if sortby and len(geojson_features) > 1:
-            for sort_criterion in reversed(sortby):
-                sort_prop = sort_criterion["property"]
-                sort_order = sort_criterion["order"]
-                reverse_sort = sort_order == "-"
-
-                # Define a key function that places None values at the end for ascending order
-                # and at the beginning for descending order.
-                def sort_key(f):
-                    value = (f.properties or {}).get(sort_prop, None)
-                    return (
-                        (value is None, value)
-                        if not reverse_sort
-                        else (value is not None, value)
-                    )
-
-                # Sort in-place using the key function
-                geojson_features.sort(key=sort_key, reverse=reverse_sort)
+            sort_by_properties_in_place(geojson_features, sortby)
 
         validated_geojson = FeatureCollection(
             type="FeatureCollection", features=geojson_features
