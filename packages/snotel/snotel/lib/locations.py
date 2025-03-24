@@ -106,7 +106,7 @@ class LocationCollection:
         return GeojsonFeatureCollectionDict(
             **{
                 "type": "FeatureCollection",
-                "features": features,
+                "features": [feature.model_dump(by_alias=True) for feature in features],
             }
         )
 
