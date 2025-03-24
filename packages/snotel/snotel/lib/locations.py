@@ -71,10 +71,16 @@ class LocationCollection:
             }
             features.append(feature)
 
-        return geojson_pydantic.FeatureCollection(
+        geojson_pydantic.FeatureCollection(
             type="FeatureCollection",
             features=[geojson_pydantic.Feature.model_validate(f) for f in features],
-        ).model_dump()  # type: ignore
+        )
+        if len(features) == 1:
+            return features[0]
+        return {
+            "type": "FeatureCollection",
+            "features": features,
+        }
 
     @TRACER.start_as_current_span("geometry_filter")
     def _filter_by_geometry(
