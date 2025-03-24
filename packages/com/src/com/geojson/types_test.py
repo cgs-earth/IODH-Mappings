@@ -1,3 +1,6 @@
+# Copyright 2025 Lincoln Institute of Land Policy
+# SPDX-License-Identifier: MIT
+
 from com.geojson.types import SortDict, sort_by_properties_in_place
 import geojson_pydantic
 
