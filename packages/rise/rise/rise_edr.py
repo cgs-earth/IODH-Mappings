@@ -68,7 +68,6 @@ class RiseEDRProvider(BaseEDRProvider):
         if not location_id and datetime_:
             raise ProviderQueryError("Can't filter by date on every location")
 
-
         raw_resp = self.cache.get_or_fetch_all_param_filtered_pages(select_properties)
         response = LocationResponseWithIncluded.from_api_pages(raw_resp)
 
