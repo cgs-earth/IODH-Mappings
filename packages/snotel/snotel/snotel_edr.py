@@ -6,7 +6,9 @@ from typing import Optional
 
 from com.helpers import EDRField
 from pygeoapi.provider.base_edr import BaseEDRProvider
+from snotel.lib.locations import LocationCollection
 from snotel.lib.parameters import ParametersCollection
+from pygeoapi.provider.base import ProviderQueryError
 
 LOGGER = logging.getLogger(__name__)
 
@@ -39,7 +41,14 @@ class SnotelEDRProvider(BaseEDRProvider):
         """
         Extract data from location
         """
-        ...
+
+        if not location_id and datetime_:
+            raise ProviderQueryError(
+                "Datetime parameter is not supported without location_id"
+            )
+        collection = LocationCollection()
+        if location_id:
+            collection = collection.drop_all_locations_but_id(location_id)
 
     def get_fields(self) -> dict[str, EDRField]:
         """Get the list of all parameters (i.e. fields) that the user can filter by"""
