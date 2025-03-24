@@ -53,8 +53,11 @@ class LocationCollection:
         return self._filter_by_geometry(geometry, z)
 
     def to_geojson(
-        self, skip_geometry: Optional[bool] = False
-    ) -> GeojsonFeatureCollectionDict:
+        self, skip_geometry: Optional[bool] = False, itemsIDSingleFeature=False
+    ) -> GeojsonFeatureCollectionDict | GeojsonFeature:
+        """
+        Return a geojson feature if the client queried for items/{itemId} or a feature collection if they queried for items/ even if the result is only one item
+        """
         features: list[GeojsonFeature] = []
 
         for loc in self.locations:
@@ -75,7 +78,10 @@ class LocationCollection:
             type="FeatureCollection",
             features=[geojson_pydantic.Feature.model_validate(f) for f in features],
         )
-        if len(features) == 1:
+        if itemsIDSingleFeature:
+            assert len(features) == 1, (
+                "The user queried a single item but we have more than one present. This is a sign that filtering by locationid wasn't done properly"
+            )
             return features[0]
         return {
             "type": "FeatureCollection",
