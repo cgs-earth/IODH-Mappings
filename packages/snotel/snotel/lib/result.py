@@ -35,6 +35,7 @@ class ResultCollection:
         station_triplets: list[str],
         element_code: str = "*",
         force_fetch: bool = False,
+        datetime_filter: str = "",
     ) -> dict[str, StationDataDTO]:
         """
         Given a list of station triples, fetch all associated data for them

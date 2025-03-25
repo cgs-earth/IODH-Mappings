@@ -1,7 +1,7 @@
 # Copyright 2025 Lincoln Institute of Land Policy
 # SPDX-License-Identifier: MIT
 
-from datetime import datetime
+from datetime import datetime, timezone
 from com.cache import RedisCache
 from com.env import TRACER
 from com.geojson.types import (
@@ -10,14 +10,30 @@ from com.geojson.types import (
     SortDict,
     sort_by_properties_in_place,
 )
-from com.helpers import await_, parse_bbox, parse_date, parse_z
+from com.helpers import (
+    EDRField,
+    OAFFieldsMapping,
+    await_,
+    parse_bbox,
+    parse_date,
+    parse_z,
+)
 import geojson_pydantic
 from rise.lib.types.helpers import ZType
-from snotel.lib.covjson_builder import CovjsonBuilder
 from snotel.lib.result import ResultCollection
 from snotel.lib.types import StationDTO
 import shapely
-from typing import Literal, Optional, assert_never
+from typing import List, Optional, assert_never
+from covjson_pydantic.coverage import Coverage, CoverageCollection
+from covjson_pydantic.parameter import Parameter
+from covjson_pydantic.unit import Unit
+from covjson_pydantic.observed_property import ObservedProperty
+from covjson_pydantic.domain import Domain, Axes, ValuesAxis, DomainType
+from covjson_pydantic.ndarray import NdArrayFloat
+from covjson_pydantic.reference_system import (
+    ReferenceSystemConnectionObject,
+    ReferenceSystem,
+)
 
 
 class LocationCollection:
@@ -121,9 +137,7 @@ class LocationCollection:
         skip_geometry: Optional[bool] = False,
         select_properties: Optional[list[str]] = None,
         properties: Optional[list[tuple[str, str]]] = None,
-        fields_mapping: dict[
-            str, dict[Literal["type"], Literal["number", "string", "integer"]]
-        ] = {},
+        fields_mapping: dict[str, EDRField] | OAFFieldsMapping = {},
         sortby: Optional[list[SortDict]] = None,
     ) -> GeojsonFeatureCollectionDict | GeojsonFeatureDict:
         """
@@ -225,12 +239,75 @@ class LocationCollection:
 
         return self
 
-    def to_covjson_builder(self) -> CovjsonBuilder:
+    def to_covjson(self):
         stationTriples: list[str] = [
             location.stationTriplet
             for location in self.locations
             if location.stationTriplet
         ]
-        results = ResultCollection().fetch_all_data(station_triplets=stationTriples)
+        triplesToData = ResultCollection().fetch_all_data(
+            station_triplets=stationTriples
+        )
 
-        return CovjsonBuilder(results)
+        coverages: list[Coverage] = []
+
+        parameters: dict[str, Parameter] = {}
+
+        for triple, result in triplesToData.items():
+            assert result.data
+            for datastream in result.data:
+                assert datastream.stationElement
+                assert datastream.stationElement.elementCode
+                param = Parameter(
+                    type="Parameter",
+                    unit=Unit(symbol=datastream.stationElement.storedUnitCode),
+                    id=datastream.stationElement.elementCode,
+                    observedProperty=ObservedProperty(
+                        label={"en": datastream.stationElement.elementCode},
+                        id=triple,
+                    ),
+                )
+                parameters[datastream.stationElement.elementCode] = param
+
+                assert datastream.values
+                values: List[float] = [
+                    data.value for data in datastream.values if data.value and data.date
+                ]
+                times = [
+                    datetime.fromisoformat(data.date).replace(tzinfo=timezone.utc)
+                    for data in datastream.values
+                    if data.date and data.value
+                ]
+                assert len(values) == len(times)
+                cov = Coverage(
+                    type="Coverage",
+                    domain=Domain(
+                        type="Domain",
+                        domainType=DomainType.point_series,
+                        axes=Axes(
+                            t=ValuesAxis(values=times),
+                            x=ValuesAxis(values=[0]),
+                            y=ValuesAxis(values=[0]),
+                        ),
+                        referencing=[
+                            ReferenceSystemConnectionObject(
+                                coordinates=["x", "y"],
+                                system=ReferenceSystem(
+                                    type="GeographicCRS",
+                                    id="http://www.opengis.net/def/crs/OGC/1.3/CRS84",
+                                ),
+                            )
+                        ],
+                    ),
+                    ranges={
+                        datastream.stationElement.elementCode: NdArrayFloat(
+                            shape=[len(values)],
+                            values=values,  # type: ignore
+                            axisNames=["t"],
+                        ),
+                    },
+                )
+                coverages.append(cov)
+
+        covCol = CoverageCollection(coverages=coverages, parameters=parameters)
+        return covCol.model_dump(by_alias=True, exclude_none=True)

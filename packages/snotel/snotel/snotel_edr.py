@@ -50,6 +50,15 @@ class SnotelEDRProvider(BaseEDRProvider):
         if location_id:
             collection = collection.drop_all_locations_but_id(location_id)
 
+        if not any([crs, datetime_, location_id]) or format_ == "geojson":
+            return collection.to_geojson(
+                itemsIDSingleFeature=location_id is not None,
+                select_properties=select_properties,
+                fields_mapping=self.get_fields(),
+            )
+
+        return collection.to_covjson()
+
     def get_fields(self) -> dict[str, EDRField]:
         """Get the list of all parameters (i.e. fields) that the user can filter by"""
         if not self._fields:
