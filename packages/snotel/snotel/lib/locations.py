@@ -11,7 +11,7 @@ from com.geojson.types import (
     sort_by_properties_in_place,
 )
 from com.helpers import (
-    EDRField,
+    EDRFieldsMapping,
     OAFFieldsMapping,
     await_,
     parse_bbox,
@@ -127,7 +127,7 @@ class LocationCollection:
         skip_geometry: Optional[bool] = False,
         select_properties: Optional[list[str]] = None,
         properties: Optional[list[tuple[str, str]]] = None,
-        fields_mapping: dict[str, EDRField] | OAFFieldsMapping = {},
+        fields_mapping: EDRFieldsMapping | OAFFieldsMapping = {},
         sortby: Optional[list[SortDict]] = None,
     ) -> GeojsonFeatureCollectionDict | GeojsonFeatureDict:
         """
@@ -229,7 +229,7 @@ class LocationCollection:
 
         return self
 
-    def to_covjson(self):
+    def to_covjson(self, fieldMapper: EDRFieldsMapping):
         stationTriples: list[str] = [
             location.stationTriplet
             for location in self.locations
@@ -245,4 +245,4 @@ class LocationCollection:
                     location.latitude,
                 )
 
-        return CovjsonBuilder(stationTriples, tripleToGeometry).render()
+        return CovjsonBuilder(stationTriples, tripleToGeometry, fieldMapper).render()

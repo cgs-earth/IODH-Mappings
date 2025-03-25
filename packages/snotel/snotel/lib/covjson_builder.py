@@ -2,6 +2,7 @@
 # SPDX-License-Identifier: MIT
 
 from datetime import datetime, timezone
+from com.helpers import EDRFieldsMapping
 from covjson_pydantic.coverage import Coverage, CoverageCollection
 from covjson_pydantic.parameter import Parameter
 from covjson_pydantic.unit import Unit
@@ -25,22 +26,28 @@ class CovjsonBuilder:
         self,
         station_triples: list[str],
         triplesToGeometry: dict[str, tuple[float, float]],
+        fieldsMapper: EDRFieldsMapping,
     ):
         """Initialize the builder object and fetch the necessary timeseries data"""
         self.triplesToData = ResultCollection().fetch_all_data(station_triples)
         self.triplesToGeometry = triplesToGeometry
+        self.fieldsMapper = fieldsMapper
 
     def _generate_parameter(self, triple: str, datastream: DataDTO):
         """Given a triple and an associated datastream, generate a covjson parameter that describes its properties and unit"""
         assert datastream.stationElement
         assert datastream.stationElement.elementCode
+
+        edr_field = self.fieldsMapper[datastream.stationElement.elementCode]
+
         param = Parameter(
             type="Parameter",
             unit=Unit(symbol=datastream.stationElement.storedUnitCode),
-            id=datastream.stationElement.elementCode,
+            id=edr_field["title"],
             observedProperty=ObservedProperty(
                 label={"en": datastream.stationElement.elementCode},
-                id=triple,
+                id=edr_field["title"],
+                description={"en": edr_field["description"]},
             ),
         )
         return param
@@ -83,7 +90,9 @@ class CovjsonBuilder:
                 ],
             ),
             ranges={
-                datastream.stationElement.elementCode: NdArrayFloat(
+                self.fieldsMapper[datastream.stationElement.elementCode][
+                    "title"
+                ]: NdArrayFloat(
                     shape=[len(values)],
                     values=values,  # type: ignore
                     axisNames=["t"],
@@ -102,9 +111,9 @@ class CovjsonBuilder:
                 assert datastream.stationElement
                 assert datastream.stationElement.elementCode
                 coverages.append(self._generate_coverage(triple, datastream))
-                parameters[datastream.stationElement.elementCode] = (
-                    self._generate_parameter(triple, datastream)
-                )
+
+                id = self.fieldsMapper[datastream.stationElement.elementCode]["title"]
+                parameters[id] = self._generate_parameter(triple, datastream)
 
         covCol = CoverageCollection(coverages=coverages, parameters=parameters)
         return covCol.model_dump(

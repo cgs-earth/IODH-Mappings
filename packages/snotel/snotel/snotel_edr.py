@@ -4,7 +4,7 @@
 import logging
 from typing import Optional
 
-from com.helpers import EDRField
+from com.helpers import EDRFieldsMapping
 from pygeoapi.provider.base_edr import BaseEDRProvider
 from snotel.lib.locations import LocationCollection
 from snotel.lib.parameters import ParametersCollection
@@ -57,9 +57,9 @@ class SnotelEDRProvider(BaseEDRProvider):
                 fields_mapping=self.get_fields(),
             )
 
-        return collection.to_covjson()
+        return collection.to_covjson(self.get_fields())
 
-    def get_fields(self) -> dict[str, EDRField]:
+    def get_fields(self) -> EDRFieldsMapping:
         """Get the list of all parameters (i.e. fields) that the user can filter by"""
         if not self._fields:
             self._fields = ParametersCollection().get_fields()
