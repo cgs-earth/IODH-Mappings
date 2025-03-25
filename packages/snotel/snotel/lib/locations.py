@@ -13,6 +13,8 @@ from com.geojson.types import (
 from com.helpers import await_, parse_bbox, parse_date, parse_z
 import geojson_pydantic
 from rise.lib.types.helpers import ZType
+from snotel.lib.covjson_builder import CovjsonBuilder
+from snotel.lib.result import ResultCollection
 from snotel.lib.types import StationDTO
 import shapely
 from typing import Literal, Optional, assert_never
@@ -222,3 +224,13 @@ class LocationCollection:
             self.locations.pop(i)
 
         return self
+
+    def to_covjson_builder(self) -> CovjsonBuilder:
+        stationTriples: list[str] = [
+            location.stationTriplet
+            for location in self.locations
+            if location.stationTriplet
+        ]
+        results = ResultCollection().fetch_all_data(station_triplets=stationTriples)
+
+        return CovjsonBuilder(results)
