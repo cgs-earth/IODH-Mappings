@@ -86,7 +86,14 @@ class CovjsonBuilder:
                             type="GeographicCRS",
                             id="http://www.opengis.net/def/crs/OGC/1.3/CRS84",
                         ),
-                    )
+                    ),
+                    ReferenceSystemConnectionObject(
+                        coordinates=["t"],
+                        system=ReferenceSystem(
+                            type="TemporalRS",
+                            id="http://www.opengis.net/def/crs/OGC/1.3/CRS84",
+                        ),
+                    ),
                 ],
             ),
             ranges={
@@ -105,17 +112,46 @@ class CovjsonBuilder:
         """Build the covjson and return it as a dictionary"""
         coverages: list[Coverage] = []
         parameters: dict[str, Parameter] = {}
+
+        ranges = {}
+
         for triple, result in self.triplesToData.items():
             assert result.data
             for datastream in result.data:
                 assert datastream.stationElement
                 assert datastream.stationElement.elementCode
-                coverages.append(self._generate_coverage(triple, datastream))
+                cov = self._generate_coverage(triple, datastream)
+                coverages.append(cov)
+
+                assert len(cov.ranges) == 1
+                key, value = list(cov.ranges.items())[0]
+                ranges[key] = value
 
                 id = self.fieldsMapper[datastream.stationElement.elementCode]["title"]
                 parameters[id] = self._generate_parameter(triple, datastream)
 
-        covCol = CoverageCollection(coverages=coverages, parameters=parameters)
+        for coverage in coverages:
+            maxRangeLength = max(
+                [
+                    r.shape[0]
+                    for r in coverage.ranges.values()
+                    if isinstance(r, NdArrayFloat) and r.shape
+                ]
+            )
+
+            for range in ranges:
+                if range not in coverage.ranges:
+                    coverage.ranges[range] = NdArrayFloat(
+                        shape=[maxRangeLength],
+                        values=[None] * maxRangeLength,
+                        axisNames=["t"],
+                    )
+
+        covCol = CoverageCollection(
+            coverages=coverages,
+            domainType=DomainType.point_series,
+            parameters=parameters,
+        )
         return covCol.model_dump(
             by_alias=True, exclude_none=True
         )  # pydantic covjson must dump with exclude none
