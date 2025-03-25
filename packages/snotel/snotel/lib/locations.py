@@ -1,7 +1,7 @@
 # Copyright 2025 Lincoln Institute of Land Policy
 # SPDX-License-Identifier: MIT
 
-from datetime import datetime, timezone
+from datetime import datetime
 from com.cache import RedisCache
 from com.env import TRACER
 from com.geojson.types import (
@@ -20,20 +20,10 @@ from com.helpers import (
 )
 import geojson_pydantic
 from rise.lib.types.helpers import ZType
-from snotel.lib.result import ResultCollection
+from snotel.lib.covjson_builder import CovjsonBuilder
 from snotel.lib.types import StationDTO
 import shapely
-from typing import List, Optional, assert_never
-from covjson_pydantic.coverage import Coverage, CoverageCollection
-from covjson_pydantic.parameter import Parameter
-from covjson_pydantic.unit import Unit
-from covjson_pydantic.observed_property import ObservedProperty
-from covjson_pydantic.domain import Domain, Axes, ValuesAxis, DomainType
-from covjson_pydantic.ndarray import NdArrayFloat
-from covjson_pydantic.reference_system import (
-    ReferenceSystemConnectionObject,
-    ReferenceSystem,
-)
+from typing import Optional, assert_never
 
 
 class LocationCollection:
@@ -245,69 +235,14 @@ class LocationCollection:
             for location in self.locations
             if location.stationTriplet
         ]
-        triplesToData = ResultCollection().fetch_all_data(
-            station_triplets=stationTriples
-        )
 
-        coverages: list[Coverage] = []
-
-        parameters: dict[str, Parameter] = {}
-
-        for triple, result in triplesToData.items():
-            assert result.data
-            for datastream in result.data:
-                assert datastream.stationElement
-                assert datastream.stationElement.elementCode
-                param = Parameter(
-                    type="Parameter",
-                    unit=Unit(symbol=datastream.stationElement.storedUnitCode),
-                    id=datastream.stationElement.elementCode,
-                    observedProperty=ObservedProperty(
-                        label={"en": datastream.stationElement.elementCode},
-                        id=triple,
-                    ),
+        tripleToGeometry: dict[str, tuple[float, float]] = {}
+        for location in self.locations:
+            if location.stationTriplet and location.longitude and location.latitude:
+                assert location.longitude and location.latitude
+                tripleToGeometry[location.stationTriplet] = (
+                    location.longitude,
+                    location.latitude,
                 )
-                parameters[datastream.stationElement.elementCode] = param
 
-                assert datastream.values
-                values: List[float] = [
-                    data.value for data in datastream.values if data.value and data.date
-                ]
-                times = [
-                    datetime.fromisoformat(data.date).replace(tzinfo=timezone.utc)
-                    for data in datastream.values
-                    if data.date and data.value
-                ]
-                assert len(values) == len(times)
-                cov = Coverage(
-                    type="Coverage",
-                    domain=Domain(
-                        type="Domain",
-                        domainType=DomainType.point_series,
-                        axes=Axes(
-                            t=ValuesAxis(values=times),
-                            x=ValuesAxis(values=[0]),
-                            y=ValuesAxis(values=[0]),
-                        ),
-                        referencing=[
-                            ReferenceSystemConnectionObject(
-                                coordinates=["x", "y"],
-                                system=ReferenceSystem(
-                                    type="GeographicCRS",
-                                    id="http://www.opengis.net/def/crs/OGC/1.3/CRS84",
-                                ),
-                            )
-                        ],
-                    ),
-                    ranges={
-                        datastream.stationElement.elementCode: NdArrayFloat(
-                            shape=[len(values)],
-                            values=values,  # type: ignore
-                            axisNames=["t"],
-                        ),
-                    },
-                )
-                coverages.append(cov)
-
-        covCol = CoverageCollection(coverages=coverages, parameters=parameters)
-        return covCol.model_dump(by_alias=True, exclude_none=True)
+        return CovjsonBuilder(stationTriples, tripleToGeometry).render()
