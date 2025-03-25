@@ -139,9 +139,9 @@ class CovjsonBuilder:
                 ]
             )
 
-            for range in ranges:
-                if range not in coverage.ranges:
-                    coverage.ranges[range] = NdArrayFloat(
+            for rangeID, rangeVal in ranges.items():
+                if rangeID not in coverage.ranges:
+                    coverage.ranges[rangeID] = NdArrayFloat(
                         shape=[maxRangeLength],
                         values=[None] * maxRangeLength,
                         axisNames=["t"],
