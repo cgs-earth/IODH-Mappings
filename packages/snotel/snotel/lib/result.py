@@ -30,7 +30,10 @@ class ResultCollection:
         self,
         station_triplets: list[str],
         element_code: str = "*",
-    ):
+    ) -> list[StationDataDTO]:
+        """
+        Given a list of station triples, fetch all associated data for them
+        """
         metadata = self._fetch_metadata_for_elements(station_triplets, element_code)
 
         urls_for_full_data = []
@@ -60,4 +63,6 @@ class ResultCollection:
 
             full_results_url = f"https://wcc.sc.egov.usda.gov/awdbRestApi/services/v1/data?beginDate={earliestDate}&endDate={latestDate}&elements={','.join(elements)}&stationTriplets={station.stationTriplet}"
             urls_for_full_data.append(full_results_url)
-        return await_(self.cache.get_or_fetch_group(urls_for_full_data))
+        result = await_(self.cache.get_or_fetch_group(urls_for_full_data))
+
+        return [StationDataDTO.model_validate(res) for res in result]
