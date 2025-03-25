@@ -32,6 +32,7 @@ class CovjsonBuilder:
         self.triplesToData = ResultCollection().fetch_all_data(station_triples)
         self.triplesToGeometry = triplesToGeometry
         self.fieldsMapper = fieldsMapper
+        self.latitude = 0
 
     def _generate_parameter(self, triple: str, datastream: DataDTO):
         """Given a triple and an associated datastream, generate a covjson parameter that describes its properties and unit"""
@@ -76,8 +77,8 @@ class CovjsonBuilder:
                 domainType=DomainType.point_series,
                 axes=Axes(
                     t=ValuesAxis(values=times),
-                    x=ValuesAxis(values=[longitude]),
-                    y=ValuesAxis(values=[latitude]),
+                    x=ValuesAxis(values=[0]),
+                    y=ValuesAxis(values=[self.latitude]),
                 ),
                 referencing=[
                     ReferenceSystemConnectionObject(
@@ -106,6 +107,7 @@ class CovjsonBuilder:
                 ),
             },
         )
+        self.latitude += 5
         return cov
 
     def render(self):
@@ -129,23 +131,6 @@ class CovjsonBuilder:
 
                 id = self.fieldsMapper[datastream.stationElement.elementCode]["title"]
                 parameters[id] = self._generate_parameter(triple, datastream)
-
-        for coverage in coverages:
-            maxRangeLength = max(
-                [
-                    r.shape[0]
-                    for r in coverage.ranges.values()
-                    if isinstance(r, NdArrayFloat) and r.shape
-                ]
-            )
-
-            for rangeID, rangeVal in ranges.items():
-                if rangeID not in coverage.ranges:
-                    coverage.ranges[rangeID] = NdArrayFloat(
-                        shape=[maxRangeLength],
-                        values=[None] * maxRangeLength,
-                        axisNames=["t"],
-                    )
 
         covCol = CoverageCollection(
             coverages=coverages,
