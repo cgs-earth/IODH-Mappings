@@ -32,7 +32,6 @@ class CovjsonBuilder:
         self.triplesToData = ResultCollection().fetch_all_data(station_triples)
         self.triplesToGeometry = triplesToGeometry
         self.fieldsMapper = fieldsMapper
-        self.latitude = 0
 
     def _generate_parameter(self, triple: str, datastream: DataDTO):
         """Given a triple and an associated datastream, generate a covjson parameter that describes its properties and unit"""
@@ -77,8 +76,8 @@ class CovjsonBuilder:
                 domainType=DomainType.point_series,
                 axes=Axes(
                     t=ValuesAxis(values=times),
-                    x=ValuesAxis(values=[0]),
-                    y=ValuesAxis(values=[self.latitude]),
+                    x=ValuesAxis(values=[longitude]),
+                    y=ValuesAxis(values=[latitude]),
                 ),
                 referencing=[
                     ReferenceSystemConnectionObject(
@@ -107,7 +106,6 @@ class CovjsonBuilder:
                 ),
             },
         )
-        self.latitude += 5
         return cov
 
     def render(self):
