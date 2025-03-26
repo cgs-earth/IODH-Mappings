@@ -76,4 +76,3 @@ asyncio_default_fixture_loop_scope = "function"
 omit = [
     "**/*_test.py"
 ]
-
