@@ -94,7 +94,7 @@ class RiseEDRProvider(BaseEDRProvider):
         # if we are returning covjson we need to fetch the results and fill in the json
         builder = LocationResultBuilder(cache=self.cache, base_response=response)
         response_with_results = builder.load_results(time_filter=datetime_)
-        return CovJSONBuilder(self.cache).fill_template(response_with_results)
+        return CovJSONBuilder(self.cache).render(response_with_results)
 
     def get_fields(self):
         """Get the list of all parameters (i.e. fields) that the user can filter by"""
@@ -135,7 +135,7 @@ class RiseEDRProvider(BaseEDRProvider):
 
         builder = LocationResultBuilder(cache=self.cache, base_response=response)
         response_with_results = builder.load_results(time_filter=datetime_)
-        return CovJSONBuilder(self.cache).fill_template(response_with_results)
+        return CovJSONBuilder(self.cache).render(response_with_results)
 
     @TRACER.start_as_current_span("area")
     @BaseEDRProvider.register()
@@ -178,7 +178,7 @@ class RiseEDRProvider(BaseEDRProvider):
 
         builder = LocationResultBuilder(cache=self.cache, base_response=response)
         response_with_results = builder.load_results(time_filter=datetime_)
-        return CovJSONBuilder(self.cache).fill_template(response_with_results)
+        return CovJSONBuilder(self.cache).render(response_with_results)
 
     @BaseEDRProvider.register()
     def items(self, **kwargs):

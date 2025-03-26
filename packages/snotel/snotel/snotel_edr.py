@@ -6,7 +6,7 @@ from typing import Optional, cast
 
 from com.helpers import EDRFieldsMapping
 from pygeoapi.provider.base_edr import BaseEDRProvider
-from rise.lib.covjson.types import CoverageCollection
+from rise.lib.covjson.types import CoverageCollectionDict
 from snotel.lib.locations import LocationCollection
 from snotel.lib.parameters import ParametersCollection
 from pygeoapi.provider.base import ProviderQueryError
@@ -75,7 +75,7 @@ class SnotelEDRProvider(BaseEDRProvider):
         z: Optional[str] = None,
         format_: Optional[str] = None,
         **kwargs,
-    ) -> CoverageCollection:
+    ) -> CoverageCollectionDict:
         """
         Returns a data cube defined by bbox and z parameters
 
@@ -90,7 +90,7 @@ class SnotelEDRProvider(BaseEDRProvider):
 
         collection.drop_all_locations_outside_bounding_box(bbox, z)
 
-        return cast(CoverageCollection, collection.to_covjson(self.get_fields()))
+        return cast(CoverageCollectionDict, collection.to_covjson(self.get_fields()))
 
     @BaseEDRProvider.register()
     def area(
@@ -110,7 +110,7 @@ class SnotelEDRProvider(BaseEDRProvider):
 
         collection = collection.drop_outside_of_wkt(wkt, z)
 
-        return cast(CoverageCollection, collection.to_covjson(self.get_fields()))
+        return cast(CoverageCollectionDict, collection.to_covjson(self.get_fields()))
 
     @BaseEDRProvider.register()
     def items(self, **kwargs):
