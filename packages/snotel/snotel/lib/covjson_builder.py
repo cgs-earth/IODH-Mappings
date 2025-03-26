@@ -113,8 +113,6 @@ class CovjsonBuilder:
         coverages: list[Coverage] = []
         parameters: dict[str, Parameter] = {}
 
-        ranges = {}
-
         for triple, result in self.triplesToData.items():
             assert result.data
             for datastream in result.data:
@@ -124,8 +122,6 @@ class CovjsonBuilder:
                 coverages.append(cov)
 
                 assert len(cov.ranges) == 1
-                key, value = list(cov.ranges.items())[0]
-                ranges[key] = value
 
                 id = self.fieldsMapper[datastream.stationElement.elementCode]["title"]
                 parameters[id] = self._generate_parameter(triple, datastream)
