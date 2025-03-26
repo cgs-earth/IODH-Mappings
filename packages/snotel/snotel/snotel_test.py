@@ -1,3 +1,6 @@
+# Copyright 2025 Lincoln Institute of Land Policy
+# SPDX-License-Identifier: MIT
+
 from snotel.snotel import SnotelProvider
 
 
@@ -44,6 +47,7 @@ def test_snotel_filter_by_multiple_property_values():
     out = p.items(properties=[("networkCode", "SNTL"), ("name", "Albro Lake")])
     assert out["type"] == "FeatureCollection"
     assert len(out["features"]) == 1
+<<<<<<< HEAD
 
 
 def test_filter_by_property_is_same_as_filter_by_id():
@@ -66,3 +70,5 @@ def test_filter_by_property_and_itemid_at_once():
     assert out1["type"] == "Feature"
     assert out1["properties"]["networkCode"] == "SNTL"
     assert out1["properties"]["stationId"] == str(idForAdinMtnInCalifornia)
+=======
+>>>>>>> f2a208eddf28f734a78590c930994693d17dc1ca
