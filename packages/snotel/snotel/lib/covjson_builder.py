@@ -33,7 +33,7 @@ class CovjsonBuilder:
         self.triplesToGeometry = triplesToGeometry
         self.fieldsMapper = fieldsMapper
 
-    def _generate_parameter(self, triple: str, datastream: DataDTO):
+    def _generate_parameter(self, datastream: DataDTO):
         """Given a triple and an associated datastream, generate a covjson parameter that describes its properties and unit"""
         assert datastream.stationElement
         assert datastream.stationElement.elementCode
@@ -124,7 +124,7 @@ class CovjsonBuilder:
                 assert len(cov.ranges) == 1
 
                 id = self.fieldsMapper[datastream.stationElement.elementCode]["title"]
-                parameters[id] = self._generate_parameter(triple, datastream)
+                parameters[id] = self._generate_parameter(datastream)
 
         covCol = CoverageCollection(
             coverages=coverages,

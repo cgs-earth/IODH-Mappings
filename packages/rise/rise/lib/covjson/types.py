@@ -3,15 +3,22 @@
 
 from typing import Literal, TypedDict
 
+"""
+All of these typeddicts are used for type hinting the result of 
+a pydantic model dump. They are thus not used for validation and
+just for dev ux. They are prefixed with _Dict to distinguish them
+from the pydantic models of the same name
+"""
 
-class Parameter(TypedDict):
+
+class ParameterDict(TypedDict):
     type: str
     description: dict[str, str]
     unit: dict
     observedProperty: dict
 
 
-class CoverageRange(TypedDict):
+class CoverageRangeDict(TypedDict):
     type: Literal["NdArray"]
     dataType: Literal["float"]
     axisNames: list[str]
@@ -19,15 +26,15 @@ class CoverageRange(TypedDict):
     values: list[float | None]
 
 
-class Coverage(TypedDict):
+class CoverageDict(TypedDict):
     type: Literal["Coverage"]
     domain: dict
-    ranges: dict[str, CoverageRange]
+    ranges: dict[str, CoverageRangeDict]
     domainType: Literal["PolygonSeries", "PointSeries"]
 
 
-class CoverageCollection(TypedDict):
+class CoverageCollectionDict(TypedDict):
     type: str
-    parameters: dict[str, Parameter]
+    parameters: dict[str, ParameterDict]
     referencing: list
-    coverages: list[Coverage]
+    coverages: list[CoverageDict]
