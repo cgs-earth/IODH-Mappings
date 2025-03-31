@@ -59,3 +59,7 @@ def test_cube_with_datetime_filter():
             assert tValue <= datetime.datetime(2020, 1, 1).replace(
                 tzinfo=datetime.timezone.utc
             )
+
+
+def test_cube_with_select_properties():
+    pass
