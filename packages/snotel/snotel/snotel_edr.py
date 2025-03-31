@@ -85,6 +85,7 @@ class SnotelEDRProvider(BaseEDRProvider):
         :param format_: data format of output
         """
         # Example: http://localhost:5000/collections/snotel-edr/cube?bbox=-164.300537,67.195518,-160.620117,68.26125
+        # Example: http://localhost:5000/collections/snotel-edr/cube?bbox=-164.300537,67.195518,-160.620117,68.26125&datetime=2010-01-01/..&f=json
 
         collection = LocationCollection()
 

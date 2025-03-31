@@ -88,10 +88,10 @@ class LocationCollection:
         """
         location_indices_to_remove = set()
 
-        parsed_date: list[datetime] = parse_date(datetime_)
+        parsed_date = parse_date(datetime_)
         MAGIC_UPSTREAM_DATE_SIGNIFYING_STILL_IN_SERVICE = "2100-01-01"
 
-        if len(parsed_date) == 2:
+        if isinstance(parsed_date, tuple) and len(parsed_date) == 2:
             startQuery, endQuery = parsed_date
 
             for i, location in enumerate(self.locations):
@@ -110,7 +110,7 @@ class LocationCollection:
                 if not locationIsInsideQueryRange:
                     location_indices_to_remove.add(i)
 
-        elif len(parsed_date) == 1:
+        elif isinstance(parsed_date, datetime):
             for i, location in enumerate(self.locations):
                 if not location.beginDate or not location.endDate:
                     location_indices_to_remove.add(i)
@@ -120,11 +120,10 @@ class LocationCollection:
                 )
                 startDate = datetime.fromisoformat(location.beginDate)
                 endDate = datetime.fromisoformat(location.endDate)
-                if parsed_date[0] < startDate or (
-                    not skipEndDateCheck and parsed_date[0] > endDate
+                if parsed_date < startDate or (
+                    not skipEndDateCheck and parsed_date > endDate
                 ):
                     location_indices_to_remove.add(i)
-
         else:
             raise RuntimeError(
                 "datetime_ must be a date or date range with two dates separated by '/' but got {}".format(
