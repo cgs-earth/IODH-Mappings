@@ -1,3 +1,6 @@
+# Copyright 2025 Lincoln Institute of Land Policy
+# SPDX-License-Identifier: MIT
+
 US_STATE_ABBREVIATIONS = {
     # "AL": "Alabama",
     "AK": "Alaska",
