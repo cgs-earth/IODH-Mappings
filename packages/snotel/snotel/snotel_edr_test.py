@@ -62,4 +62,21 @@ def test_cube_with_datetime_filter():
 
 
 def test_cube_with_select_properties():
-    pass
+    p = SnotelEDRProvider(conf)
+    bboxCovering1175InAlaska = [-164.300537, 67.195518, -160.620117, 68.26125]
+    out = p.cube(
+        bbox=bboxCovering1175InAlaska,
+        datetime_="2010-01-01/..",
+        select_properties=["DUMMY"],
+    )
+    assert len(out["coverages"]) == 0, (
+        "DUMMY is a property that doesn't exist and thus there should be no features returned"
+    )
+    # Since there are 13 coverages, we should get 13 since TAVG is a parameter that exists
+    # and thus no locations are filtered out
+    out = p.cube(
+        bbox=bboxCovering1175InAlaska,
+        datetime_="2010-01-01/..",
+        select_properties=["TAVG"],
+    )
+    assert len(out["coverages"]) == 13
