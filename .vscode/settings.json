@@ -11,7 +11,7 @@
     "**/*.egg-info/": true,
     ".venv/": true,
     "dist/": true,
-    "htmlcov/": true,
+    "htmlcov/": true
   },
   "[python]": {
     "editor.formatOnSave": true,
