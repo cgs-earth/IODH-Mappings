@@ -21,7 +21,7 @@ This repository maps the various federal water data APIs like the USBR RISE API 
 | Provider | Property Filters/Display | Result Type | BBox | Datetime | Sort By | Skip Geometry | CQL | Transactions | CRS |
 | -------- | ------------------------ | ----------- | ---- | -------- | ------- | ------------- | --- | ------------ | --- |
 | `RISE`   | ✅ / ✅                  | ✅          | ✅   | ✅       | ✅      | ✅            | ❌  | ❌           | ✅  |
-| `SNOTEL`   | ✅ / ✅                  | ✅          | ✅   | ✅       | ✅      | ✅            | ❌  | ❌           | ✅  |
+| `SNOTEL` | ✅ / ✅                  | ✅          | ✅   | ✅       | ✅      | ✅            | ❌  | ❌           | ✅  |
 
 ## OGC EDR Spec Compliance
 
@@ -34,5 +34,5 @@ This repository maps the various federal water data APIs like the USBR RISE API 
 
 | Provider | Coords | Parameter-Name | Datetime |
 | -------- | ------ | -------------- | -------- |
-| RISE     | ✅      | ✅              | ✅       |
-| SNOTEL   | ✅      | ✅              | ✅       |
+| RISE     | ✅     | ✅             | ✅       |
+| SNOTEL   | ✅     | ✅             | ✅       |
