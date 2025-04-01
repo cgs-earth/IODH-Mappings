@@ -23,6 +23,7 @@ dependencies = [
     "pygeoapi @ git+https://github.com/geopython/pygeoapi.git",
     "pytest-cov>=6.0.0",
     "radon>=6.0.1",
+    "pytest-dotenv>=0.5.2",
 ]
 
 classifiers = [
@@ -74,9 +75,14 @@ addopts = "--strict-markers"
 markers = [
     "upstream: marks tests that test upstream behavior outside of our control"
 ]
+env_files = [
+    ".env"
+]
+env_override_existing_values = 1
 
 [tool.coverage.run]
 # don't include tests 
 omit = [
     "**/*_test.py"
 ]
+
