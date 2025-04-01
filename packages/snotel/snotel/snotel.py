@@ -5,9 +5,15 @@ import logging
 from typing import Literal, Optional
 
 from com.helpers import get_oaf_fields_from_pydantic_model
+from com.otel import otel_trace
+from com.protocol import OAFProviderProtocol
 from pygeoapi.provider.base import BaseProvider
 from pygeoapi.util import crs_transform
-from com.geojson.types import GeojsonFeatureDict, GeojsonFeatureCollectionDict, SortDict
+from com.geojson.helpers import (
+    GeojsonFeatureDict,
+    GeojsonFeatureCollectionDict,
+    SortDict,
+)
 from com.cache import RedisCache
 from snotel.lib.locations import LocationCollection
 from snotel.lib.types import StationDTO
@@ -15,7 +21,7 @@ from snotel.lib.types import StationDTO
 LOGGER = logging.getLogger(__name__)
 
 
-class SnotelProvider(BaseProvider):
+class SnotelProvider(BaseProvider, OAFProviderProtocol):
     """Rise Provider for OGC API Features"""
 
     def __init__(self, provider_def):
@@ -27,6 +33,7 @@ class SnotelProvider(BaseProvider):
         self.cache = RedisCache()
         self.get_fields()
 
+    @otel_trace()
     def items(
         self,
         bbox: list = [],
@@ -100,6 +107,6 @@ class SnotelProvider(BaseProvider):
 
         :returns: dict of field names and their associated JSON Schema types
         """
-        if not self._fields:
+        if not hasattr(self, "_fields") or not self._fields:
             self._fields = get_oaf_fields_from_pydantic_model(StationDTO)
         return self._fields
