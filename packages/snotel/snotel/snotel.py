@@ -107,6 +107,6 @@ class SnotelProvider(BaseProvider, OAFProviderProtocol):
 
         :returns: dict of field names and their associated JSON Schema types
         """
-        if not hasattr(self, "_fields") or not self._fields:
+        if not self._fields:
             self._fields = get_oaf_fields_from_pydantic_model(StationDTO)
         return self._fields
