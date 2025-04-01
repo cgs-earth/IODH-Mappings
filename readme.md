@@ -27,8 +27,8 @@ This repository maps the various federal water data APIs like the USBR RISE API 
 
 | Provider | Position | Radius | Area | Cube | Trajectory | Coordidor | Items |
 | -------- | -------- | ------ | ---- | ---- | ---------- | --------- | ----- |
-| RISE     | ❌       | ❌     | ✅   | ✅   | ❌          | ❌        | ✅    |
-| SNOTEL   | ❌       | ❌     | ✅   | ✅   | ❌          | ❌        | ✅    |
+| RISE     | ❌       | ❌     | ✅   | ✅   | ❌         | ❌        | ✅    |
+| SNOTEL   | ❌       | ❌     | ✅   | ✅   | ❌         | ❌        | ✅    |
 
 ### EDR Query Options
 
