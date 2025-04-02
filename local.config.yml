@@ -96,7 +96,6 @@ resources:
         entity: Observation
         title_field: name
 
-
   awdb-forecasts-edr:
     type: collection
     title: awdb forecasts edr
