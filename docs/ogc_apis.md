@@ -2,7 +2,7 @@
 
 | name in pygeoapi    | name in query url | spec text                                                                               | explanation                                                                                                                                                                                                            | example |
 | ------------------- | ----------------- | --------------------------------------------------------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ------- |
-| `select_properties` | `parameter-name`  | Verify that only resources for the requested parameters were included in the result set | Drop location features if they do not contain the parameters in question. Since they are dropped, no timeseries results data should be fetched. Neither the location nor its results will be part of the final covjson |         |
+| `select_properties` | `parameter-name`  | Verify that only resources for the requested parameters were included in the result set | Only return features or coverages matching the one of the provided parameters or all. <br> For `locations?parameter-name=` this should return all monitoring locations which collect data about given param as geojson FC.  <br> For all the other EDR endpoints this acts as a parameter filter where the only parameters returned should be those in the parameter-name query argument. However, don't drop whole features. |         |
 
 # OAF Spec
 
