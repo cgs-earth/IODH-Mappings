@@ -1,3 +1,6 @@
+# Copyright 2025 Lincoln Institute of Land Policy
+# SPDX-License-Identifier: MIT
+
 from awdb_com.locations import LocationCollection
 from com.helpers import EDRFieldsMapping
 from rise.lib.covjson.types import CoverageCollectionDict
