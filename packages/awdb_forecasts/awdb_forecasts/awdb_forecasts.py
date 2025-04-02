@@ -29,7 +29,7 @@ class AwdbForecastsProvider(BaseProvider, OAFProviderProtocol):
         Initialize object
         :param provider_def: provider definition
         """
-        super().__init__(provider_def)
+        BaseProvider.__init__(self, provider_def)
         self.cache = RedisCache()
         self.get_fields()
 

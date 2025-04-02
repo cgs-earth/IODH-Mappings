@@ -100,7 +100,7 @@ class ForecastResultCollection:
                 else self._get_earliest_and_latest_date_from_filter(datetime_filter)
             )
             elements: list[str] = []
-            for datastream in station.data:
+            for datastream in station.forecastValues:
                 if not datastream.stationElement:
                     continue
 
