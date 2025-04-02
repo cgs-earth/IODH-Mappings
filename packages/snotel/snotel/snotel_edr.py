@@ -57,7 +57,6 @@ class SnotelEDRProvider(BaseEDRProvider, EDRProviderProtocol):
         if not any([crs, datetime_, location_id]) or format_ == "geojson":
             return collection.to_geojson(
                 itemsIDSingleFeature=location_id is not None,
-                select_properties=select_properties,
                 fields_mapping=self.get_fields(),
             )
 
@@ -96,7 +95,7 @@ class SnotelEDRProvider(BaseEDRProvider, EDRProviderProtocol):
 
         collection.drop_all_locations_outside_bounding_box(bbox, z)
 
-        return collection.to_covjson(self.get_fields(), datetime_)
+        return collection.to_covjson(self.get_fields(), datetime_, select_properties)
 
     @otel_trace()
     @BaseEDRProvider.register()
@@ -116,7 +115,7 @@ class SnotelEDRProvider(BaseEDRProvider, EDRProviderProtocol):
 
         collection = collection.drop_outside_of_wkt(wkt, z)
 
-        return collection.to_covjson(self.get_fields(), datetime_)
+        return collection.to_covjson(self.get_fields(), datetime_, select_properties)
 
     @BaseEDRProvider.register()
     def items(self, **kwargs):

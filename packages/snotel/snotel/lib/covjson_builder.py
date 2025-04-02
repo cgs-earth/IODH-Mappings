@@ -128,13 +128,17 @@ class CovjsonBuilder:
             for datastream in result.data:
                 assert datastream.stationElement
                 assert datastream.stationElement.elementCode
+                title = self.fieldsMapper[datastream.stationElement.elementCode][
+                    "title"
+                ]
+                id = datastream.stationElement.elementCode
+                parameters[title] = self._generate_parameter(triple, datastream)
+                if self.select_properties and id not in self.select_properties:
+                    continue
                 cov = self._generate_coverage(triple, datastream)
                 coverages.append(cov)
 
                 assert len(cov.ranges) == 1
-
-                id = self.fieldsMapper[datastream.stationElement.elementCode]["title"]
-                parameters[id] = self._generate_parameter(triple, datastream)
 
         covCol = CoverageCollection(
             coverages=coverages,

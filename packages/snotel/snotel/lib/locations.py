@@ -280,7 +280,7 @@ class LocationCollection:
 
         # We cast the return value here because we know it will be a CoverageCollectionDict
         covjson_result = CovjsonBuilder(
-            stationTriples, tripleToGeometry, fieldMapper, datetime_
+            stationTriples, tripleToGeometry, fieldMapper, datetime_, select_properties
         ).render()
 
         return cast(
