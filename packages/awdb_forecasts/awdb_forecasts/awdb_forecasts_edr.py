@@ -10,7 +10,7 @@ from com.otel import otel_trace
 from com.protocol import EDRProviderProtocol
 from pygeoapi.provider.base_edr import BaseEDRProvider
 from rise.lib.covjson.types import CoverageCollectionDict
-from snotel.lib.locations import LocationCollection
+from snotel.lib.locations import SnotelLocationCollection
 from snotel.lib.parameters import ParametersCollection
 from pygeoapi.provider.base import ProviderQueryError
 
@@ -50,7 +50,7 @@ class AwdbForecastsEDRProvider(BaseEDRProvider, EDRProviderProtocol):
             raise ProviderQueryError(
                 "Datetime parameter is not supported without location_id"
             )
-        collection = LocationCollection(select_properties)
+        collection = SnotelLocationCollection(select_properties)
         if location_id:
             collection = collection.drop_all_locations_but_id(location_id)
 
@@ -92,7 +92,7 @@ class AwdbForecastsEDRProvider(BaseEDRProvider, EDRProviderProtocol):
         # Example: http://localhost:5000/collections/snotel-edr/cube?bbox=-164.300537,67.195518,-160.620117,68.26125&datetime=2010-01-01/..&parameter-name=EVAP
         # Example: http://localhost:5000/collections/snotel-edr/cube?bbox=-164.300537,67.195518,-160.620117,68.26125&datetime=2010-01-01/..&parameter-name=TAVG
 
-        collection = LocationCollection(select_properties)
+        collection = SnotelLocationCollection(select_properties)
 
         collection.drop_all_locations_outside_bounding_box(bbox, z)
 
@@ -112,7 +112,7 @@ class AwdbForecastsEDRProvider(BaseEDRProvider, EDRProviderProtocol):
         """
         Extract and return coverage data from a specified area.
         """
-        collection = LocationCollection(select_properties)
+        collection = SnotelLocationCollection(select_properties)
 
         collection = collection.drop_outside_of_wkt(wkt, z)
 
