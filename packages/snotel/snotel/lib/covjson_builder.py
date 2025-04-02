@@ -33,6 +33,7 @@ class CovjsonBuilder:
         triplesToGeometry: dict[str, tuple[float, float]],
         fieldsMapper: EDRFieldsMapping,
         datetime_: Optional[str] = None,
+        select_properties: Optional[list[str]] = None,
     ):
         """Initialize the builder object and fetch the necessary timeseries data"""
         self.triplesToData = ResultCollection().fetch_all_data(
@@ -40,6 +41,7 @@ class CovjsonBuilder:
         )
         self.triplesToGeometry = triplesToGeometry
         self.fieldsMapper = fieldsMapper
+        self.select_properties = select_properties
 
     def _generate_parameter(self, triple: str, datastream: DataDTO):
         """Given a triple and an associated datastream, generate a covjson parameter that describes its properties and unit"""

@@ -258,7 +258,10 @@ class LocationCollection:
         return self
 
     def to_covjson(
-        self, fieldMapper: EDRFieldsMapping, datetime_: Optional[str]
+        self,
+        fieldMapper: EDRFieldsMapping,
+        datetime_: Optional[str],
+        select_properties: Optional[list[str]],
     ) -> CoverageCollectionDict:
         stationTriples: list[str] = [
             location.stationTriplet
