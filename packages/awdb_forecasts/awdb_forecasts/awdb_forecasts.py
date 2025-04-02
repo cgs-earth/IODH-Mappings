@@ -21,7 +21,7 @@ from snotel.lib.types import StationDTO
 LOGGER = logging.getLogger(__name__)
 
 
-class AwdbForecastProvider(BaseProvider, OAFProviderProtocol):
+class AwdbForecastsProvider(BaseProvider, OAFProviderProtocol):
     """Rise Provider for OGC API Features"""
 
     def __init__(self, provider_def):
