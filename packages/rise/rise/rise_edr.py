@@ -88,7 +88,6 @@ class RiseEDRProvider(BaseEDRProvider, EDRProviderProtocol):
         if not any([crs, datetime_, location_id]) or format_ == "geojson":
             return response.to_geojson(
                 itemsIDSingleFeature=location_id is not None,
-                select_properties=select_properties,
                 fields_mapping=self.get_fields(),
             )
 
@@ -96,7 +95,7 @@ class RiseEDRProvider(BaseEDRProvider, EDRProviderProtocol):
         builder = LocationResultBuilder(cache=self.cache, base_response=response)
         response_with_results = builder.load_results(time_filter=datetime_)
         return CovJSONBuilder(self.cache).fill_template(
-            response_with_results,
+            response_with_results, select_properties
         )
 
     def get_fields(self):
@@ -138,7 +137,9 @@ class RiseEDRProvider(BaseEDRProvider, EDRProviderProtocol):
 
         builder = LocationResultBuilder(cache=self.cache, base_response=response)
         response_with_results = builder.load_results(time_filter=datetime_)
-        return CovJSONBuilder(self.cache).fill_template(response_with_results)
+        return CovJSONBuilder(self.cache).fill_template(
+            response_with_results, select_properties
+        )
 
     @otel_trace()
     @BaseEDRProvider.register()
@@ -181,7 +182,9 @@ class RiseEDRProvider(BaseEDRProvider, EDRProviderProtocol):
 
         builder = LocationResultBuilder(cache=self.cache, base_response=response)
         response_with_results = builder.load_results(time_filter=datetime_)
-        return CovJSONBuilder(self.cache).fill_template(response_with_results)
+        return CovJSONBuilder(self.cache).fill_template(
+            response_with_results, select_properties
+        )
 
     @BaseEDRProvider.register()
     def items(self, **kwargs):
