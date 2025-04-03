@@ -132,9 +132,10 @@ class CovjsonBuilder:
                     "title"
                 ]
                 id = datastream.stationElement.elementCode
-                parameters[title] = self._generate_parameter(triple, datastream)
                 if self.select_properties and id not in self.select_properties:
                     continue
+                parameters[title] = self._generate_parameter(triple, datastream)
+
                 cov = self._generate_coverage(triple, datastream)
                 coverages.append(cov)
 
