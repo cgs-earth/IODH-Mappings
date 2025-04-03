@@ -32,4 +32,4 @@ class OntologyProcessor(BaseProcessor):
 
         value = ONTOLOGY[parameters]
 
-        return "application/json", {"id": "echo", "decoded": value}
+        return "application/json", {"id": "ontology", "decoded": value}

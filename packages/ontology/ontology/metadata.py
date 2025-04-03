@@ -22,14 +22,14 @@ PROCESS_METADATA = {
         "name": {
             "title": "parameter",
             "description": "The name of the parameter you wish to resolve into the collection specific term",
-            "schema": {"type": "string"},
+            "schema": {"type": "array", "items": {"type": "string"}},
             "minOccurs": 1,
             "maxOccurs": 1,
             "keywords": ["ontology", "parameter"],
         },
     },
     "outputs": {
-        "parameter": {
+        "decoding": {
             "title": "Hello, world",
             "description": 'A "hello world" echo with the name and (optional)'
             "message submitted for processing",
