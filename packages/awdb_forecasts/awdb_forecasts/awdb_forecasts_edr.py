@@ -11,7 +11,6 @@ from com.otel import otel_trace
 from com.protocol import EDRProviderProtocol
 from pygeoapi.provider.base_edr import BaseEDRProvider
 from rise.lib.covjson.types import CoverageCollectionDict
-from snotel.lib.locations import SnotelLocationCollection
 from snotel.lib.parameters import ParametersCollection
 from pygeoapi.provider.base import ProviderQueryError
 
@@ -29,7 +28,11 @@ class AwdbForecastsEDRProvider(BaseEDRProvider, EDRProviderProtocol):
 
         :returns: rise.base_edr.RiseEDRProvider
         """
-        BaseEDRProvider.__init__(self, provider_def)
+        BaseEDRProvider.__init__(
+            self,
+            provider_def
+            or {"name": "AWDB Forecasts", "type": "feature", "data": "remote"},
+        )
         self.instances = []
 
     @otel_trace()
@@ -93,7 +96,7 @@ class AwdbForecastsEDRProvider(BaseEDRProvider, EDRProviderProtocol):
         # Example: http://localhost:5000/collections/snotel-edr/cube?bbox=-164.300537,67.195518,-160.620117,68.26125&datetime=2010-01-01/..&parameter-name=EVAP
         # Example: http://localhost:5000/collections/snotel-edr/cube?bbox=-164.300537,67.195518,-160.620117,68.26125&datetime=2010-01-01/..&parameter-name=TAVG
 
-        collection = SnotelLocationCollection(select_properties)
+        collection = ForecastLocationCollection(select_properties)
 
         collection.drop_all_locations_outside_bounding_box(bbox, z)
 
@@ -113,7 +116,7 @@ class AwdbForecastsEDRProvider(BaseEDRProvider, EDRProviderProtocol):
         """
         Extract and return coverage data from a specified area.
         """
-        collection = SnotelLocationCollection(select_properties)
+        collection = ForecastLocationCollection(select_properties)
 
         collection = collection.drop_outside_of_wkt(wkt, z)
 
