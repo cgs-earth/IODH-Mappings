@@ -4,7 +4,7 @@
 import logging
 from typing import Literal, Optional
 
-from awdb_forecasts.lib.locations import ForecastLocationCollection
+from awdb_forecasts.lib.forecast_locations import ForecastLocationCollection
 from com.helpers import get_oaf_fields_from_pydantic_model
 from com.otel import otel_trace
 from com.protocol import OAFProviderProtocol

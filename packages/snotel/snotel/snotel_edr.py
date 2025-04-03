@@ -86,11 +86,6 @@ class SnotelEDRProvider(BaseEDRProvider, EDRProviderProtocol):
         :param z: vertical level(s)
         :param format_: data format of output
         """
-        # Example: http://localhost:5000/collections/snotel-edr/cube?bbox=-164.300537,67.195518,-160.620117,68.26125
-        # Example: http://localhost:5000/collections/snotel-edr/cube?bbox=-164.300537,67.195518,-160.620117,68.26125&datetime=2010-01-01/..&f=json
-        # Example: http://localhost:5000/collections/snotel-edr/cube?bbox=-164.300537,67.195518,-160.620117,68.26125&datetime=2010-01-01/..&parameter-name=EVAP
-        # Example: http://localhost:5000/collections/snotel-edr/cube?bbox=-164.300537,67.195518,-160.620117,68.26125&datetime=2010-01-01/..&parameter-name=TAVG
-
         collection = SnotelLocationCollection(select_properties)
 
         collection.drop_all_locations_outside_bounding_box(bbox, z)

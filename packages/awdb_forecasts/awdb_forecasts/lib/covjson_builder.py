@@ -59,11 +59,9 @@ class CovjsonBuilder:
                 maxVal = value
         values = [maxVal]
 
-        assert datastream.publicationDate
+        assert datastream.issueDate
         times = [
-            datetime.fromisoformat(datastream.publicationDate).replace(
-                tzinfo=timezone.utc
-            )
+            datetime.fromisoformat(datastream.issueDate).replace(tzinfo=timezone.utc)
         ]
         assert len(values) == len(times)
         longitude, latitude = self.triplesToGeometry[triple]
@@ -76,7 +74,7 @@ class CovjsonBuilder:
             type="Coverage",
             domain=Domain(
                 type="Domain",
-                domainType=DomainType.point_series,
+                domainType=DomainType.point,
                 axes=Axes(
                     t=ValuesAxis(values=times),
                     x=ValuesAxis(values=[longitude]),

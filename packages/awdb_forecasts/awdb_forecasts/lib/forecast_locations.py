@@ -20,7 +20,6 @@ class ForecastLocationCollection(LocationCollection):
         only_stations_with_forecasts=True,
     ):
         self.cache = RedisCache()
-        # snotel also proxies usgs so we just want to get SNOTEL stations
         url = "https://wcc.sc.egov.usda.gov/awdbRestApi/services/v1/stations?returnForecastPointMetadata=true&returnReservoirMetadata=false&returnStationElements=false&activeOnly=true"
         if select_properties:
             url += f"&elements={','.join(select_properties)}"

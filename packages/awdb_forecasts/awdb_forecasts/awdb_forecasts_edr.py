@@ -4,7 +4,7 @@
 import logging
 from typing import Optional
 
-from awdb_forecasts.lib.locations import ForecastLocationCollection
+from awdb_forecasts.lib.forecast_locations import ForecastLocationCollection
 from com.geojson.helpers import GeojsonFeatureCollectionDict, GeojsonFeatureDict
 from com.helpers import EDRFieldsMapping
 from com.otel import otel_trace
