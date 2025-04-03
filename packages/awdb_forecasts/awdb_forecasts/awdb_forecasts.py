@@ -4,6 +4,7 @@
 import logging
 from typing import Literal, Optional
 
+from awdb_forecasts.lib.locations import ForecastLocationCollection
 from com.helpers import get_oaf_fields_from_pydantic_model
 from com.otel import otel_trace
 from com.protocol import OAFProviderProtocol
@@ -15,8 +16,7 @@ from com.geojson.helpers import (
     SortDict,
 )
 from com.cache import RedisCache
-from snotel.lib.locations import SnotelLocationCollection
-from snotel.lib.types import StationDTO
+from awdb_com.types import StationDTO
 
 LOGGER = logging.getLogger(__name__)
 
@@ -54,7 +54,10 @@ class AwdbForecastsProvider(BaseProvider, OAFProviderProtocol):
         skip_geometry: Optional[bool] = False,
         **kwargs,
     ) -> GeojsonFeatureCollectionDict | GeojsonFeatureDict:
-        collection = SnotelLocationCollection()
+        # items/ returns all features, locations/ returns only features with timeseries, and thus forecasts
+        collection = ForecastLocationCollection(
+            select_properties, only_stations_with_forecasts=False
+        )
         if itemId:
             collection = collection.drop_all_locations_but_id(itemId)
         if bbox:

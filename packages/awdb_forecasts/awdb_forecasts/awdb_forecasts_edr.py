@@ -4,6 +4,7 @@
 import logging
 from typing import Optional
 
+from awdb_forecasts.lib.locations import ForecastLocationCollection
 from com.geojson.helpers import GeojsonFeatureCollectionDict, GeojsonFeatureDict
 from com.helpers import EDRFieldsMapping
 from com.otel import otel_trace
@@ -50,7 +51,7 @@ class AwdbForecastsEDRProvider(BaseEDRProvider, EDRProviderProtocol):
             raise ProviderQueryError(
                 "Datetime parameter is not supported without location_id"
             )
-        collection = SnotelLocationCollection(select_properties)
+        collection = ForecastLocationCollection(select_properties)
         if location_id:
             collection = collection.drop_all_locations_but_id(location_id)
 

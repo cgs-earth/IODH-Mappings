@@ -16,7 +16,7 @@ from com.geojson.helpers import (
 )
 from com.cache import RedisCache
 from snotel.lib.locations import SnotelLocationCollection
-from snotel.lib.types import StationDTO
+from awdb_com.types import StationDTO
 
 LOGGER = logging.getLogger(__name__)
 

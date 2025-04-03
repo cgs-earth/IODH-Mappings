@@ -25,7 +25,7 @@ import geojson_pydantic
 from rise.lib.covjson.types import CoverageCollectionDict
 from rise.lib.types.helpers import ZType
 from snotel.lib.covjson_builder import CovjsonBuilder
-from snotel.lib.types import StationDTO
+from awdb_com.types import StationDTO
 import shapely
 from typing import Optional, assert_never, cast
 import shapely.wkt

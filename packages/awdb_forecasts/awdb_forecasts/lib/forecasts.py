@@ -4,7 +4,7 @@
 from typing import Optional
 from com.cache import RedisCache
 from com.helpers import await_
-from snotel.lib.types import ForecastDataDTO
+from awdb_com.types import ForecastDataDTO
 
 
 class ForecastResultCollection:
