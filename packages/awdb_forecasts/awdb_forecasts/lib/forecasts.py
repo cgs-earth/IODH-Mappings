@@ -37,6 +37,7 @@ class ForecastResultCollection:
         result = await_(self.cache.get_or_fetch(url))
         assert "error" not in result, result
 
+        assert result
         tripletToForecast: dict[str, list[ForecastDataDTO]] = {}
         for res in result:
             tripletToForecast[res.get("stationTriplet")] = [

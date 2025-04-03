@@ -25,9 +25,16 @@ class ForecastLocationCollection(LocationCollection):
         if select_properties:
             url += f"&elements={','.join(select_properties)}"
         result = await_(self.cache.get_or_fetch(url))
-        self.locations = [
-            StationDTO.model_validate(res) for res in result if res.get("forecastPoint")
-        ]
+        locations: list[StationDTO] = []
+
+        for res in result:
+            if only_stations_with_forecasts:
+                if res.get("forecastPoint"):
+                    locations.append(StationDTO.model_validate(res))
+            else:
+                locations.append(StationDTO.model_validate(res))
+
+        self.locations = locations
 
     def to_covjson(
         self,

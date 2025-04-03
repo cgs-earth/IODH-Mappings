@@ -43,30 +43,22 @@ class CovjsonBuilder:
         self.fieldsMapper = fieldsMapper
         self.select_properties = select_properties
 
-    def _generate_parameter(self, id: str, datastream: ForecastDataDTO):
-        """Given a triple and an associated datastream, generate a covjson parameter that describes its properties and unit"""
-        assert datastream.elementCode
-        edr_field = self.fieldsMapper[datastream.elementCode]
-        param = Parameter(
-            type="Parameter",
-            unit=Unit(symbol=datastream.unitCode),
-            id=edr_field["title"],
-            observedProperty=ObservedProperty(
-                label={"en": datastream.elementCode},
-                id=edr_field["title"],
-                description={"en": edr_field["description"]},
-            ),
-        )
-        return param
-
-    def _generate_coverage(self, triple: str, datastream: ForecastDataDTO):
+    def _generate_coverage_and_parameter(
+        self, triple: str, datastream: ForecastDataDTO
+    ) -> tuple[Coverage, Parameter]:
         """Given a datastream generate a covjson coverage for the timeseries data"""
 
         assert datastream.forecastValues
-        values: list[float] = [
-            # value for prob, value in datastream.forecastValues.items()
-            1
-        ]
+
+        # get the value of the biggest key in the forecastValues dict
+        maxProb: int = 0
+        maxVal = 0
+        for probability, value in datastream.forecastValues.items():
+            if int(probability) > maxProb:
+                maxProb = int(probability)
+                maxVal = value
+        values = [maxVal]
+
         assert datastream.publicationDate
         times = [
             datetime.fromisoformat(datastream.publicationDate).replace(
@@ -76,6 +68,10 @@ class CovjsonBuilder:
         assert len(values) == len(times)
         longitude, latitude = self.triplesToGeometry[triple]
         assert datastream.elementCode
+
+        edr_field = self.fieldsMapper[datastream.elementCode]
+        parameterName = f"{edr_field['title']} {datastream.forecastPeriod}"
+
         cov = Coverage(
             type="Coverage",
             domain=Domain(
@@ -104,14 +100,26 @@ class CovjsonBuilder:
                 ],
             ),
             ranges={
-                self.fieldsMapper[datastream.elementCode]["title"]: NdArrayFloat(
+                parameterName: NdArrayFloat(
                     shape=[len(values)],
                     values=values,  # type: ignore
                     axisNames=["t"],
                 ),
             },
         )
-        return cov
+
+        param = Parameter(
+            type="Parameter",
+            unit=Unit(symbol=datastream.unitCode),
+            id=parameterName,
+            observedProperty=ObservedProperty(
+                label={"en": datastream.elementCode},
+                id=parameterName,
+                description={"en": edr_field["description"]},
+            ),
+        )
+
+        return (cov, param)
 
     def render(self):
         """Build the covjson and return it as a dictionary"""
@@ -122,13 +130,13 @@ class CovjsonBuilder:
             assert result
             for datastream in result:
                 assert datastream.elementCode
-                title = self.fieldsMapper[datastream.elementCode]["title"]
                 id = datastream.elementCode
-                parameters[title] = self._generate_parameter(triple, datastream)
                 if self.select_properties and id not in self.select_properties:
                     continue
-                cov = self._generate_coverage(triple, datastream)
+                cov, param = self._generate_coverage_and_parameter(triple, datastream)
                 coverages.append(cov)
+                assert param.id
+                parameters[param.id] = param
 
                 assert len(cov.ranges) == 1
 
