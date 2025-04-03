@@ -53,7 +53,7 @@ resources:
   ontology:
     type: process
     processor:
-        name: ontology.process.OntologyProcessor
+      name: ontology.process.OntologyProcessor
 
   rise-edr:
     type: collection

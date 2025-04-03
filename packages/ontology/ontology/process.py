@@ -1,3 +1,6 @@
+# Copyright 2025 Lincoln Institute of Land Policy
+# SPDX-License-Identifier: MIT
+
 from pygeoapi.process.base import BaseProcessor
 import logging
 from pygeoapi.process.base import ProcessorExecuteError
