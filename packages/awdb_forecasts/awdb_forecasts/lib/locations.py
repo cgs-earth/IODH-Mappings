@@ -1,3 +1,6 @@
+# Copyright 2025 Lincoln Institute of Land Policy
+# SPDX-License-Identifier: MIT
+
 from awdb_com.locations import LocationCollection
 from awdb_com.types import StationDTO
 from awdb_forecasts.lib.covjson_builder import CovjsonBuilder
