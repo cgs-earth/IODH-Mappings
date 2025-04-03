@@ -2,7 +2,6 @@
 # SPDX-License-Identifier: MIT
 
 from datetime import datetime
-from com.cache import RedisCache
 from com.datetime import datetime_from_iso
 from com.env import TRACER
 from com.geojson.helpers import (
@@ -16,7 +15,6 @@ from com.geojson.helpers import (
 from com.helpers import (
     EDRFieldsMapping,
     OAFFieldsMapping,
-    await_,
     parse_bbox,
     parse_date,
     parse_z,
@@ -37,8 +35,6 @@ class LocationCollection:
     """A wrapper class containing locations and methods to filter them"""
 
     locations: list[StationDTO]
-
-
 
     def drop_all_locations_but_id(self, location_id: str):
         data = [v for v in self.locations if v.stationId == str(location_id)]
