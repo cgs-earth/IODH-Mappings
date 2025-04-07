@@ -1,5 +1,7 @@
 # Western Water Datahub EDR Mappings
 
+**NOTE: This repo is now archived and condensed into a monorepo with its associated deployment code located at [internetofwater/WWDH/](https://github.com/internetofwater/WWDH/)**
+
 This repository maps the various federal water data APIs like the USBR RISE API to OGC EDR using pygeoapi for ETL. It defaults to redis for the caching implementation.
 
 ## Usage
